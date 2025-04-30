@@ -24,7 +24,7 @@ const Navbar = () => {
             <span className="hidden sm:inline">Tentang Kami</span>
           </Link>
           <Link 
-            href="/masuk" 
+            href="/signin" 
             className="text-white hover:text-gray-300 transition-colors flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a2942]"
           >
             <i className="fas fa-sign-in-alt"></i>

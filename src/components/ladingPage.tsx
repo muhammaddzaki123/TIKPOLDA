@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-const Hero = () => {
+const landingPage = () => {
   return (
   <div className="min-h-screen bg-[#E7EEF3]">
     <div className="container mx-auto px-6 py-16 flex flex-col lg:flex-row items-center justify-between min-h-[calc(100vh-76px)] ">
@@ -14,14 +14,14 @@ const Hero = () => {
         </p>
         <div className="flex gap-4 pt-6">
           <Link 
-            href="/daftar"
+            href="/signUp"
             className="bg-[#0B1221] text-white px-8 py-4 rounded-lg hover:bg-[#1a2942] transition-all transform hover:scale-105 flex items-center gap-2 text-lg"
           >
             <i className="fas fa-user-plus"></i>
             <span>Daftar</span>
           </Link>
           <Link
-            href="/masuk"
+            href="/signin"
             className="border-2 border-[#0B1221] text-[#0B1221] px-8 py-4 rounded-lg hover:bg-[#0B1221] hover:text-white transition-all transform hover:scale-105 flex items-center gap-2 text-lg"
           >
             <i className="fas fa-sign-in-alt"></i>
@@ -46,4 +46,4 @@ const Hero = () => {
   );
 };
 
-export default Hero;
+export default landingPage;
