@@ -60,12 +60,12 @@ export default function StokBarang() {
     <div className="min-h-screen bg-gray-100">
       <div className="p-6">
         <div className="bg-[#0B2447] text-white p-4 rounded-t-lg">
-          <h1 className="text-xl font-semibold">Manajemen Stok Barang</h1>
+          <h1 className="text-xl font-semibold">Manajemen Kuuota Peminjaman HT</h1>
         </div>
 
         <div className="bg-white p-6 rounded-b-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-black">Data Barang</h2>
+            <h2 className="text-lg font-medium text-black">Data Peminjaman HT</h2>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center"
@@ -83,7 +83,7 @@ export default function StokBarang() {
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
                 className="border rounded px-2 py-1 text-black"
               >
-                <option value="3">3</option>
+                <option value="3">1</option>
                 <option value="5">5</option>
                 <option value="10">10</option>
               </select>
@@ -105,21 +105,23 @@ export default function StokBarang() {
               <thead>
                 <tr className="bg-gray-100">
                   <th className="px-6 py-3 text-left">NO.</th>
-                  <th className="px-6 py-3 text-left">Kode Barang</th>
+                  <th className="px-6 py-3 text-left">ID Anggota</th>
                   <th className="px-6 py-3 text-left">Nama Barang</th>
-                  <th className="px-6 py-3 text-left">Kategori</th>
-                  <th className="px-6 py-3 text-left">Supplier</th>
-                  <th className="px-6 py-3 text-left">Jumlah Barang</th>
+                  <th className="px-6 py-3 text-left">Satuan Kerja</th>
+                  <th className="px-6 py-3 text-left">Jenis Barang</th>
+                  <th className="px-6 py-3 text-left">Qty</th>
+                  <th className="px-6 py-3 text-left">Batas Waktu</th>
                   <th className="px-6 py-3 text-left">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {dummyData.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                  <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white' }>
                     <td className="px-6 py-4">{index + 1}</td>
                     <td className="px-6 py-4">{item.kodeBarang}</td>
                     <td className="px-6 py-4">{item.namaBarang}</td>
                     <td className="px-6 py-4">{item.kategori}</td>
+                    <td className="px-6 py-4">{item.supplier}</td>
                     <td className="px-6 py-4">{item.supplier}</td>
                     <td className="px-6 py-4">{item.jumlahBarang}</td>
                     <td className="px-6 py-4">
