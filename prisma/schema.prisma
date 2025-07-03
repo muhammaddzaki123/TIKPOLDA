@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nama      String
+  email     String   @unique
+  password  String   // Akan di-hash
+  role      Role
+  createdAt DateTime @default(now())
+
+  satkerId  String?
+  satker    Satker?  @relation(fields: [satkerId], references: [id])
+}
+
+model Satker {
+  id      String @id @default(cuid())
+  nama    String @unique
+  alamat  String
+  admins  User[]
+  ht      HT[]
+}
+
+model HT {
+  id            String      @id @default(cuid())
+  nomorSeri     String      @unique
+  merk          String
+  status        HTStatus    @default(TERSEDIA)
+  kondisi       KondisiHT   @default(BAIK)
+  pemegang      String?
+  catatan       String?
+  satkerId      String
+  satkerPemilik Satker      @relation(fields: [satkerId], references: [id])
+
+  peminjaman    Peminjaman?
+}
+
+model Peminjaman {
+  id                String            @id @default(cuid())
+  keperluan         String
+  satkerPeminjam    String
+  tanggalPinjam     DateTime
+  tanggalKembali    DateTime?
+  statusPeminjaman  StatusPeminjaman  @default(PENDING)
+  disetujuiOleh     String?
+  createdAt         DateTime          @default(now())
+
+  htId              String            @unique
+  ht                HT                @relation(fields: [htId], references: [id])
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN_SATKER
+}
+
+enum HTStatus {
+  TERSEDIA
+  DIPINJAM
+  RUSAK
+  PERBAIKAN
+}
+
+enum KondisiHT {
+  BAIK
+  RUSAK_RINGAN
+  RUSAK_BERAT
+}
+
+enum StatusPeminjaman {
+  PENDING
+  DISETUJUI
+  DITOLAK
+  SELESAI
+}
