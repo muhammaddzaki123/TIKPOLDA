@@ -1,26 +1,27 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { LoginForm } from "@/components/login-form";
+// app/page.tsx
 
-export default function LoginPage() {
+import Image from 'next/image';
+import LoginForm from '@/components/login-form'; // Import komponen baru
+
+export default function SignInPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-      <Card className="mx-auto max-w-sm w-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Sistem Manajemen HT Polda NTB
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-      </Card>
-    </div>
+    <main className="grid min-h-screen w-full grid-cols-1 md:grid-cols-2">
+      {/* Kolom Kiri: Form Login */}
+      <div className="flex items-center justify-center bg-white p-8">
+        <LoginForm /> {/* Gunakan komponen di sini */}
+      </div>
+
+      {/* Kolom Kanan: Gambar */}
+      <div className="hidden items-center justify-center bg-[#0d2436] p-10 md:flex">
+        <Image
+          src="/gambarawal.svg" // Pastikan path gambar benar
+          alt="Polda NTB Display"
+          width={500}
+          height={500}
+          quality={100}
+          priority
+        />
+      </div>
+    </main>
   );
 }

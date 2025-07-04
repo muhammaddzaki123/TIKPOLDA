@@ -1,46 +1,56 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { HandMetal, LayoutDashboard, FilePlus2 } from "lucide-react";
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Warehouse,
+  Users,
+  Building2,
+  History,
+} from 'lucide-react';
 
-// TODO: Ganti dengan link dinamis berdasarkan role user
-const adminSatkerLinks = [
-  { href: "/admin-satker/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin-satker/ht-saya", label: "HT Saya", icon: HandMetal },
-  { href: "/admin-satker/buat-peminjaman", label: "Buat Peminjaman", icon: FilePlus2 },
+const sidebarItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Inventaris HT', href: '/dashboard/inventaris', icon: Warehouse },
+  { name: 'Manajemen Admin', href: '/dashboard/admin', icon: Users },
+  { name: 'Manajemen Satker', href: '/dashboard/satker', icon: Building2 },
+  { name: 'Riwayat Peminjaman', href: '/dashboard/riwayat', icon: History },
 ];
 
-export function Sidebar() {
+export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-      <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-white">POLDA NTB</h1>
+    <aside className="hidden w-64 flex-col bg-[#0d2436] p-4 text-white md:flex">
+      <div className="mb-8 flex items-center justify-center space-x-3 border-b border-gray-700 pb-6">
+        <Image src="/icon.svg" width={40} height={40} alt="Logo" />
+        <span className="text-lg font-semibold">Logistik POLDA NTB</span>
       </div>
-      <nav className="flex-1 px-4 py-4">
+      <nav className="flex-1">
         <ul>
-          {adminSatkerLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`flex items-center p-3 my-1 rounded-lg text-sm font-medium ${
-                    isActive
-                      ? "bg-slate-100 text-slate-900 dark:bg-slate-700 dark:text-white"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <link.icon className="h-5 w-5 mr-3" />
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
+          {sidebarItems.map((item) => (
+            <li key={item.name}>
+              <Link
+                href={item.href}
+                className={`flex items-center space-x-3 rounded-md p-3 text-sm font-medium transition-colors ${
+                  pathname === item.href
+                    ? 'bg-slate-700 text-white'
+                    : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
+      <div className="mt-auto border-t border-gray-700 pt-4">
+        {/* Bisa ditambahkan info user atau tombol logout di sini */}
+        <p className="text-center text-xs text-gray-400">© 2025 Polda NTB</p>
+      </div>
     </aside>
   );
 }

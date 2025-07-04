@@ -1,80 +1,59 @@
-"use client";
+// components/login-form.tsx
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Import useRouter
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+'use client'; // Tambahkan ini di atas karena akan ada interaksi pengguna (event handler, state)
 
-export function LoginForm() {
-  const router = useRouter(); // Inisialisasi router
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+import Link from 'next/link';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Jika response status bukan 2xx (e.g., 401 Unauthorized)
-        throw new Error(data.error || 'Gagal untuk login.');
-      }
-
-      // Jika login berhasil, redirect ke halaman yang sesuai
-      // Nantinya, session akan disimpan di sini
-      if (data.user && data.user.redirectUrl) {
-        router.push(data.user.redirectUrl);
-      } else {
-         throw new Error('URL redirect tidak ditemukan.');
-      }
-
-    } catch (err: any) {
-      setError(err.message);
-      setIsLoading(false);
-    }
-  };
-
+export default function LoginForm() {
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="admin@polda.go.id"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-        />
+    <div className="w-full max-w-sm rounded-xl bg-slate-100 p-8 shadow-lg md:p-12">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-slate-800">Selamat Datang!</h1>
+        <p className="text-sm text-slate-600">Masuk ke Akun Anda</p>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-        />
-      </div>
-      {error && <p className="text-sm font-medium text-red-500">{error}</p>}
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Memproses..." : "Login"}
-      </Button>
-    </form>
+
+      <form className="space-y-6">
+        <div>
+          <label htmlFor="username" className="sr-only">
+            Username
+          </label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Username"
+            className="w-full border-b-2 border-slate-300 bg-transparent py-2 text-slate-700 placeholder-slate-400 focus:border-slate-500 focus:outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="sr-only">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Password"
+            className="w-full border-b-2 border-slate-300 bg-transparent py-2 text-slate-700 placeholder-slate-400 focus:border-slate-500 focus:outline-none"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full rounded-lg bg-slate-800 py-3 font-semibold text-white shadow-md transition-colors hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+        >
+          Masuk
+        </button>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-slate-600">
+        Belum memiliki akun?{' '}
+        <Link href="/register" className="font-semibold text-slate-800 hover:underline">
+          Daftar
+        </Link>
+      </p>
+    </div>
   );
 }

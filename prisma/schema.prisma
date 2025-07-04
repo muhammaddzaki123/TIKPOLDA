@@ -8,52 +8,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  nama      String
-  email     String   @unique
-  password  String   // Akan di-hash
-  role      Role
-  createdAt DateTime @default(now())
-
-  satkerId  String?
-  satker    Satker?  @relation(fields: [satkerId], references: [id])
-}
-
 model Satker {
-  id      String @id @default(cuid())
-  nama    String @unique
-  alamat  String
-  admins  User[]
-  ht      HT[]
-}
+  id        String @id @default(cuid())
+  nama_satker String @unique
+  kode_satker String? @unique
 
-model HT {
-  id            String      @id @default(cuid())
-  nomorSeri     String      @unique
-  merk          String
-  status        HTStatus    @default(TERSEDIA)
-  kondisi       KondisiHT   @default(BAIK)
-  pemegang      String?
-  catatan       String?
-  satkerId      String
-  satkerPemilik Satker      @relation(fields: [satkerId], references: [id])
-
-  peminjaman    Peminjaman?
-}
-
-model Peminjaman {
-  id                String            @id @default(cuid())
-  keperluan         String
-  satkerPeminjam    String
-  tanggalPinjam     DateTime
-  tanggalKembali    DateTime?
-  statusPeminjaman  StatusPeminjaman  @default(PENDING)
-  disetujuiOleh     String?
-  createdAt         DateTime          @default(now())
-
-  htId              String            @unique
-  ht                HT                @relation(fields: [htId], references: [id])
+  // Relasi
+  users     User[]
+  hts       HT[]
 }
 
 enum Role {
@@ -61,22 +23,66 @@ enum Role {
   ADMIN_SATKER
 }
 
-enum HTStatus {
+model User {
+  id       String    @id @default(cuid())
+  email    String    @unique
+  password String
+  nama     String
+  role     Role
+
+  // Relasi ke Satker (wajib ada jika role-nya ADMIN_SATKER)
+  satkerId String?
+  satker   Satker?   @relation(fields: [satkerId], references: [id])
+
+  // Relasi ke Peminjaman (admin yang memproses)
+  peminjaman_diproses Peminjaman[]
+}
+
+enum StatusHT {
   TERSEDIA
   DIPINJAM
   RUSAK
-  PERBAIKAN
 }
 
-enum KondisiHT {
-  BAIK
-  RUSAK_RINGAN
-  RUSAK_BERAT
+model HT {
+  id              String        @id @default(cuid())
+  serial_number   String        @unique
+  kode_ht         String        @unique
+  merk            String
+  jenis           String
+  tahun_buat      Int
+  tahun_peroleh   Int
+  status          StatusHT      @default(TERSEDIA)
+  kondisi         String
+
+  // Relasi ke Satker (HT ini milik satker mana)
+  satkerId        String
+  satker          Satker        @relation(fields: [satkerId], references: [id])
+
+  // Relasi ke riwayat peminjamannya
+  peminjaman      Peminjaman[]
 }
 
 enum StatusPeminjaman {
-  PENDING
-  DISETUJUI
-  DITOLAK
+  AKTIF
   SELESAI
+}
+
+model Peminjaman {
+  id                 String           @id @default(cuid())
+  tanggal_pinjam     DateTime         @default(now())
+  tanggal_kembali    DateTime?
+  peminjam_nrp       String
+  peminjam_nama      String
+  peminjam_jabatan   String
+  peminjam_satker    String
+  status_peminjaman  StatusPeminjaman @default(AKTIF)
+
+  // Relasi ke HT yang dipinjam
+  htId               String
+  ht                 HT               @relation(fields: [htId], references: [id])
+
+  // Relasi ke Admin yang memproses
+  adminId            String
+  processedBy        User             @relation(fields: [adminId], references: [id])
 }
