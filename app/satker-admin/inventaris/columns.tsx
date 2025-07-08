@@ -5,29 +5,46 @@ import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { HT, Personil } from '@prisma/client';
 
-// Tipe data sederhana untuk tabel ini
-export type InventarisHT = {
-  id: string;
-  kodeHT: string;
-  merk: string;
-  pemegang: string; // Nama pemegang
-  nrp: string; // NRP pemegang
-  status: 'Digunakan' | 'Di Gudang';
+// Tipe data kustom yang akan kita gunakan untuk menampilkan data di tabel.
+// Ini akan dibuat di dalam file page.tsx.
+export type InventarisDisplay = HT & {
+  pemegangSaatIni: Personil | null;
 };
 
-export const columns: ColumnDef<InventarisHT>[] = [
+export const columns: ColumnDef<InventarisDisplay>[] = [
   { accessorKey: 'kodeHT', header: 'Kode HT' },
   { accessorKey: 'merk', header: 'Merk' },
-  { accessorKey: 'pemegang', header: 'Pemegang Saat Ini' },
-  { accessorKey: 'nrp', header: 'NRP Pemegang' },
+  {
+    accessorKey: 'pemegangSaatIni',
+    header: 'Pemegang Saat Ini',
+    cell: ({ row }) => {
+      // Akses nama dari data relasi yang sudah kita siapkan
+      const pemegang = row.original.pemegangSaatIni;
+      return pemegang ? pemegang.nama : <span className="text-slate-400">-</span>;
+    },
+  },
+  {
+    header: 'NRP Pemegang',
+    cell: ({ row }) => {
+      // Akses NRP dari data relasi
+      const pemegang = row.original.pemegangSaatIni;
+      return pemegang ? pemegang.nrp : '-';
+    },
+  },
   {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
-      const variant = status === 'Digunakan' ? 'default' : 'secondary';
-      return <Badge variant={variant}>{status}</Badge>;
+      
+      let variant: "default" | "secondary" | "destructive" | "outline" = 'outline';
+      if (status === 'DIPINJAM') variant = 'default';
+      else if (status === 'TERSEDIA') variant = 'secondary';
+      else if (status === 'RUSAK') variant = 'destructive';
+
+      return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
     },
   },
   {
@@ -43,10 +60,8 @@ export const columns: ColumnDef<InventarisHT>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Pemegang HT</DropdownMenuItem>
-            <DropdownMenuItem>Ajukan Peminjaman Baru</DropdownMenuItem>
             <DropdownMenuItem>Lihat Riwayat HT</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Edit Data Aset</DropdownMenuItem>
+            <DropdownMenuItem>Laporkan Kerusakan</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
