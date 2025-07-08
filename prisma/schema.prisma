@@ -6,16 +6,26 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("directUrl")
 }
 
 model Satker {
-  id        String @id @default(cuid())
-  nama_satker String @unique
-  kode_satker String? @unique
+  id         String @id @default(cuid())
+  nama       String @unique // Nama Satker, e.g., "DITLANTAS", "DITSAMAPTA"
+  admins     User[]
+  personil   Personil[]
+  ht         HT[]
+}
 
-  // Relasi
-  users     User[]
-  hts       HT[]
+// Model untuk Pengguna Aplikasi (Admin Satker & Super Admin)
+model User {
+  id        String    @id @default(cuid())
+  nama      String
+  email     String    @unique
+  password  String    // Hash password, jangan simpan sebagai plain text
+  role      Role      @default(ADMIN_SATKER)
+  satkerId  String?   // Admin Satker terikat pada satu Satker
+  satker    Satker?   @relation(fields: [satkerId], references: [id])
 }
 
 enum Role {
@@ -23,66 +33,49 @@ enum Role {
   ADMIN_SATKER
 }
 
-model User {
-  id       String    @id @default(cuid())
-  email    String    @unique
-  password String
-  nama     String
-  role     Role
+// Model untuk Personil Kepolisian (Pengguna HT)
+model Personil {
+  id        String   @id @default(cuid())
+  nrp       String   @unique
+  nama      String
+  jabatan   String
+  satkerId  String
+  satker    Satker   @relation(fields: [satkerId], references: [id])
+  peminjaman Peminjaman[]
+}
 
-  // Relasi ke Satker (wajib ada jika role-nya ADMIN_SATKER)
-  satkerId String?
-  satker   Satker?   @relation(fields: [satkerId], references: [id])
-
-  // Relasi ke Peminjaman (admin yang memproses)
-  peminjaman_diproses Peminjaman[]
+// Model untuk Data Handy Talky (HT)
+model HT {
+  id             String      @id @default(cuid())
+  serialNumber   String      @unique
+  kodeHT         String      @unique
+  merk           String
+  jenis          String
+  tahunBuat      Int
+  tahunPeroleh   Int
+  status         StatusHT    @default(TERSEDIA)
+  satkerId       String      // Setiap HT dimiliki oleh satu Satker
+  satker         Satker      @relation(fields: [satkerId], references: [id])
+  peminjaman     Peminjaman[]
 }
 
 enum StatusHT {
   TERSEDIA
   DIPINJAM
   RUSAK
+  PERBAIKAN
 }
 
-model HT {
-  id              String        @id @default(cuid())
-  serial_number   String        @unique
-  kode_ht         String        @unique
-  merk            String
-  jenis           String
-  tahun_buat      Int
-  tahun_peroleh   Int
-  status          StatusHT      @default(TERSEDIA)
-  kondisi         String
-
-  // Relasi ke Satker (HT ini milik satker mana)
-  satkerId        String
-  satker          Satker        @relation(fields: [satkerId], references: [id])
-
-  // Relasi ke riwayat peminjamannya
-  peminjaman      Peminjaman[]
-}
-
-enum StatusPeminjaman {
-  AKTIF
-  SELESAI
-}
-
+// Model untuk mencatat riwayat Peminjaman
 model Peminjaman {
-  id                 String           @id @default(cuid())
-  tanggal_pinjam     DateTime         @default(now())
-  tanggal_kembali    DateTime?
-  peminjam_nrp       String
-  peminjam_nama      String
-  peminjam_jabatan   String
-  peminjam_satker    String
-  status_peminjaman  StatusPeminjaman @default(AKTIF)
-
-  // Relasi ke HT yang dipinjam
-  htId               String
-  ht                 HT               @relation(fields: [htId], references: [id])
-
-  // Relasi ke Admin yang memproses
-  adminId            String
-  processedBy        User             @relation(fields: [adminId], references: [id])
+  id               String    @id @default(cuid())
+  htId             String
+  ht               HT        @relation(fields: [htId], references: [id])
+  personilId       String
+  personil         Personil  @relation(fields: [personilId], references: [id])
+  tanggalPinjam    DateTime  @default(now())
+  tanggalKembali   DateTime? // Null jika belum dikembalikan
+  kondisiSaatPinjam String
+  kondisiSaatKembali String?
+  adminPencatatId  String    // ID admin yang melakukan transaksi
 }

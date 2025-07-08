@@ -4,11 +4,24 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { HTDataTable } from '@/components/ht-data-table';
-// 1. Pastikan import ini benar
-import { personilDitlantas } from '@/data/mock-personil-data'; 
 import { columns } from './columns';
+import { addPersonil } from './actions'; // Import Server Action
+import { PrismaClient } from '@prisma/client';
 
-export default function PersonilManagementPage() {
+const prisma = new PrismaClient();
+
+// Fungsi untuk mengambil data asli dari database
+async function getPersonil() {
+  const data = await prisma.personil.findMany({
+    // where: { satkerId: 'clsrxxxxxxxxx' } // Nanti difilter berdasarkan satker admin
+  });
+  return data;
+}
+
+export default async function PersonilManagementPage() {
+  // Ganti mock data dengan data asli
+  const personilData = await getPersonil();
+
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
@@ -27,23 +40,26 @@ export default function PersonilManagementPage() {
                 Masukkan data personil baru untuk unit kerja Anda.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="nrp">NRP</Label>
-                <Input id="nrp" placeholder="Contoh: 85011234" />
+            {/* Form sekarang menggunakan Server Action */}
+            <form action={addPersonil}>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nrp">NRP</Label>
+                  <Input id="nrp" name="nrp" placeholder="Contoh: 85011234" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nama">Nama Lengkap</Label>
+                  <Input id="nama" name="nama" placeholder="Masukkan nama lengkap" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="jabatan">Jabatan / Pangkat</Label>
+                  <Input id="jabatan" name="jabatan" placeholder="Contoh: BRIPKA" required />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="nama">Nama Lengkap</Label>
-                <Input id="nama" placeholder="Masukkan nama lengkap" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="jabatan">Jabatan / Pangkat</Label>
-                <Input id="jabatan" placeholder="Contoh: BRIPKA" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Simpan</Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="submit">Simpan</Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -51,10 +67,8 @@ export default function PersonilManagementPage() {
         Kelola semua data personil yang terdaftar di unit kerja Anda.
       </p>
 
-      {/* Render komponen tabel data */}
       <div className="rounded-lg border bg-white p-4 shadow-sm">
-        {/* 2. Pastikan Anda menggunakan variabel yang benar di sini */}
-        <HTDataTable columns={columns} data={personilDitlantas} />
+        <HTDataTable columns={columns} data={personilData} />
       </div>
     </div>
   );
