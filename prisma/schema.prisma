@@ -9,24 +9,15 @@ datasource db {
   directUrl = env("directUrl")
 }
 
-// Model untuk Satuan Kerja (Satker)
-model Satker {
-  id       String     @id @default(cuid())
-  nama     String     @unique 
-  admins   User[]
-  personil Personil[]
-  ht       HT[]
-}
-
-// Model untuk Pengguna Aplikasi (Admin Satker & Super Admin)
+// Model untuk Autentikasi
 model User {
-  id       String @id @default(cuid())
-  nama     String
-  email    String @unique
-  password String 
-  role     Role   @default(ADMIN_SATKER)
-  satkerId String?
-  satker   Satker?  @relation(fields: [satkerId], references: [id])
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nama      String
+  password  String
+  role      Role     @default(ADMIN_SATKER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -34,61 +25,64 @@ enum Role {
   ADMIN_SATKER
 }
 
-// Model untuk Personil Kepolisian
+// Model untuk Inventaris
+model Satker {
+  id             String      @id @default(cuid())
+  kode           String      @unique
+  nama           String
+  personil       Personil[]
+  ht             HT[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
 model Personil {
-  id         String       @id @default(cuid())
-  nrp        String       @unique
-  nama       String
-  jabatan    String
-  satkerId   String
-  satker     Satker       @relation(fields: [satkerId], references: [id])
-  peminjaman Peminjaman[]
-
-  // Relasi untuk HT yang sedang dipegang saat ini
-  htDipegang HT[]         @relation("PemegangHT")
+  id              String        @id @default(cuid())
+  nrp             String        @unique
+  nama            String
+  jabatan         String
+  satker          Satker        @relation(fields: [satkerId], references: [id])
+  satkerId        String
+  peminjaman      Peminjaman[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
-// Model untuk Data Handy Talky (HT)
 model HT {
-  id           String     @id @default(cuid())
-  serialNumber String     @unique
-  kodeHT       String     @unique
-  merk         String
-  jenis        String
-  tahunBuat    Int
-  tahunPeroleh Int
-  status       StatusHT   @default(TERSEDIA)
-  createdAt    DateTime   @default(now())
+  id              String        @id @default(cuid())
+  serialNumber    String        @unique
+  kodeHT          String        @unique
+  merk            String
+  jenis           String
+  tahunBuat       Int
+  tahunPeroleh    Int
+  status          HTStatus      @default(TERSEDIA)
+  satker          Satker        @relation(fields: [satkerId], references: [id])
+  satkerId        String
+  peminjaman      Peminjaman[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  // Relasi ke Satker pemilik
-  satkerId String
-  satker   Satker   @relation(fields: [satkerId], references: [id])
-
-  // Relasi ke pemegang saat ini (untuk efisiensi)
-  pemegangId String?
-  pemegang   Personil?  @relation("PemegangHT", fields: [pemegangId], references: [id])
-
-  // Relasi ke riwayat peminjaman
-  peminjaman Peminjaman[]
+  @@map("HT")
 }
 
-enum StatusHT {
+enum HTStatus {
   TERSEDIA
   DIPINJAM
   RUSAK
-  PERBAIKAN
+  HILANG
 }
 
-// Model untuk mencatat riwayat Peminjaman
+// Model untuk Transaksi
 model Peminjaman {
-  id                 String    @id @default(cuid())
+  id                 String     @id @default(cuid())
+  ht                 HT         @relation(fields: [htId], references: [id])
   htId               String
-  ht                 HT        @relation(fields: [htId], references: [id])
+  personil           Personil   @relation(fields: [personilId], references: [id])
   personilId         String
-  personil           Personil  @relation(fields: [personilId], references: [id])
-  tanggalPinjam      DateTime  @default(now())
-  tanggalKembali     DateTime? 
+  adminPencatatId    String     // ID User Admin yang mencatat
   kondisiSaatPinjam  String
+  tanggalPinjam      DateTime   @default(now())
+  tanggalKembali     DateTime?
   kondisiSaatKembali String?
-  adminPencatatId    String   
 }

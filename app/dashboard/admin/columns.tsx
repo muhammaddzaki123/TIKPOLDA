@@ -1,3 +1,5 @@
+// app/dashboard/admin/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -10,10 +12,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { AdminUser } from '@/data/mock-admin-data';
+import { User } from '@prisma/client';
 
-export const columns: ColumnDef<AdminUser>[] = [
+// PERBAIKAN: Mengganti ColumnMeta menjadi TableMeta
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> {
+    openResetDialog: (user: TData) => void;
+  }
+}
+
+export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'nama',
     header: 'Nama Lengkap',
@@ -23,19 +31,22 @@ export const columns: ColumnDef<AdminUser>[] = [
     header: 'Email',
   },
   {
-    accessorKey: 'satker',
-    header: 'Satuan Kerja',
-  },
-  {
-    accessorKey: 'role',
-    header: 'Role',
+    accessorKey: 'createdAt',
+    header: 'Tanggal Dibuat',
     cell: ({ row }) => {
-      return <Badge variant="outline">{row.getValue('role')}</Badge>;
+      const date = new Date(row.getValue('createdAt'));
+      return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
     },
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const user = row.original;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -46,9 +57,15 @@ export const columns: ColumnDef<AdminUser>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Akun</DropdownMenuItem>
-            <DropdownMenuItem>Reset Password</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Nonaktifkan Akun</DropdownMenuItem>
+            <DropdownMenuItem
+              // Sekarang akses ini sudah valid secara tipe
+              onClick={() => table.options.meta?.openResetDialog(user)}
+            >
+              Reset Password
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              Hapus Akun
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

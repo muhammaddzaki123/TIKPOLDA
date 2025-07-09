@@ -1,3 +1,5 @@
+// app/dashboard/inventaris/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -11,9 +13,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { HT } from '@/data/mock-ht-data'; // Import tipe data
+import { HT, Satker } from '@prisma/client'; // Import tipe data dari Prisma
 
-export const columns: ColumnDef<HT>[] = [
+// Tipe data gabungan untuk tabel
+export type HTWithSatker = HT & {
+  satker: Satker;
+};
+
+export const columns: ColumnDef<HTWithSatker>[] = [
   {
     accessorKey: 'kodeHT',
     header: 'Kode HT',
@@ -27,7 +34,7 @@ export const columns: ColumnDef<HT>[] = [
     header: 'Merk',
   },
   {
-    accessorKey: 'satker',
+    accessorKey: 'satker.nama', // <-- Ambil nama dari relasi
     header: 'Satuan Kerja',
   },
   {
@@ -35,13 +42,13 @@ export const columns: ColumnDef<HT>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
-      const variant =
-        status === 'Tersedia'
-          ? 'default'
-          : status === 'Dipinjam'
-          ? 'destructive'
-          : 'secondary';
-      return <Badge variant={variant}>{status}</Badge>;
+      
+      let variant: "default" | "secondary" | "destructive" | "outline" = 'outline';
+      if (status === 'DIPINJAM') variant = 'default';
+      else if (status === 'TERSEDIA') variant = 'secondary';
+      else if (status === 'RUSAK') variant = 'destructive';
+
+      return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
     },
   },
   {
@@ -59,9 +66,7 @@ export const columns: ColumnDef<HT>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(ht.kodeHT)}>
-              Lihat Detail
-            </DropdownMenuItem>
+            <DropdownMenuItem>Lihat Detail</DropdownMenuItem>
             <DropdownMenuItem>Edit Data</DropdownMenuItem>
             <DropdownMenuItem className="text-red-600">Hapus</DropdownMenuItem>
           </DropdownMenuContent>
