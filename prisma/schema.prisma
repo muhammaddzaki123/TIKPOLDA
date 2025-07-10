@@ -9,80 +9,137 @@ datasource db {
   directUrl = env("directUrl")
 }
 
-// Model untuk Autentikasi
+// Model untuk Pengguna (Super Admin & Admin Satker)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   nama      String
   password  String
-  role      Role     @default(ADMIN_SATKER)
+  role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  satker   Satker? @relation(fields: [satkerId], references: [id])
+  satkerId String? @unique
 }
+
+// Model untuk Satuan Kerja
+model Satker {
+  id        String   @id @default(cuid())
+  kode      String   @unique
+  nama      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  admin User?
+  personil                Personil[]
+  ht                      HT[]
+  pengajuanPeminjaman     PengajuanPeminjaman[]
+  pengajuanMutasiAsal     PengajuanMutasi[]     @relation("SatkerAsal")
+  pengajuanMutasiTujuan   PengajuanMutasi[]     @relation("SatkerTujuan")
+}
+
+// Model untuk Personil/Anggota
+model Personil {
+  id         String   @id @default(cuid())
+  nrp        String   @unique
+  nama       String
+  jabatan    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  satker   Satker @relation(fields: [satkerId], references: [id], onDelete: Cascade)
+  satkerId String
+  peminjaman      Peminjaman[]
+  pengajuanMutasi PengajuanMutasi[]
+}
+
+// Model untuk Aset Handy Talky (HT)
+model HT {
+  id             String   @id @default(cuid())
+  serialNumber   String   @unique
+  kodeHT         String   @unique
+  merk           String
+  jenis          String
+  tahunBuat      Int
+  tahunPeroleh   Int
+  status         HTStatus @default(BAIK) // Status fisik dari HT
+  catatanKondisi String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  satker   Satker @relation(fields: [satkerId], references: [id], onDelete: Cascade)
+  satkerId String
+
+  // Relasi: Sebuah HT bisa memiliki banyak riwayat peminjaman
+  peminjaman Peminjaman[]
+
+  @@map("HT")
+}
+
+
+// --- MODEL TRANSAKSI & PENGAJUAN ---
+
+// Model untuk mencatat riwayat peminjaman HT
+model Peminjaman {
+  id                 String    @id @default(cuid())
+  tanggalPinjam      DateTime  @default(now())
+  tanggalKembali     DateTime?
+  kondisiSaatPinjam  String
+  kondisiSaatKembali String?
+  catatan            String?
+
+  ht   HT     @relation(fields: [htId], references: [id], onDelete: Cascade)
+  htId String
+
+  personil   Personil @relation(fields: [personilId], references: [id], onDelete: Cascade)
+  personilId String
+}
+
+// Model untuk mencatat pengajuan peminjaman HT oleh Admin Satker
+model PengajuanPeminjaman {
+  id           String          @id @default(cuid())
+  keperluan    String
+  jumlah       Int
+  status       PengajuanStatus @default(PENDING)
+  catatanAdmin String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  satkerPengaju Satker @relation(fields: [satkerId], references: [id], onDelete: Cascade)
+  satkerId      String
+}
+
+// Model untuk mencatat pengajuan mutasi personil
+model PengajuanMutasi {
+  id             String          @id @default(cuid())
+  alasan         String
+  status         PengajuanStatus @default(PENDING)
+  catatanAdmin   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  personil     Personil @relation(fields: [personilId], references: [id])
+  personilId   String
+  
+  satkerAsal   Satker @relation("SatkerAsal", fields: [satkerAsalId], references: [id])
+  satkerAsalId String
+  
+  satkerTujuan Satker @relation("SatkerTujuan", fields: [satkerTujuanId], references: [id])
+  satkerTujuanId String
+}
+
 
 enum Role {
   SUPER_ADMIN
   ADMIN_SATKER
 }
 
-// Model untuk Inventaris
-model Satker {
-  id             String      @id @default(cuid())
-  kode           String      @unique
-  nama           String
-  personil       Personil[]
-  ht             HT[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-}
-
-model Personil {
-  id              String        @id @default(cuid())
-  nrp             String        @unique
-  nama            String
-  jabatan         String
-  satker          Satker        @relation(fields: [satkerId], references: [id])
-  satkerId        String
-  peminjaman      Peminjaman[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model HT {
-  id              String        @id @default(cuid())
-  serialNumber    String        @unique
-  kodeHT          String        @unique
-  merk            String
-  jenis           String
-  tahunBuat       Int
-  tahunPeroleh    Int
-  status          HTStatus      @default(TERSEDIA)
-  satker          Satker        @relation(fields: [satkerId], references: [id])
-  satkerId        String
-  peminjaman      Peminjaman[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@map("HT")
-}
-
 enum HTStatus {
-  TERSEDIA
-  DIPINJAM
-  RUSAK
+  BAIK
+  RUSAK_RINGAN
+  RUSAK_BERAT
   HILANG
 }
 
-// Model untuk Transaksi
-model Peminjaman {
-  id                 String     @id @default(cuid())
-  ht                 HT         @relation(fields: [htId], references: [id])
-  htId               String
-  personil           Personil   @relation(fields: [personilId], references: [id])
-  personilId         String
-  adminPencatatId    String     // ID User Admin yang mencatat
-  kondisiSaatPinjam  String
-  tanggalPinjam      DateTime   @default(now())
-  tanggalKembali     DateTime?
-  kondisiSaatKembali String?
+enum PengajuanStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

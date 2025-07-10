@@ -1,5 +1,3 @@
-// app/api/auth/[...nextauth]/route.ts
-
 import NextAuth, { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
@@ -17,7 +15,7 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
-          return null;
+          return null; 
         }
 
         const user = await prisma.user.findUnique({
@@ -55,6 +53,7 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;

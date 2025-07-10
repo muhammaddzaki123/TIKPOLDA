@@ -1,3 +1,5 @@
+// app/dashboard/satker/page.tsx
+
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,11 +13,26 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { HTDataTable } from '@/components/ht-data-table'; // Pakai ulang lagi komponen tabel kita
-import { satkerData } from '@/data/mock-satker-data';
+import { HTDataTable } from '@/components/ht-data-table';
 import { columns } from './columns';
+import { PrismaClient } from '@prisma/client';
+import { addSatker } from './actions'; // Import Server Action
 
-export default function SatkerManagementPage() {
+const prisma = new PrismaClient();
+
+// Fungsi untuk mengambil data Satker dari database
+async function getSatkerData() {
+  const data = await prisma.satker.findMany({
+    orderBy: {
+      nama: 'asc',
+    },
+  });
+  return data;
+}
+
+export default async function SatkerManagementPage() {
+  const satkerData = await getSatkerData();
+
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between">
@@ -27,30 +44,28 @@ export default function SatkerManagementPage() {
               Tambah Satker Baru
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Tambah Satker Baru</DialogTitle>
               <DialogDescription>
                 Buat data Satuan Kerja baru. Pastikan data yang dimasukkan sudah benar.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="kode" className="text-right">
-                  Kode Satker
-                </Label>
-                <Input id="kode" placeholder="e.g., DITLANTAS" className="col-span-3" />
+            <form action={addSatker}>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="kode">Kode Satker</Label>
+                  <Input id="kode" name="kode" placeholder="Contoh: DITLANTAS" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nama">Nama Lengkap Satker</Label>
+                  <Input id="nama" name="nama" placeholder="Contoh: Direktorat Lalu Lintas" required />
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="nama" className="text-right">
-                  Nama Lengkap
-                </Label>
-                <Input id="nama" placeholder="e.g., Direktorat Lalu Lintas" className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Simpan</Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="submit">Simpan</Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -58,11 +73,7 @@ export default function SatkerManagementPage() {
         Master data untuk semua Satuan Kerja yang terdaftar dalam sistem.
       </p>
 
-      {/* Render komponen tabel data */}
       <div className="rounded-lg border bg-white p-4 shadow-sm">
-        {/* Catatan: Untuk pencarian, komponen HTDataTable saat ini mencari 'serialNumber'.
-            Untuk aplikasi nyata, ini perlu dibuat dinamis.
-            Namun untuk UI, ini sudah cukup. */}
         <HTDataTable columns={columns} data={satkerData} />
       </div>
     </div>
