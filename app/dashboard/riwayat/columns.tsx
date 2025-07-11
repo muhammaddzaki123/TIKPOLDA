@@ -1,68 +1,58 @@
+// app/dashboard/riwayat/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { Peminjaman } from '@/data/mock-history-data';
-import { MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Peminjaman, HT, Personil, Satker } from '@prisma/client';
 
-export const columns: ColumnDef<Peminjaman>[] = [
+// Tipe data gabungan yang kompleks untuk menampilkan semua detail
+export type PeminjamanWithDetails = Peminjaman & {
+  ht: HT;
+  personil: Personil & {
+    satker: Satker;
+  };
+};
+
+export const columns: ColumnDef<PeminjamanWithDetails>[] = [
   {
-    accessorKey: 'kodeHT',
+    accessorKey: 'ht.kodeHT',
     header: 'Kode HT',
   },
   {
-    accessorKey: 'namaPeminjam',
+    accessorKey: 'personil.nama',
     header: 'Nama Peminjam',
   },
   {
-    accessorKey: 'satker',
+    accessorKey: 'personil.nrp',
+    header: 'NRP Peminjam',
+  },
+  {
+    accessorKey: 'personil.satker.nama',
     header: 'Satuan Kerja',
   },
   {
     accessorKey: 'tanggalPinjam',
-    header: 'Tgl Pinjam',
+    header: 'Tgl. Pinjam',
+    cell: ({ row }) => new Date(row.getValue('tanggalPinjam')).toLocaleDateString('id-ID'),
   },
   {
     accessorKey: 'tanggalKembali',
-    header: 'Tgl Kembali',
+    header: 'Tgl. Kembali',
     cell: ({ row }) => {
-      const tgl = row.getValue('tanggalKembali');
-      return tgl ? tgl : <span className="text-slate-400">-</span>;
+      const tglKembali = row.getValue('tanggalKembali') as Date | null;
+      return tglKembali ? new Date(tglKembali).toLocaleDateString('id-ID') : '-';
     },
   },
   {
-    accessorKey: 'status',
+    id: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
-      const variant = status === 'Dikembalikan' ? 'default' : 'destructive';
-      return <Badge variant={variant}>{status}</Badge>;
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Buka menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Lihat Detail Tanda Terima</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      const isDikembalikan = !!row.original.tanggalKembali;
+      return isDikembalikan ? (
+        <Badge variant="default">Dikembalikan</Badge>
+      ) : (
+        <Badge variant="destructive">Masih Dipinjam</Badge>
       );
     },
   },
