@@ -1,11 +1,16 @@
 // types/custom.d.ts
 
-import { Satker, User, Personil } from '@prisma/client';
+import { Satker, User, Personil, HT, Peminjaman } from '@prisma/client';
 import '@tanstack/react-table';
 
 // Definisikan tipe gabungan di sini agar bisa digunakan di banyak tempat
 export type AdminWithSatker = User & { satker: Satker | null };
 export type PersonilWithSatker = Personil & { satker: Satker };
+
+// Tipe baru untuk detail inventaris di halaman satker admin
+export type HtWithPeminjaman = HT & {
+  peminjaman: (Peminjaman & { personil: Personil })[];
+};
 
 /**
  * Perluas tipe TableMeta dari @tanstack/react-table.
@@ -21,5 +26,10 @@ declare module '@tanstack/react-table' {
 
     // Fungsi untuk tabel personil
     openMutasiDialog?: (personil: TData) => void;
+
+    // --- TAMBAHKAN FUNGSI BARU DI SINI ---
+    // Fungsi untuk tabel inventaris satker
+    openUpdateStatusDialog?: (ht: TData) => void;
+    openDeleteHtDialog?: (ht: TData) => void;
   }
 }

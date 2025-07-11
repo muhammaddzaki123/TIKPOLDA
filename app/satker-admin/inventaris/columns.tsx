@@ -1,55 +1,67 @@
+// app/satker-admin/inventaris/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { HT, Personil } from '@prisma/client';
+import { HtWithPeminjaman } from '@/types/custom';
 
-// Tipe data kustom yang akan kita gunakan untuk menampilkan data di tabel.
-// Ini akan dibuat di dalam file page.tsx.
-export type InventarisDisplay = HT & {
-  pemegangSaatIni: Personil | null;
-};
-
-export const columns: ColumnDef<InventarisDisplay>[] = [
-  { accessorKey: 'kodeHT', header: 'Kode HT' },
-  { accessorKey: 'merk', header: 'Merk' },
+export const columns: ColumnDef<HtWithPeminjaman>[] = [
   {
-    accessorKey: 'pemegangSaatIni',
-    header: 'Pemegang Saat Ini',
-    cell: ({ row }) => {
-      // Akses nama dari data relasi yang sudah kita siapkan
-      const pemegang = row.original.pemegangSaatIni;
-      return pemegang ? pemegang.nama : <span className="text-slate-400">-</span>;
-    },
+    accessorKey: 'kodeHT',
+    header: 'Kode HT',
   },
   {
-    header: 'NRP Pemegang',
+    accessorKey: 'merk',
+    header: 'Merk',
+  },
+  {
+    id: 'statusPeminjaman',
+    header: 'Status',
     cell: ({ row }) => {
-      // Akses NRP dari data relasi
-      const pemegang = row.original.pemegangSaatIni;
-      return pemegang ? pemegang.nrp : '-';
+      const isDipinjam = row.original.peminjaman.length > 0;
+      return isDipinjam ? (
+        <Badge variant="destructive">Dipinjam</Badge>
+      ) : (
+        <Badge variant="default">Tersedia</Badge>
+      );
     },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Kondisi Fisik',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
-      
-      let variant: "default" | "secondary" | "destructive" | "outline" = 'outline';
-      if (status === 'DIPINJAM') variant = 'default';
-      else if (status === 'TERSEDIA') variant = 'secondary';
-      else if (status === 'RUSAK') variant = 'destructive';
-
+      const status = row.original.status;
+      let variant: 'outline' | 'secondary' | 'destructive' = 'outline';
+      if (status === 'RUSAK_RINGAN' || status === 'RUSAK_BERAT') variant = 'secondary';
+      if (status === 'HILANG') variant = 'destructive';
       return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
     },
   },
   {
-    id: 'actions',
+    id: 'pemegang',
+    header: 'Pemegang Saat Ini',
     cell: ({ row }) => {
+      const pemegang = row.original.peminjaman[0]?.personil;
+      return pemegang ? pemegang.nama : '-';
+    },
+  },
+  {
+    id: 'actions',
+    cell: ({ row, table }) => {
+      const ht = row.original;
+      const isDipinjam = ht.peminjaman.length > 0;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -60,8 +72,17 @@ export const columns: ColumnDef<InventarisDisplay>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Lihat Riwayat HT</DropdownMenuItem>
-            <DropdownMenuItem>Laporkan Kerusakan</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => table.options.meta?.openUpdateStatusDialog?.(ht)}>
+              Update Kondisi Fisik
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={isDipinjam} // Tidak bisa hapus jika sedang dipinjam
+              className="text-red-600 focus:text-red-600"
+              onClick={() => !isDipinjam && table.options.meta?.openDeleteHtDialog?.(ht)}
+            >
+              Hapus HT
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
