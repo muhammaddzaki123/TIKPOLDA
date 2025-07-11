@@ -1,6 +1,7 @@
+// app/satker-admin/layout.tsx
+
 import SidebarSatker from '@/components/sidebar-satker';
-import HeaderDashboard from '@/components/header-dashboard'; 
-import AuthProvider from '@/components/auth-provider';
+import HeaderDashboard from '@/components/header-dashboard';
 
 export default function SatkerAdminLayout({
   children,
