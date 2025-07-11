@@ -1,7 +1,7 @@
 // app/dashboard/page.tsx
 
 import { PrismaClient, HTStatus } from '@prisma/client';
-import StatCard from '@/components/stat-card'; // Pastikan path ini benar
+import StatCard from '@/components/stat-card';
 import {
   Building,
   RadioTower,
@@ -14,24 +14,18 @@ import {
 
 const prisma = new PrismaClient();
 
-// Fungsi untuk mengambil data statistik dengan cara yang lebih aman
 async function getDashboardStats() {
-  // Ambil setiap statistik secara terpisah agar mudah dilacak
   const satkerCount = await prisma.satker.count();
   const personilCount = await prisma.personil.count();
   const htCount = await prisma.hT.count();
-  
-  // Hitung jumlah HT yang sedang aktif dipinjam
+
   const dipinjamCount = await prisma.peminjaman.count({
     where: { tanggalKembali: null },
   });
 
-  // Hitung jumlah HT berdasarkan status fisiknya
   const rusakRinganCount = await prisma.hT.count({ where: { status: HTStatus.RUSAK_RINGAN } });
   const rusakBeratCount = await prisma.hT.count({ where: { status: HTStatus.RUSAK_BERAT } });
   const hilangCount = await prisma.hT.count({ where: { status: HTStatus.HILANG } });
-
-  // Hitung HT yang tersedia (total HT dikurangi yang dipinjam)
   const tersediaCount = htCount - dipinjamCount;
 
   return {
