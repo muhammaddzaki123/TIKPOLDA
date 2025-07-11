@@ -1,6 +1,7 @@
 import { Role } from '@prisma/client';
 import NextAuth, { DefaultSession } from 'next-auth';
 import { JWT, DefaultJWT } from 'next-auth/jwt';
+import '@tanstack/react-table';
 
 declare module 'next-auth' {
   interface User {
@@ -25,3 +26,4 @@ declare module 'next-auth/jwt' {
     nama: string;
   }
 }
+

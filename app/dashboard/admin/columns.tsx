@@ -1,30 +1,22 @@
-// app/dashboard/admin/columns.tsx
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { User } from '@prisma/client';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AdminWithSatker } from '@/types/custom'; // <-- Impor dari file terpusat
 
-// PERBAIKAN: Mengganti ColumnMeta menjadi TableMeta
-declare module '@tanstack/react-table' {
-  interface TableMeta<TData> {
-    openResetDialog: (user: TData) => void;
-  }
-}
+// Blok "declare module" sudah dihapus dari sini
 
-export const columns: ColumnDef<User>[] = [
+export const columns: ColumnDef<AdminWithSatker>[] = [
   {
     accessorKey: 'nama',
-    header: 'Nama Lengkap',
+    header: 'Nama Admin',
+  },
+  {
+    accessorKey: 'satker.nama',
+    header: 'Satuan Kerja Dikelola',
+    cell: ({ row }) => row.original.satker?.nama || '-',
   },
   {
     accessorKey: 'email',
@@ -33,20 +25,12 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'createdAt',
     header: 'Tanggal Dibuat',
-    cell: ({ row }) => {
-      const date = new Date(row.getValue('createdAt'));
-      return date.toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    },
+    cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }),
   },
   {
     id: 'actions',
     cell: ({ row, table }) => {
       const user = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -57,14 +41,12 @@ export const columns: ColumnDef<User>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem
-              // Sekarang akses ini sudah valid secara tipe
-              onClick={() => table.options.meta?.openResetDialog(user)}
-            >
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => table.options.meta?.openResetDialog?.(user)}>
               Reset Password
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              Hapus Akun
+            <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700" onClick={() => table.options.meta?.openDeleteDialog?.(user)}>
+              Hapus
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

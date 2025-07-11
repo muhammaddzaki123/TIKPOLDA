@@ -1,3 +1,5 @@
+// middleware.ts
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
@@ -6,37 +8,44 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
-  // 1. Jika pengguna BELUM LOGIN dan mencoba mengakses halaman yang dilindungi
-  if (!token && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
-    const loginUrl = new URL('/login', req.url);
-    return NextResponse.redirect(loginUrl);
-  }
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
 
-  // 2. Jika pengguna SUDAH LOGIN
+  // Jika pengguna SUDAH LOGIN
   if (token) {
-    const role = token.role as string;
-
-    if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
-      const dashboardUrl = role === 'SUPER_ADMIN' ? '/dashboard' : '/satker-admin';
+    // Jika mencoba membuka halaman login/register, arahkan ke dashboard yang sesuai
+    if (isAuthPage) {
+      const dashboardUrl = token.role === 'SUPER_ADMIN' ? '/dashboard' : '/satker-admin';
       return NextResponse.redirect(new URL(dashboardUrl, req.url));
     }
 
-    if (role === 'SUPER_ADMIN' && pathname.startsWith('/satker-admin')) {
+    // Jika SUPER_ADMIN mencoba akses halaman Admin Satker
+    if (token.role === 'SUPER_ADMIN' && pathname.startsWith('/satker-admin')) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
-    if (role === 'ADMIN_SATKER' && pathname.startsWith('/dashboard')) {
+    // Jika ADMIN_SATKER mencoba akses halaman Super Admin
+    if (token.role === 'ADMIN_SATKER' && pathname.startsWith('/dashboard')) {
       return NextResponse.redirect(new URL('/satker-admin', req.url));
     }
+
+    // Izinkan akses jika sudah login dan path-nya benar
+    return NextResponse.next();
   }
 
+  // Jika pengguna BELUM LOGIN dan mencoba mengakses halaman selain login/register
+  if (!token && !isAuthPage) {
+    // Arahkan ke halaman login
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  // Izinkan akses ke halaman login/register jika belum login
   return NextResponse.next();
 }
 
-// Konfigurasi path mana saja yang akan dijalankan oleh middleware ini
+// Konfigurasi matcher yang lebih sederhana dan aman
 export const config = {
   matcher: [
-
-    '/((?!api|_next/static|_next/image|icon.svg|gambarawal.svg|favicon.ico).*)',
+    // Jalankan middleware pada semua path KECUALI yang ada di daftar di bawah
+    '/((?!api|_next/static|_next/image|favicon.ico|gambarawal.svg|icon.svg).*)',
   ],
 };

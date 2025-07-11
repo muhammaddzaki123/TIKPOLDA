@@ -1,3 +1,5 @@
+// components/sidebar.tsx
+
 'use client';
 
 import Link from 'next/link';
@@ -5,17 +7,19 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  Warehouse,
   Users,
-  Building2,
+  Building,
+  RadioTower,
+  UserCheck,
   History,
 } from 'lucide-react';
 
 const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Inventaris HT', href: '/dashboard/inventaris', icon: Warehouse },
-  { name: 'Manajemen Admin', href: '/dashboard/admin', icon: Users },
-  { name: 'Manajemen Satker', href: '/dashboard/satker', icon: Building2 },
+  { name: 'Manajemen Admin & Satker', href: '/dashboard/admin', icon: Users },
+  { name: 'Pemantauan Satker', href: '/dashboard/satker', icon: Building },
+  { name: 'Manajemen Inventaris', href: '/dashboard/inventaris', icon: RadioTower },
+  { name: 'Manajemen Personil', href: '/dashboard/personil', icon: UserCheck },
   { name: 'Riwayat Peminjaman', href: '/dashboard/riwayat', icon: History },
 ];
 
@@ -25,7 +29,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden w-64 flex-col bg-[#0d2436] p-4 text-white md:flex">
       <div className="mb-8 flex items-center justify-center space-x-3 border-b border-gray-700 pb-6">
-        <Image src="/icon.svg" width={40} height={40} alt="Logo" />
+        <Image src="/icon.svg" width={40} height={40} alt="Logo POLDA NTB" />
         <span className="text-lg font-semibold">Logistik POLDA NTB</span>
       </div>
       <nav className="flex-1">
@@ -48,7 +52,6 @@ export default function Sidebar() {
         </ul>
       </nav>
       <div className="mt-auto border-t border-gray-700 pt-4">
-        {/* Bisa ditambahkan info user atau tombol logout di sini */}
         <p className="text-center text-xs text-gray-400">© 2025 Polda NTB</p>
       </div>
     </aside>

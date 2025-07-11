@@ -6,90 +6,110 @@ import { PrismaClient, Role } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
 
-// Inisialisasi Prisma Client untuk berinteraksi dengan database
 const prisma = new PrismaClient();
 
+/**
+ * Aksi untuk menambah Admin Satker baru beserta entitas Satker-nya.
+ * Dilakukan dalam satu transaksi untuk memastikan data konsisten.
+ */
 export async function addAdminSatker(formData: FormData) {
-  const nama = formData.get('nama') as string;
+  const namaAdmin = formData.get('namaAdmin') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
+  const kodeSatker = formData.get('kodeSatker') as string;
+  const namaSatker = formData.get('namaSatker') as string;
 
-  // Validasi dasar untuk memastikan semua field terisi
-  if (!nama || !email || !password) {
-    throw new Error('Nama, email, dan password wajib diisi.');
+  if (!namaAdmin || !email || !password || !kodeSatker || !namaSatker) {
+    throw new Error('Semua kolom wajib diisi.');
   }
 
-  // Melakukan hashing pada password sebelum disimpan ke database
   const hashedPassword = await hash(password, 10);
 
   try {
-    // Membuat user baru di database
-    await prisma.user.create({
-      data: {
-        nama,
-        email,
-        password: hashedPassword,
-        role: Role.ADMIN_SATKER, 
-      },
+    await prisma.$transaction(async (tx) => {
+      const newSatker = await tx.satker.create({
+        data: { kode: kodeSatker, nama: namaSatker },
+      });
+
+      await tx.user.create({
+        data: {
+          nama: namaAdmin,
+          email,
+          password: hashedPassword,
+          role: Role.ADMIN_SATKER,
+          satkerId: newSatker.id,
+        },
+      });
     });
   } catch (error: any) {
     if (error.code === 'P2002') {
-      throw new Error('Email sudah terdaftar. Gunakan email lain.');
+      const target = error.meta?.target as string[];
+      if (target?.includes('email')) throw new Error('Gagal: Email sudah terdaftar.');
+      if (target?.includes('kode')) throw new Error('Gagal: Kode Satker sudah terdaftar.');
     }
-
-    console.error('Gagal membuat akun admin:', error);
-    throw new Error('Terjadi kesalahan saat membuat akun admin.');
+    console.error(error);
+    throw new Error('Terjadi kesalahan saat membuat akun dan Satker.');
   }
 
+  // Segarkan data di halaman admin dan pemantauan satker
   revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/satker');
 }
 
+/**
+ * Aksi untuk mereset password seorang Admin Satker.
+ */
 export async function resetPassword(formData: FormData) {
   const userId = formData.get('userId') as string;
   const newPassword = formData.get('newPassword') as string;
 
-  // Validasi dasar
-  if (!userId || !newPassword) {
-    throw new Error('ID Pengguna dan Password baru tidak boleh kosong.');
-  }
+  if (!userId || !newPassword) throw new Error('Password baru tidak boleh kosong.');
 
-  // Melakukan hashing pada password baru
   const hashedPassword = await hash(newPassword, 10);
 
   try {
-    // Memperbarui password user di database berdasarkan ID-nya
     await prisma.user.update({
       where: { id: userId },
-      data: {
-        password: hashedPassword,
-      },
+      data: { password: hashedPassword },
     });
   } catch (error) {
-    console.error('Gagal mereset password:', error);
-    throw new Error('Terjadi kesalahan saat mereset password.');
+    throw new Error('Gagal mereset password.');
   }
 
-  // Memuat ulang data di halaman admin
   revalidatePath('/dashboard/admin');
 }
 
-export async function deleteAdmin(formData: FormData) {
-  const userId = formData.get('userId') as string;
+/**
+ * Aksi untuk menghapus akun Admin dan Satker terkait.
+ */
+export async function deleteAdminAndSatker(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { satkerId: true },
+  });
 
-  if (!userId) {
-    throw new Error('ID Pengguna tidak ditemukan.');
+  if (!user || !user.satkerId) {
+    throw new Error('Admin tidak terhubung dengan Satker manapun.');
   }
+  
+  const satkerId = user.satkerId;
 
   try {
-    // Menghapus user dari database berdasarkan ID
-    await prisma.user.delete({
-      where: { id: userId },
+    // Transaksi untuk menghapus semua data terkait secara berurutan
+    await prisma.$transaction(async (tx) => {
+      await tx.peminjaman.deleteMany({ where: { ht: { satkerId } } });
+      await tx.hT.deleteMany({ where: { satkerId } });
+      await tx.pengajuanMutasi.deleteMany({ where: { OR: [{ satkerAsalId: satkerId }, { satkerTujuanId: satkerId }] } });
+      await tx.pengajuanPeminjaman.deleteMany({ where: { satkerId } });
+      await tx.personil.deleteMany({ where: { satkerId } });
+      await tx.user.delete({ where: { id: userId } });
+      await tx.satker.delete({ where: { id: satkerId } });
     });
   } catch (error) {
-    console.error('Gagal menghapus admin:', error);
-    throw new Error('Terjadi kesalahan saat menghapus akun admin.');
+    console.error(error);
+    throw new Error('Gagal menghapus data. Pastikan semua relasi sudah ditangani.');
   }
 
-  // Memuat ulang data di halaman admin
   revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/satker');
 }

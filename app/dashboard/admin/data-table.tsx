@@ -1,60 +1,59 @@
-// app/dashboard/admin/data-table.tsx
-
 'use client';
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { useState, useTransition } from 'react';
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { User } from '@prisma/client';
-import { resetPassword } from './actions';
+import { deleteAdminAndSatker, resetPassword } from './actions';
+import { AdminWithSatker } from '@/types/custom';
 
-interface AdminDataTableProps<TData, TValue> {
+interface AdminDataTableProps<TData extends AdminWithSatker, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function AdminDataTable<TData extends User, TValue>({
+export function AdminDataTable<TData extends AdminWithSatker, TValue>({
   columns,
   data,
 }: AdminDataTableProps<TData, TValue>) {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<TData | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // 'meta' digunakan untuk meneruskan fungsi ke dalam definisi kolom
     meta: {
-      openResetDialog: (user: TData) => {
-        setSelectedUser(user);
+      openResetDialog: (user) => {
+        setSelectedUser(user as TData);
         setIsResetDialogOpen(true);
+      },
+      openDeleteDialog: (user) => {
+        setSelectedUser(user as TData);
+        setIsDeleteDialogOpen(true);
       },
     },
   });
+  
+  const handleResetSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      await resetPassword(formData);
+      setIsResetDialogOpen(false);
+    });
+  };
+
+  const handleDelete = () => {
+    if (!selectedUser?.id) return;
+    startTransition(async () => {
+      await deleteAdminAndSatker(selectedUser.id);
+      setIsDeleteDialogOpen(false);
+    });
+  };
 
   return (
     <>
@@ -65,12 +64,7 @@ export function AdminDataTable<TData extends User, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -79,26 +73,17 @@ export function AdminDataTable<TData extends User, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   Belum ada data Admin Satker.
                 </TableCell>
               </TableRow>
@@ -107,41 +92,35 @@ export function AdminDataTable<TData extends User, TValue>({
         </Table>
       </div>
 
-      {/* Dialog untuk Reset Password */}
       <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Anda akan mereset password untuk admin: <strong>{selectedUser?.nama}</strong>.
-              Password lama akan segera tidak valid.
-            </DialogDescription>
-          </DialogHeader>
-          <form action={resetPassword}>
-            <input type="hidden" name="userId" value={selectedUser?.id} />
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Password Baru</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  required
-                  placeholder="Masukkan password baru"
-                />
-              </div>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Reset Password untuk {selectedUser?.nama}</DialogTitle></DialogHeader>
+          <form action={handleResetSubmit}>
+            <input type="hidden" name="userId" value={selectedUser?.id ?? ''} />
+            <div className="py-4 space-y-2">
+              <Label htmlFor="newPassword">Password Baru</Label>
+              <Input id="newPassword" name="newPassword" type="password" required />
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsResetDialogOpen(false)}
-              >
-                Batal
-              </Button>
-              <Button type="submit">Reset Password</Button>
+              <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(false)}>Batal</Button>
+              <Button type="submit" disabled={isPending}>{isPending ? 'Memproses...' : 'Reset'}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Anda yakin?</DialogTitle>
+            <DialogDescription>
+              Tindakan ini akan menghapus permanen akun <strong>{selectedUser?.nama}</strong> dan Satker terkait. Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Batal</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>{isPending ? 'Menghapus...' : 'Hapus Permanen'}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

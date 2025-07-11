@@ -10,17 +10,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { HT, Satker } from '@prisma/client'; // Import tipe data dari Prisma
+import { HT, Satker, Peminjaman, Personil } from '@prisma/client';
 
-// Tipe data gabungan untuk tabel
-export type HTWithSatker = HT & {
+// Tipe data gabungan untuk menampilkan data relasi yang kompleks
+export type HTWithDetails = HT & {
   satker: Satker;
+  peminjaman: (Peminjaman & { personil: Personil })[];
 };
 
-export const columns: ColumnDef<HTWithSatker>[] = [
+export const columns: ColumnDef<HTWithDetails>[] = [
   {
     accessorKey: 'kodeHT',
     header: 'Kode HT',
@@ -34,28 +36,44 @@ export const columns: ColumnDef<HTWithSatker>[] = [
     header: 'Merk',
   },
   {
-    accessorKey: 'satker.nama', // <-- Ambil nama dari relasi
-    header: 'Satuan Kerja',
+    accessorKey: 'satker.nama',
+    header: 'Penempatan Satker',
+  },
+  {
+    id: 'statusPeminjaman',
+    header: 'Status',
+    cell: ({ row }) => {
+      const isDipinjam = row.original.peminjaman.length > 0;
+      if (isDipinjam) {
+        return <Badge variant="destructive">Dipinjam</Badge>;
+      }
+      return <Badge variant="default">Tersedia</Badge>;
+    },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Kondisi Fisik',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
-      
-      let variant: "default" | "secondary" | "destructive" | "outline" = 'outline';
-      if (status === 'DIPINJAM') variant = 'default';
-      else if (status === 'TERSEDIA') variant = 'secondary';
-      else if (status === 'RUSAK') variant = 'destructive';
-
-      return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
+        const status = row.original.status;
+        let variant: "outline" | "secondary" | "destructive" = "outline";
+        if (status === 'RUSAK_RINGAN' || status === 'RUSAK_BERAT') variant = 'secondary';
+        if (status === 'HILANG') variant = 'destructive';
+        
+        return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>
+    }
+  },
+  {
+    id: 'pemegang',
+    header: 'Pemegang Saat Ini',
+    cell: ({ row }) => {
+      const pemegang = row.original.peminjaman[0]?.personil;
+      return pemegang ? `${pemegang.nama} (${pemegang.nrp})` : '-';
     },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
       const ht = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -66,9 +84,11 @@ export const columns: ColumnDef<HTWithSatker>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Lihat Detail</DropdownMenuItem>
-            <DropdownMenuItem>Edit Data</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Hapus</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Edit Data HT</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600 focus:text-red-600">
+              Hapus HT
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
