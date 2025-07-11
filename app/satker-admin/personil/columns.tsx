@@ -1,27 +1,38 @@
+// app/satker-admin/personil/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Personil } from '@/data/mock-personil-data'; // Menggunakan tipe data dari file mock yang sudah ada
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Personil } from '@prisma/client';
 
 export const columns: ColumnDef<Personil>[] = [
-  {
-    accessorKey: 'nrp',
-    header: 'NRP (Nomor Registrasi Pokok)',
-  },
   {
     accessorKey: 'nama',
     header: 'Nama Lengkap',
   },
   {
+    accessorKey: 'nrp',
+    header: 'NRP (Nomor Registrasi Pokok)',
+  },
+  {
     accessorKey: 'jabatan',
-    header: 'Jabatan/Pangkat',
+    header: 'Jabatan / Pangkat',
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const personil = row.original;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -32,8 +43,16 @@ export const columns: ColumnDef<Personil>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Data Personil</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Hapus Data</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => table.options.meta?.openEditPersonilDialog?.(personil)}>
+              Edit Data Personil
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-600 focus:text-red-600"
+              onClick={() => table.options.meta?.openDeletePersonilDialog?.(personil)}
+            >
+              Hapus Data
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
