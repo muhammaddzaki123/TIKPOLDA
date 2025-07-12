@@ -1,5 +1,3 @@
-// app/dashboard/inventaris/columns.tsx
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -16,19 +14,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { HT, Satker, Peminjaman, Personil, PeminjamanSatker } from '@prisma/client';
 
+// Tipe data gabungan untuk menampilkan semua detail yang diperlukan
 export type HtDetails = HT & {
   satker: Satker | null;
   peminjaman: (Peminjaman & { personil: Personil })[];
   peminjamanOlehSatker: PeminjamanSatker[];
 };
-
-// Definisikan tipe meta untuk tabel inventaris
-declare module '@tanstack/react-table' {
-  interface TableMeta<TData> {
-    openPinjamkanDialog?: (ht: TData) => void;
-    openDeleteDialog?: (ht: TData) => void;
-  }
-}
 
 // Kolom untuk tabel Inventaris Gudang Pusat
 export const gudangColumns: ColumnDef<HtDetails>[] = [
@@ -39,39 +30,21 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
   {
     id: 'actions',
     cell: ({ row, table }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Buka menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => table.options.meta?.openPinjamkanDialog?.(row.original)}>
-            Pinjamkan ke Satker
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => table.options.meta?.openDeleteDialog?.(row.original)}>
-            Hapus
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button size="sm" onClick={() => table.options.meta?.openPinjamkanDialog?.(row.original)}>
+        Pinjamkan
+      </Button>
     ),
   },
 ];
 
 // Kolom untuk tabel Inventaris Terdistribusi
 export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
-  // ... (tidak ada perubahan di sini)
   { accessorKey: 'kodeHT', header: 'Kode HT' },
   { accessorKey: 'merk', header: 'Merk' },
   {
     accessorKey: 'satker.nama',
     header: 'Penempatan',
-    filterFn: (row, id, value) => { // Fungsi custom untuk filter berdasarkan relasi
-      return value.includes(row.original.satker?.id);
-    },
+    cell: ({ row }) => row.original.satker?.nama || '-',
   },
   {
     id: 'statusPeminjaman',
@@ -103,4 +76,3 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
     cell: ({ row }) => row.original.peminjaman[0]?.personil?.nama || '-',
   },
 ];
-

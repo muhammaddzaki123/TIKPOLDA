@@ -91,39 +91,3 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
 }
-
-/**
- * --- FUNGSI BARU YANG DITAMBAHKAN DAN DIPERLUKAN ---
- * Aksi untuk menghapus data HT.
- */
-export async function deleteHT(htId: string) {
-    if (!htId) {
-        throw new Error('ID HT tidak valid.');
-    }
-
-    try {
-        // Validasi: Pastikan HT tidak sedang dipinjam oleh Satker
-        const peminjamanSatkerAktif = await prisma.peminjamanSatker.count({
-            where: { htId: htId, tanggalKembali: null }
-        });
-
-        if (peminjamanSatkerAktif > 0) {
-            throw new Error('HT tidak dapat dihapus karena sedang dipinjamkan ke Satker.');
-        }
-
-        // Hapus semua riwayat terkait
-        await prisma.peminjaman.deleteMany({ where: { htId: htId } });
-        await prisma.peminjamanSatker.deleteMany({ where: { htId: htId } });
-
-        // Hapus HT
-        await prisma.hT.delete({ where: { id: htId } });
-
-    } catch (error: any) {
-        if (error instanceof Error) throw error;
-        console.error('Gagal menghapus HT:', error);
-        throw new Error('Gagal menghapus data HT.');
-    }
-
-    revalidatePath('/dashboard/inventaris');
-    revalidatePath('/dashboard/satker');
-}

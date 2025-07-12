@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PrismaClient, HTStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { addHtBySuperAdmin } from './actions';
 import { gudangColumns, terdistribusiColumns, HtDetails } from './columns';
 import { InventarisDataTable } from '@/components/data-table';
@@ -19,7 +19,7 @@ async function getInventarisData() {
     include: {
       satker: true,
       peminjaman: { where: { tanggalKembali: null }, include: { personil: true } },
-      peminjamanOlehSatker: { where: { tanggalKembali: null } },
+      peminjamanOlehSatker: true
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -28,22 +28,12 @@ async function getInventarisData() {
   const terdistribusiData = allHt.filter(ht => ht.satkerId);
   
   const satkerList = await prisma.satker.findMany({ orderBy: { nama: 'asc' } });
-  
-  // Ambil data unik untuk filter
-  const merkList = await prisma.hT.findMany({ select: { merk: true }, distinct: ['merk'] });
-  const statusEnumValues = Object.values(HTStatus).map(s => ({ value: s, label: s.replace('_', ' ') }));
 
-  return { 
-    gudangData, 
-    terdistribusiData, 
-    satkerList,
-    merkOptions: merkList.map(item => ({ value: item.merk, label: item.merk })),
-    statusOptions: statusEnumValues
-  };
+  return { gudangData, terdistribusiData, satkerList };
 }
 
 export default async function InventarisManagementPage() {
-  const { gudangData, terdistribusiData, satkerList, merkOptions, statusOptions } = await getInventarisData();
+  const { gudangData, terdistribusiData, satkerList } = await getInventarisData();
 
   return (
     <div className="w-full space-y-6">
@@ -88,10 +78,10 @@ export default async function InventarisManagementPage() {
           <TabsTrigger value="gudang">Inventaris Gudang Pusat ({gudangData.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="terdistribusi" className="rounded-lg border bg-white p-4 shadow-sm">
-          <InventarisDataTable columns={terdistribusiColumns} data={terdistribusiData as HtDetails[]} satkerList={satkerList} merkList={merkOptions} statusList={statusOptions} />
+          <InventarisDataTable columns={terdistribusiColumns} data={terdistribusiData as HtDetails[]} filterColumn="kodeHT" filterPlaceholder="Cari Kode HT Terdistribusi..."/>
         </TabsContent>
         <TabsContent value="gudang" className="rounded-lg border bg-white p-4 shadow-sm">
-          <InventarisDataTable columns={gudangColumns} data={gudangData as HtDetails[]} satkerList={satkerList} />
+          <InventarisDataTable columns={gudangColumns} data={gudangData as HtDetails[]} filterColumn="kodeHT" filterPlaceholder="Cari Kode HT di Gudang..." satkerList={satkerList} />
         </TabsContent>
       </Tabs>
     </div>
