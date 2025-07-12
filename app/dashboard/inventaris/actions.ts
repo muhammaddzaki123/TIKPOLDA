@@ -7,11 +7,6 @@ import { revalidatePath } from 'next/cache';
 
 const prisma = new PrismaClient();
 
-/**
- * Aksi untuk menambah HT baru oleh Super Admin.
- * Jika Satker dipilih, HT akan langsung ditempatkan di Satker tersebut.
- * Jika tidak, HT akan menjadi milik Gudang Pusat (satkerId = null).
- */
 export async function addHtBySuperAdmin(formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;
   const kodeHT = formData.get('kodeHT') as string;
@@ -34,7 +29,6 @@ export async function addHtBySuperAdmin(formData: FormData) {
         jenis,
         tahunBuat,
         tahunPeroleh,
-        // Jika satkerId adalah string kosong, simpan sebagai null. Jika tidak, gunakan nilainya.
         satkerId: satkerId === '' ? null : satkerId,
         status: HTStatus.BAIK,
       },
@@ -45,18 +39,14 @@ export async function addHtBySuperAdmin(formData: FormData) {
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
       if (target?.includes('kodeHT')) throw new Error('Gagal: Kode HT sudah terdaftar.');
     }
-    console.error('Gagal membuat HT:', error);
+    console.error(error);
     throw new Error('Terjadi kesalahan saat menyimpan data HT.');
   }
 
-  // Segarkan semua path yang relevan
   revalidatePath('/dashboard/inventaris');
   revalidatePath('/dashboard/satker');
 }
 
-/**
- * Aksi untuk meminjamkan HT dari Gudang Pusat ke Satker.
- */
 export async function pinjamkanHtKeSatker(formData: FormData) {
     const htId = formData.get('htId') as string;
     const satkerId = formData.get('satkerId') as string;
@@ -68,19 +58,12 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
 
     try {
         await prisma.$transaction(async (tx) => {
-            // 1. Update status kepemilikan HT
             await tx.hT.update({
                 where: { id: htId },
                 data: { satkerId: satkerId }
             });
-
-            // 2. Catat transaksi peminjaman
             await tx.peminjamanSatker.create({
-                data: {
-                    htId,
-                    satkerId,
-                    catatan
-                }
+                data: { htId, satkerId, catatan }
             });
         });
     } catch (error) {
@@ -90,40 +73,18 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
 
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
+    revalidatePath('/dashboard/riwayat');
 }
 
-/**
- * --- FUNGSI BARU YANG DITAMBAHKAN DAN DIPERLUKAN ---
- * Aksi untuk menghapus data HT.
- */
 export async function deleteHT(htId: string) {
-    if (!htId) {
-        throw new Error('ID HT tidak valid.');
-    }
+    if (!htId) throw new Error('ID HT tidak valid.');
 
     try {
-        // Validasi: Pastikan HT tidak sedang dipinjam oleh Satker
-        const peminjamanSatkerAktif = await prisma.peminjamanSatker.count({
-            where: { htId: htId, tanggalKembali: null }
-        });
-
-        if (peminjamanSatkerAktif > 0) {
-            throw new Error('HT tidak dapat dihapus karena sedang dipinjamkan ke Satker.');
-        }
-
-        // Hapus semua riwayat terkait
-        await prisma.peminjaman.deleteMany({ where: { htId: htId } });
-        await prisma.peminjamanSatker.deleteMany({ where: { htId: htId } });
-
-        // Hapus HT
         await prisma.hT.delete({ where: { id: htId } });
-
-    } catch (error: any) {
-        if (error instanceof Error) throw error;
+    } catch (error) {
         console.error('Gagal menghapus HT:', error);
         throw new Error('Gagal menghapus data HT.');
     }
 
     revalidatePath('/dashboard/inventaris');
-    revalidatePath('/dashboard/satker');
 }
