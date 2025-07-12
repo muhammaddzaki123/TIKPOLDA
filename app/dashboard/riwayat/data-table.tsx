@@ -15,16 +15,19 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PeminjamanWithDetails } from './columns';
 
-interface RiwayatDataTableProps<TData extends PeminjamanWithDetails, TValue> {
+interface RiwayatDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  filterColumn: string;
+  filterPlaceholder: string;
 }
 
-export function RiwayatDataTable<TData extends PeminjamanWithDetails, TValue>({
+export function RiwayatDataTable<TData, TValue>({
   columns,
   data,
+  filterColumn,
+  filterPlaceholder,
 }: RiwayatDataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
@@ -44,11 +47,10 @@ export function RiwayatDataTable<TData extends PeminjamanWithDetails, TValue>({
     <div className="space-y-4">
       <div className="flex items-center">
         <Input
-          placeholder="Cari berdasarkan Kode HT..."
-          // Filter diterapkan pada kolom 'ht.kodeHT' yang kita definisikan di columns.tsx
-          value={(table.getColumn('ht_kodeHT')?.getFilterValue() as string) ?? ''}
+          placeholder={filterPlaceholder}
+          value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
-            table.getColumn('ht_kodeHT')?.setFilterValue(event.target.value)
+            table.getColumn(filterColumn)?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -80,7 +82,7 @@ export function RiwayatDataTable<TData extends PeminjamanWithDetails, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada data riwayat peminjaman.
+                  Tidak ada data riwayat.
                 </TableCell>
               </TableRow>
             )}

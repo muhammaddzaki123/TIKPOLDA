@@ -12,15 +12,19 @@ import {
   RadioTower,
   UserCheck,
   History,
+  Archive, // Menggunakan ikon baru untuk riwayat pusat
+  ArrowRightLeft, // Menggunakan ikon baru untuk riwayat internal
 } from 'lucide-react';
 
+// Definisikan item menu baru untuk Super Admin
 const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Manajemen Admin & Satker', href: '/dashboard/admin', icon: Users },
   { name: 'Pemantauan Satker', href: '/dashboard/satker', icon: Building },
-  { name: 'Manajemen Inventaris', href: '/dashboard/inventaris', icon: RadioTower },
+  { name: 'Inventaris Pusat', href: '/dashboard/inventaris', icon: RadioTower },
   { name: 'Manajemen Personil', href: '/dashboard/personil', icon: UserCheck },
-  { name: 'Riwayat Peminjaman', href: '/dashboard/riwayat', icon: History },
+  { name: 'Riwayat Pinjam (Pusat)', href: '/dashboard/riwayat', icon: Archive },
+  { name: 'Riwayat Internal (Satker)', href: '/dashboard/riwayat-internal', icon: ArrowRightLeft },
 ];
 
 export default function Sidebar() {

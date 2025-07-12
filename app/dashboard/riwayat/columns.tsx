@@ -4,45 +4,51 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { Peminjaman, HT, Personil, Satker } from '@prisma/client';
+import { PeminjamanSatker, HT, Satker } from '@prisma/client';
 
-// Tipe data gabungan yang kompleks untuk menampilkan semua detail
-export type PeminjamanWithDetails = Peminjaman & {
+// Tipe data gabungan untuk menampilkan semua detail yang relevan
+export type RiwayatPeminjamanSatker = PeminjamanSatker & {
   ht: HT;
-  personil: Personil & {
-    satker: Satker;
-  };
+  satker: Satker;
 };
 
-export const columns: ColumnDef<PeminjamanWithDetails>[] = [
+export const columns: ColumnDef<RiwayatPeminjamanSatker>[] = [
   {
     accessorKey: 'ht.kodeHT',
     header: 'Kode HT',
-    id: 'ht_kodeHT', // <-- Tambahkan ID unik untuk filtering
   },
   {
-    accessorKey: 'personil.nama',
-    header: 'Nama Peminjam',
+    accessorKey: 'ht.merk',
+    header: 'Merk HT',
   },
   {
-    accessorKey: 'personil.nrp',
-    header: 'NRP Peminjam',
-  },
-  {
-    accessorKey: 'personil.satker.nama',
-    header: 'Satuan Kerja',
+    accessorKey: 'satker.nama',
+    header: 'Dipinjam oleh Satker',
   },
   {
     accessorKey: 'tanggalPinjam',
-    header: 'Tgl. Pinjam',
-    cell: ({ row }) => new Date(row.getValue('tanggalPinjam')).toLocaleDateString('id-ID'),
+    header: 'Tanggal Peminjaman',
+    cell: ({ row }) => {
+      const date = new Date(row.getValue('tanggalPinjam'));
+      return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    },
   },
   {
     accessorKey: 'tanggalKembali',
-    header: 'Tgl. Kembali',
+    header: 'Tanggal Pengembalian',
     cell: ({ row }) => {
       const tglKembali = row.getValue('tanggalKembali') as Date | null;
-      return tglKembali ? new Date(tglKembali).toLocaleDateString('id-ID') : '-';
+      return tglKembali
+        ? new Date(tglKembali).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : '-';
     },
   },
   {
@@ -51,9 +57,9 @@ export const columns: ColumnDef<PeminjamanWithDetails>[] = [
     cell: ({ row }) => {
       const isDikembalikan = !!row.original.tanggalKembali;
       return isDikembalikan ? (
-        <Badge variant="default">Dikembalikan</Badge>
+        <Badge variant="default">Sudah Kembali</Badge>
       ) : (
-        <Badge variant="destructive">Masih Dipinjam</Badge>
+        <Badge variant="destructive">Sedang Dipinjam</Badge>
       );
     },
   },
