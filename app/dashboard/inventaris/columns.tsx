@@ -1,5 +1,3 @@
-// app/dashboard/inventaris/columns.tsx
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -14,43 +12,53 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { HT, Satker, Peminjaman, Personil } from '@prisma/client';
+import { HT, Satker, Peminjaman, Personil, PeminjamanSatker } from '@prisma/client';
 
-// Tipe data gabungan untuk menampilkan data relasi yang kompleks
-export type HTWithDetails = HT & {
-  satker: Satker;
+// Tipe data gabungan untuk menampilkan semua detail yang diperlukan
+export type HtDetails = HT & {
+  satker: Satker | null;
   peminjaman: (Peminjaman & { personil: Personil })[];
+  peminjamanOlehSatker: PeminjamanSatker[];
 };
 
-export const columns: ColumnDef<HTWithDetails>[] = [
+// Kolom untuk tabel Inventaris Gudang Pusat
+export const gudangColumns: ColumnDef<HtDetails>[] = [
+  { accessorKey: 'kodeHT', header: 'Kode HT' },
+  { accessorKey: 'merk', header: 'Merk' },
+  { accessorKey: 'jenis', header: 'Jenis' },
+  { accessorKey: 'status', header: 'Kondisi Fisik' },
   {
-    accessorKey: 'kodeHT',
-    header: 'Kode HT',
+    id: 'actions',
+    cell: ({ row, table }) => (
+      <Button size="sm" onClick={() => table.options.meta?.openPinjamkanDialog?.(row.original)}>
+        Pinjamkan
+      </Button>
+    ),
   },
-  {
-    accessorKey: 'serialNumber',
-    header: 'Serial Number',
-  },
-  {
-    accessorKey: 'merk',
-    header: 'Merk',
-  },
+];
+
+// Kolom untuk tabel Inventaris Terdistribusi
+export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
+  { accessorKey: 'kodeHT', header: 'Kode HT' },
+  { accessorKey: 'merk', header: 'Merk' },
   {
     accessorKey: 'satker.nama',
-    header: 'Penempatan Satker',
+    header: 'Penempatan',
+    cell: ({ row }) => row.original.satker?.nama || '-',
   },
   {
     id: 'statusPeminjaman',
-    header: 'Status',
+    header: 'Status Pinjam',
     cell: ({ row }) => {
-      const isDipinjam = row.original.peminjaman.length > 0;
-      if (isDipinjam) {
-        return <Badge variant="destructive">Dipinjam</Badge>;
-      }
-      return <Badge variant="default">Tersedia</Badge>;
+      const isDipinjamPersonil = row.original.peminjaman.length > 0;
+      return isDipinjamPersonil ? (
+        <Badge variant="destructive">Dipinjam Personil</Badge>
+      ) : (
+        <Badge variant="default">Tersedia di Satker</Badge>
+      );
     },
   },
-  {
+   {
     accessorKey: 'status',
     header: 'Kondisi Fisik',
     cell: ({ row }) => {
@@ -64,34 +72,7 @@ export const columns: ColumnDef<HTWithDetails>[] = [
   },
   {
     id: 'pemegang',
-    header: 'Pemegang Saat Ini',
-    cell: ({ row }) => {
-      const pemegang = row.original.peminjaman[0]?.personil;
-      return pemegang ? `${pemegang.nama} (${pemegang.nrp})` : '-';
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const ht = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Buka menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Data HT</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600 focus:text-red-600">
-              Hapus HT
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    header: 'Pemegang Akhir',
+    cell: ({ row }) => row.original.peminjaman[0]?.personil?.nama || '-',
   },
 ];
