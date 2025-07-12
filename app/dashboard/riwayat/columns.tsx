@@ -18,6 +18,7 @@ export const columns: ColumnDef<PeminjamanWithDetails>[] = [
   {
     accessorKey: 'ht.kodeHT',
     header: 'Kode HT',
+    id: 'ht_kodeHT', // <-- Tambahkan ID unik untuk filtering
   },
   {
     accessorKey: 'personil.nama',

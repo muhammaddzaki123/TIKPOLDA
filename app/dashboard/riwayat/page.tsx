@@ -2,8 +2,8 @@
 
 import { PrismaClient } from '@prisma/client';
 import { columns, PeminjamanWithDetails } from './columns';
-import { HTDataTable } from '@/components/ht-data-table'; // Kita gunakan ulang komponen generik ini
 import { DateRangePicker } from '@/components/date-range-picker';
+import { RiwayatDataTable } from './data-table'; // <-- Gunakan komponen baru
 
 const prisma = new PrismaClient();
 
@@ -38,14 +38,13 @@ export default async function RiwayatPeminjamanPage() {
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
-          {/* Komponen filter tanggal ini akan kita fungsikan di tahap berikutnya */}
           <DateRangePicker />
         </div>
       </div>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
-        {/* Menggunakan kembali komponen tabel generik kita */}
-        <HTDataTable columns={columns} data={riwayatData} />
+        {/* Menggunakan komponen tabel baru yang lebih spesifik */}
+        <RiwayatDataTable columns={columns} data={riwayatData} />
       </div>
     </div>
   );
