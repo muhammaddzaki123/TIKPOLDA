@@ -8,14 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PrismaClient, HTStatus } from '@prisma/client';
 import { addHtBySuperAdmin } from './actions';
-import { gudangColumns, terdistribusiColumns } from './columns';
+import { gudangColumns, terdistribusiColumns, HtDetails } from './columns';
 import { InventarisDataTable } from '@/components/data-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { HtDetails } from '@/types/custom';
 
 const prisma = new PrismaClient();
 
-async function getPageData() {
+async function getInventarisData() {
   const allHt = await prisma.hT.findMany({
     include: {
       satker: true,
@@ -26,15 +25,17 @@ async function getPageData() {
   });
 
   const gudangData = allHt.filter(ht => !ht.satkerId);
-  const terdistribusiData = allHt.filter(ht => !!ht.satkerId);
+  const terdistribusiData = allHt.filter(ht => ht.satkerId);
   
   const satkerList = await prisma.satker.findMany({ orderBy: { nama: 'asc' } });
-  const merkList = await prisma.hT.groupBy({ by: ['merk'], orderBy: { merk: 'asc' } });
+  
+  // Ambil data unik untuk filter
+  const merkList = await prisma.hT.findMany({ select: { merk: true }, distinct: ['merk'] });
   const statusEnumValues = Object.values(HTStatus).map(s => ({ value: s, label: s.replace('_', ' ') }));
 
   return { 
-    gudangData: gudangData as HtDetails[],
-    terdistribusiData: terdistribusiData as HtDetails[],
+    gudangData, 
+    terdistribusiData, 
     satkerList,
     merkOptions: merkList.map(item => ({ value: item.merk, label: item.merk })),
     statusOptions: statusEnumValues
@@ -42,7 +43,7 @@ async function getPageData() {
 }
 
 export default async function InventarisManagementPage() {
-  const { gudangData, terdistribusiData, satkerList, merkOptions, statusOptions } = await getPageData();
+  const { gudangData, terdistribusiData, satkerList, merkOptions, statusOptions } = await getInventarisData();
 
   return (
     <div className="w-full space-y-6">
@@ -87,10 +88,10 @@ export default async function InventarisManagementPage() {
           <TabsTrigger value="gudang">Inventaris Gudang Pusat ({gudangData.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="terdistribusi" className="rounded-lg border bg-white p-4 shadow-sm">
-          <InventarisDataTable columns={terdistribusiColumns} data={terdistribusiData} satkerList={satkerList} merkOptions={merkOptions} statusOptions={statusOptions} />
+          <InventarisDataTable columns={terdistribusiColumns} data={terdistribusiData as HtDetails[]} satkerList={satkerList} merkList={merkOptions} statusList={statusOptions} />
         </TabsContent>
         <TabsContent value="gudang" className="rounded-lg border bg-white p-4 shadow-sm">
-          <InventarisDataTable columns={gudangColumns} data={gudangData} satkerList={satkerList} merkOptions={merkOptions} statusOptions={statusOptions} isGudang={true}/>
+          <InventarisDataTable columns={gudangColumns} data={gudangData as HtDetails[]} satkerList={satkerList} />
         </TabsContent>
       </Tabs>
     </div>
