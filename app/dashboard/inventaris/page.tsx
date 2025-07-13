@@ -82,12 +82,12 @@ export default async function InventarisManagementPage() {
                 </div>
                 <div className="col-span-1 space-y-2 md:col-span-2">
                   <Label htmlFor="satkerId">Penempatan (Opsional)</Label>
-                  <Select name="satkerId">
+                  <Select name="satkerId" defaultValue="gudang">
                     <SelectTrigger>
                       <SelectValue placeholder="Simpan di Gudang Pusat" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Simpan di Gudang Pusat</SelectItem>
+                      <SelectItem value="gudang">Simpan di Gudang Pusat</SelectItem>
                       {satkerList.map((satker) => (
                         <SelectItem key={satker.id} value={satker.id}>
                           {satker.nama}

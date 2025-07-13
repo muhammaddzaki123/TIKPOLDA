@@ -7,11 +7,6 @@ import { revalidatePath } from 'next/cache';
 
 const prisma = new PrismaClient();
 
-/**
- * Aksi untuk menambah HT baru oleh Super Admin.
- * Jika Satker dipilih, HT akan langsung ditempatkan di Satker tersebut.
- * Jika tidak, HT akan menjadi milik Gudang Pusat (satkerId = null).
- */
 export async function addHtBySuperAdmin(formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;
   const kodeHT = formData.get('kodeHT') as string;
@@ -19,11 +14,13 @@ export async function addHtBySuperAdmin(formData: FormData) {
   const jenis = formData.get('jenis') as string;
   const tahunBuat = parseInt(formData.get('tahunBuat') as string);
   const tahunPeroleh = parseInt(formData.get('tahunPeroleh') as string);
-  const satkerId = formData.get('satkerId') as string | null;
+  const satkerIdInput = formData.get('satkerId') as string | null;
 
   if (!serialNumber || !kodeHT || !merk || !jenis || !tahunBuat || !tahunPeroleh) {
     throw new Error('Semua kolom wajib diisi, kecuali penempatan Satker.');
   }
+
+  const satkerId = satkerIdInput === 'gudang' ? null : satkerIdInput;
 
   try {
     await prisma.hT.create({
@@ -34,8 +31,7 @@ export async function addHtBySuperAdmin(formData: FormData) {
         jenis,
         tahunBuat,
         tahunPeroleh,
-        // Jika satkerId adalah string kosong, simpan sebagai null. Jika tidak, gunakan nilainya.
-        satkerId: satkerId === '' ? null : satkerId,
+        satkerId: satkerId,
         status: HTStatus.BAIK,
       },
     });
@@ -49,14 +45,10 @@ export async function addHtBySuperAdmin(formData: FormData) {
     throw new Error('Terjadi kesalahan saat menyimpan data HT.');
   }
 
-  // Segarkan semua path yang relevan
   revalidatePath('/dashboard/inventaris');
   revalidatePath('/dashboard/satker');
 }
 
-/**
- * Aksi untuk meminjamkan HT dari Gudang Pusat ke Satker.
- */
 export async function pinjamkanHtKeSatker(formData: FormData) {
     const htId = formData.get('htId') as string;
     const satkerId = formData.get('satkerId') as string;
@@ -68,13 +60,11 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
 
     try {
         await prisma.$transaction(async (tx) => {
-            // 1. Update status kepemilikan HT
             await tx.hT.update({
                 where: { id: htId },
                 data: { satkerId: satkerId }
             });
 
-            // 2. Catat transaksi peminjaman
             await tx.peminjamanSatker.create({
                 data: {
                     htId,

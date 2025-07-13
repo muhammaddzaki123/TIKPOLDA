@@ -1,3 +1,5 @@
+// app/components/inventarissuperadmin/data-table.tsx
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -17,8 +19,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { HtDetails } from '../../app/dashboard/inventaris/columns';
-import { pinjamkanHtKeSatker } from '../../app/dashboard/inventaris/actions';
+import { HtDetails } from '@/app/dashboard/inventaris/columns';
+import { pinjamkanHtKeSatker } from '@/app/dashboard/inventaris/actions';
 import { Satker, HTStatus } from '@prisma/client';
 
 declare module '@tanstack/react-table' {
@@ -73,6 +75,9 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
   };
 
   const uniqueMerks = Array.from(new Set(data.map((item) => item.merk))).filter(Boolean);
+  
+  // FIX: Periksa keberadaan kolom 'satker.nama' dengan cara yang aman
+  const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'satker.nama');
 
   return (
     <div>
@@ -120,8 +125,8 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           </SelectContent>
         </Select>
 
-        {/* Filter Penempatan Satker (Hanya muncul jika kolomnya ada) */}
-        {table.getColumn('satker.nama') && (
+        {/* FIX: Hanya render filter Satker jika kolomnya ada */}
+        {hasSatkerColumn && (
           <Select
             value={(table.getColumn('satker.nama')?.getFilterValue() as string) ?? ''}
             onValueChange={(value) => table.getColumn('satker.nama')?.setFilterValue(value === 'all' ? null : value)}
