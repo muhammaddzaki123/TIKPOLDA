@@ -1,16 +1,9 @@
+// app/dashboard/inventaris/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { HT, Satker, Peminjaman, Personil, PeminjamanSatker } from '@prisma/client';
 
@@ -44,6 +37,8 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
   {
     accessorKey: 'satker.nama',
     header: 'Penempatan',
+    // PERBAIKAN: Menambahkan ID eksplisit untuk referensi yang andal
+    id: 'penempatan', 
     cell: ({ row }) => row.original.satker?.nama || '-',
   },
   {

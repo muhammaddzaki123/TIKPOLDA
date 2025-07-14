@@ -76,8 +76,8 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
 
   const uniqueMerks = Array.from(new Set(data.map((item) => item.merk))).filter(Boolean);
   
-  // FIX: Periksa keberadaan kolom 'satker.nama' dengan cara yang aman
-  const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'satker.nama');
+  // PERBAIKAN: Memeriksa keberadaan kolom berdasarkan ID 'penempatan' yang sudah kita definisikan
+  const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'penempatan');
 
   return (
     <div>
@@ -89,7 +89,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           className="max-w-xs"
         />
 
-        {/* Filter Merek */}
         <Select
           value={(table.getColumn('merk')?.getFilterValue() as string) ?? ''}
           onValueChange={(value) => table.getColumn('merk')?.setFilterValue(value === 'all' ? null : value)}
@@ -107,7 +106,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           </SelectContent>
         </Select>
 
-        {/* Filter Kondisi Fisik */}
         <Select
           value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
           onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'all' ? null : value)}
@@ -125,11 +123,12 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           </SelectContent>
         </Select>
 
-        {/* FIX: Hanya render filter Satker jika kolomnya ada */}
+        {/* PERBAIKAN: Logika render kondisional sekarang akan bekerja dengan benar */}
         {hasSatkerColumn && (
           <Select
-            value={(table.getColumn('satker.nama')?.getFilterValue() as string) ?? ''}
-            onValueChange={(value) => table.getColumn('satker.nama')?.setFilterValue(value === 'all' ? null : value)}
+            // PERBAIKAN: Menggunakan ID 'penempatan' untuk mengontrol filter
+            value={(table.getColumn('penempatan')?.getFilterValue() as string) ?? ''}
+            onValueChange={(value) => table.getColumn('penempatan')?.setFilterValue(value === 'all' ? null : value)}
           >
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Filter Penempatan..." />
