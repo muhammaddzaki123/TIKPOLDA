@@ -1,16 +1,40 @@
 // app/dashboard/riwayat-internal/page.tsx
 
 import { PrismaClient } from '@prisma/client';
-import { columns, PeminjamanWithDetails } from './columns';
-import { DateRangePicker } from '@/components/date-range-picker';
-// Kita gunakan kembali komponen data-table dari halaman riwayat sebelumnya
-import { RiwayatDataTable } from '../riwayat/data-table';
+import { RiwayatInternalClient } from './RiwayatInternalClient'; // <-- Impor komponen client baru
 
 const prisma = new PrismaClient();
 
-// Fungsi untuk mengambil semua data riwayat peminjaman internal
-async function getRiwayatInternal() {
+// Definisikan tipe untuk searchParams
+interface RiwayatInternalPageProps {
+  searchParams: {
+    q?: string;
+    satker?: string;
+  };
+}
+
+// Fungsi untuk mengambil data riwayat internal dengan filter dinamis
+async function getRiwayatInternal(props: RiwayatInternalPageProps) {
+  const { q, satker } = props.searchParams;
+
+  const whereCondition: any = {};
+
+  if (q) {
+    whereCondition.OR = [
+      { ht: { kodeHT: { contains: q, mode: 'insensitive' } } },
+      { personil: { nama: { contains: q, mode: 'insensitive' } } },
+    ];
+  }
+
+  if (satker && satker !== 'all') {
+    // Filter berdasarkan satker dari personil yang meminjam
+    whereCondition.personil = {
+      satkerId: satker,
+    };
+  }
+
   const data = await prisma.peminjaman.findMany({
+    where: whereCondition,
     include: {
       ht: true,
       personil: {
@@ -26,8 +50,17 @@ async function getRiwayatInternal() {
   return data;
 }
 
-export default async function RiwayatInternalPage() {
-  const riwayatData = await getRiwayatInternal();
+// Fungsi untuk mengambil daftar semua Satker
+async function getSatkerList() {
+    return await prisma.satker.findMany({
+        orderBy: { nama: 'asc' }
+    });
+}
+
+
+export default async function RiwayatInternalPage(props: RiwayatInternalPageProps) {
+  const riwayatData = await getRiwayatInternal(props);
+  const satkerList = await getSatkerList();
 
   return (
     <div className="w-full space-y-4">
@@ -38,20 +71,10 @@ export default async function RiwayatInternalPage() {
             Jejak audit untuk semua transaksi peminjaman yang terjadi di dalam Satuan Kerja.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
-          <DateRangePicker />
-        </div>
       </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <RiwayatDataTable 
-          columns={columns} 
-          data={riwayatData}
-          // Kita akan memfilter berdasarkan nama satker di sini
-          filterColumn="satker_nama"
-          filterPlaceholder="Cari berdasarkan nama Satker..."
-        />
-      </div>
+      {/* Gunakan komponen client baru untuk filter dan tabel */}
+      <RiwayatInternalClient riwayatData={riwayatData} satkerList={satkerList} />
     </div>
   );
 }
