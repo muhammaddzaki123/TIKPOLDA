@@ -1,36 +1,42 @@
 // app/dashboard/riwayat-internal/page.tsx
 
 import { PrismaClient } from '@prisma/client';
-import { RiwayatInternalClient } from './RiwayatInternalClient'; // <-- Impor komponen client baru
+import { RiwayatInternalClient } from './RiwayatInternalClient';
 
 const prisma = new PrismaClient();
 
-// Definisikan tipe untuk searchParams
 interface RiwayatInternalPageProps {
   searchParams: {
-    q?: string;
+    q_ht?: string; // Diubah untuk menerima ID HT
+    q_peminjam?: string;
     satker?: string;
   };
 }
 
-// Fungsi untuk mengambil data riwayat internal dengan filter dinamis
 async function getRiwayatInternal(props: RiwayatInternalPageProps) {
-  const { q, satker } = props.searchParams;
+  const { q_ht, q_peminjam, satker } = props.searchParams;
 
-  const whereCondition: any = {};
+  const whereCondition: any = {
+    AND: [],
+  };
 
-  if (q) {
-    whereCondition.OR = [
-      { ht: { kodeHT: { contains: q, mode: 'insensitive' } } },
-      { personil: { nama: { contains: q, mode: 'insensitive' } } },
-    ];
+  // Filter berdasarkan ID HT spesifik dari Combobox
+  if (q_ht) {
+    whereCondition.AND.push({ htId: q_ht });
   }
 
-  if (satker && satker !== 'all') {
-    // Filter berdasarkan satker dari personil yang meminjam
-    whereCondition.personil = {
-      satkerId: satker,
-    };
+  if (q_peminjam) {
+    whereCondition.AND.push({ personilId: q_peminjam });
+  }
+  
+  if (satker) {
+    whereCondition.AND.push({
+      personil: { satkerId: satker },
+    });
+  }
+
+  if (whereCondition.AND.length === 0) {
+    delete whereCondition.AND;
   }
 
   const data = await prisma.peminjaman.findMany({
@@ -50,17 +56,24 @@ async function getRiwayatInternal(props: RiwayatInternalPageProps) {
   return data;
 }
 
-// Fungsi untuk mengambil daftar semua Satker
 async function getSatkerList() {
-    return await prisma.satker.findMany({
-        orderBy: { nama: 'asc' }
-    });
+    return await prisma.satker.findMany({ orderBy: { nama: 'asc' } });
 }
 
+async function getPersonilList() {
+    return await prisma.personil.findMany({ orderBy: { nama: 'asc' }});
+}
+
+// Fungsi baru untuk mengambil semua HT
+async function getHtList() {
+    return await prisma.hT.findMany({ orderBy: { kodeHT: 'asc' }});
+}
 
 export default async function RiwayatInternalPage(props: RiwayatInternalPageProps) {
   const riwayatData = await getRiwayatInternal(props);
   const satkerList = await getSatkerList();
+  const personilList = await getPersonilList();
+  const htList = await getHtList(); // Ambil daftar HT
 
   return (
     <div className="w-full space-y-4">
@@ -72,9 +85,13 @@ export default async function RiwayatInternalPage(props: RiwayatInternalPageProp
           </p>
         </div>
       </div>
-
-      {/* Gunakan komponen client baru untuk filter dan tabel */}
-      <RiwayatInternalClient riwayatData={riwayatData} satkerList={satkerList} />
+      
+      <RiwayatInternalClient 
+        riwayatData={riwayatData}
+        satkerList={satkerList}
+        personilList={personilList}
+        htList={htList} // Kirim daftar HT ke komponen client
+      />
     </div>
   );
 }
