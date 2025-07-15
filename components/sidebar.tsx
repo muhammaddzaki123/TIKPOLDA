@@ -12,8 +12,9 @@ import {
   RadioTower,
   UserCheck,
   History,
-  Archive, // Menggunakan ikon baru untuk riwayat pusat
-  ArrowRightLeft, // Menggunakan ikon baru untuk riwayat internal
+  Archive,
+  ArrowRightLeft,
+  CheckSquare, // <-- Import Ikon Baru
 } from 'lucide-react';
 
 // Definisikan item menu baru untuk Super Admin
@@ -23,6 +24,7 @@ const sidebarItems = [
   { name: 'Pemantauan Satker', href: '/dashboard/satker', icon: Building },
   { name: 'Inventaris Pusat', href: '/dashboard/inventaris', icon: RadioTower },
   { name: 'Manajemen Personil', href: '/dashboard/personil', icon: UserCheck },
+  { name: 'Pusat Persetujuan', href: '/dashboard/persetujuan', icon: CheckSquare }, // <-- TAMBAHKAN ITEM INI
   { name: 'Riwayat Pinjam (Pusat)', href: '/dashboard/riwayat', icon: Archive },
   { name: 'Riwayat Internal (Satker)', href: '/dashboard/riwayat-internal', icon: ArrowRightLeft },
 ];

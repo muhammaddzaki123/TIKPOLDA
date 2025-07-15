@@ -6,25 +6,41 @@ import { redirect } from 'next/navigation';
 import { PrismaClient } from '@prisma/client';
 import { FormPeminjaman } from '@/components/peminjaman/FormPeminjaman';
 import { FormMutasi } from '@/components/peminjaman/FormMutasi';
+import { RiwayatPengajuanTable } from './RiwayatPengajuanTable'; // <-- Komponen baru
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const prisma = new PrismaClient();
 
 async function getData(satkerId: string) {
-  // Ambil daftar personil dari satker yang sedang login
   const personilList = await prisma.personil.findMany({
     where: { satkerId },
     orderBy: { nama: 'asc' },
   });
 
-  // Ambil daftar semua satker lain sebagai tujuan mutasi
   const satkerList = await prisma.satker.findMany({
-    where: {
-      id: { not: satkerId }, // Kecualikan satker saat ini
-    },
+    where: { id: { not: satkerId } },
     orderBy: { nama: 'asc' },
   });
 
-  return { personilList, satkerList };
+  // Ambil riwayat pengajuan untuk satker ini
+  const riwayatPeminjaman = await prisma.pengajuanPeminjaman.findMany({
+    where: { satkerId },
+    orderBy: { createdAt: 'desc' },
+  });
+  const riwayatMutasi = await prisma.pengajuanMutasi.findMany({
+    where: { satkerAsalId: satkerId },
+    include: { personil: true, satkerTujuan: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  
+  // Gabungkan dan format data untuk tabel riwayat
+  const riwayatGabungan = [
+      ...riwayatPeminjaman.map(p => ({...p, tipe: 'Peminjaman HT'})),
+      ...riwayatMutasi.map(m => ({...m, tipe: 'Mutasi Personil'})),
+  ].sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+
+  return { personilList, satkerList, riwayatGabungan };
 }
 
 export default async function PengajuanPage() {
@@ -35,10 +51,10 @@ export default async function PengajuanPage() {
     redirect('/login');
   }
 
-  const { personilList, satkerList } = await getData(satkerId);
+  const { personilList, satkerList, riwayatGabungan } = await getData(satkerId);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Pusat Pengajuan</h1>
         <p className="text-sm text-slate-600">
@@ -51,13 +67,14 @@ export default async function PengajuanPage() {
         <FormMutasi personilList={personilList} satkerList={satkerList} />
       </div>
 
-       {/* Di sini nanti kita bisa tambahkan tabel untuk melihat riwayat pengajuan */}
-       <div className="mt-8 rounded-lg border bg-white p-5 shadow">
-          <h3 className="mb-4 text-lg font-semibold">Riwayat Pengajuan Anda</h3>
-          <div className="flex h-40 items-center justify-center rounded-md bg-slate-50 text-slate-400">
-            Area untuk tabel riwayat pengajuan mendatang
-          </div>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Riwayat Pengajuan Anda</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RiwayatPengajuanTable data={riwayatGabungan} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
