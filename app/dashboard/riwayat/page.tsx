@@ -1,15 +1,48 @@
 // app/dashboard/riwayat/page.tsx
 
 import { PrismaClient } from '@prisma/client';
-import { RiwayatPusatTable, RiwayatPusatGrouped } from './RiwayatPusatTable';
+import { RiwayatPusatClient } from './RiwayatPusatClient'; // <-- Impor komponen client baru
 
 const prisma = new PrismaClient();
 
-async function getGroupedRiwayatPusat(): Promise<RiwayatPusatGrouped[]> {
+// Definisikan tipe untuk searchParams agar lebih aman
+interface RiwayatPusatPageProps {
+  searchParams: {
+    q?: string;
+    satker?: string;
+    from?: string;
+    to?: string;
+  };
+}
+
+async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
+  const { q, satker, from, to } = props.searchParams;
+
+  // Bangun kondisi filter dinamis untuk Prisma
+  const whereCondition: any = {
+    status: 'APPROVED',
+  };
+
+  if (q) {
+    whereCondition.OR = [
+      { keperluan: { contains: q, mode: 'insensitive' } },
+      { satkerPengaju: { nama: { contains: q, mode: 'insensitive' } } },
+    ];
+  }
+
+  if (satker && satker !== 'all') {
+    whereCondition.satkerId = satker;
+  }
+
+  if (from && to) {
+    whereCondition.updatedAt = {
+      gte: new Date(from),
+      lte: new Date(to),
+    };
+  }
+
   const approvedPeminjaman = await prisma.pengajuanPeminjaman.findMany({
-    where: {
-      status: 'APPROVED',
-    },
+    where: whereCondition,
     include: {
       satkerPengaju: true,
     },
@@ -17,8 +50,13 @@ async function getGroupedRiwayatPusat(): Promise<RiwayatPusatGrouped[]> {
       updatedAt: 'desc',
     },
   });
-
+  
   const allPeminjamanSatker = await prisma.peminjamanSatker.findMany({
+    where: {
+        satkerId: {
+            in: approvedPeminjaman.map(p => p.satkerId)
+        }
+    },
     include: {
       ht: true,
     },
@@ -28,18 +66,22 @@ async function getGroupedRiwayatPusat(): Promise<RiwayatPusatGrouped[]> {
     const htsForThisRequest = allPeminjamanSatker
       .filter(p => p.catatan?.includes(pengajuan.id.substring(0, 8)))
       .map(p => p.ht);
-
-    return {
-      ...pengajuan,
-      approvedHts: htsForThisRequest,
-    };
+    return { ...pengajuan, approvedHts: htsForThisRequest };
   });
 
   return groupedData;
 }
 
-export default async function RiwayatPusatPage() {
-  const riwayatData = await getGroupedRiwayatPusat();
+// Ambil daftar Satker untuk filter dropdown
+async function getSatkerList() {
+    return await prisma.satker.findMany({
+        orderBy: { nama: 'asc' }
+    });
+}
+
+export default async function RiwayatPusatPage(props: RiwayatPusatPageProps) {
+  const riwayatData = await getGroupedRiwayatPusat(props);
+  const satkerList = await getSatkerList();
 
   return (
     <div className="w-full space-y-4">
@@ -51,10 +93,12 @@ export default async function RiwayatPusatPage() {
           </p>
         </div>
       </div>
-
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <RiwayatPusatTable data={riwayatData} />
-      </div>
+      
+      {/* Gunakan komponen client untuk menampung filter dan tabel */}
+      <RiwayatPusatClient 
+        riwayatData={riwayatData}
+        satkerList={satkerList}
+      />
     </div>
   );
 }

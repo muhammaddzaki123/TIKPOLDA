@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { PengajuanPeminjaman, Satker, HT } from '@prisma/client';
 
-// Definisikan tipe data untuk data yang sudah dikelompokkan
 export type RiwayatPusatGrouped = PengajuanPeminjaman & {
   satkerPengaju: Satker;
   approvedHts: HT[];
@@ -49,7 +48,6 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
                   <TableCell>{new Date(item.updatedAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</TableCell>
                 </TableRow>
                 
-                {/* Baris untuk menampilkan detail HT yang dipinjamkan */}
                 {expandedRow === item.id && (
                   <TableRow className="bg-slate-50 hover:bg-slate-50">
                     <TableCell colSpan={5} className="p-0">
@@ -84,7 +82,7 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
           ) : (
             <TableRow>
               <TableCell colSpan={5} className="h-24 text-center">
-                Belum ada riwayat peminjaman dari pusat.
+                Tidak ada data riwayat yang cocok dengan filter.
               </TableCell>
             </TableRow>
           )}
