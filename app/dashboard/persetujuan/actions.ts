@@ -61,9 +61,11 @@ export async function approveMutasi(pengajuanId: string) {
 }
 
 /**
- * Menyetujui pengajuan peminjaman HT.
+ * PEMBARUAN: Menyetujui pengajuan peminjaman HT dengan memilih unit spesifik.
+ * @param pengajuanId ID dari pengajuan yang disetujui.
+ * @param selectedHtIds Array dari string berisi ID HT yang dipilih untuk dipinjamkan.
  */
-export async function approvePeminjaman(pengajuanId: string) {
+export async function approvePeminjaman(pengajuanId: string, selectedHtIds: string[]) {
     await getSuperAdminIdOrThrow();
 
     try {
@@ -75,20 +77,14 @@ export async function approvePeminjaman(pengajuanId: string) {
             throw new Error('Pengajuan tidak valid atau sudah diproses.');
         }
 
-        // Cek ketersediaan HT di gudang pusat (satkerId is null)
-        const htDiGudang = await prisma.hT.count({
-            where: { satkerId: null, status: 'BAIK' }
-        });
-
-        if (htDiGudang < pengajuan.jumlah) {
-            throw new Error(`Stok HT di gudang tidak mencukupi. Tersedia: ${htDiGudang}, Dibutuhkan: ${pengajuan.jumlah}`);
+        // Validasi baru: Pastikan jumlah HT yang dipilih sesuai dengan yang diajukan
+        if (selectedHtIds.length !== pengajuan.jumlah) {
+            throw new Error(`Jumlah HT yang dipilih (${selectedHtIds.length}) tidak sesuai dengan jumlah yang diajukan (${pengajuan.jumlah}).`);
         }
-
-        // Ambil HT yang akan dipinjamkan
-        const htUntukDipinjamkan = await prisma.hT.findMany({
-            where: { satkerId: null, status: 'BAIK' },
-            take: pengajuan.jumlah
-        });
+        
+        if (selectedHtIds.length === 0) {
+            throw new Error('Tidak ada HT yang dipilih untuk dipinjamkan.');
+        }
 
         // Lakukan peminjaman dalam satu transaksi
         await prisma.$transaction(async (tx) => {
@@ -98,15 +94,23 @@ export async function approvePeminjaman(pengajuanId: string) {
                 data: { status: PengajuanStatus.APPROVED }
             });
 
-            // Pindahkan HT ke Satker pemohon & catat di PeminjamanSatker
-            for (const ht of htUntukDipinjamkan) {
+            // Pindahkan HT yang DIPILIH ke Satker pemohon & catat di PeminjamanSatker
+            for (const htId of selectedHtIds) {
+                // Pastikan HT yang dipilih memang ada dan tersedia di gudang
+                const ht = await tx.hT.findFirst({
+                    where: { id: htId, satkerId: null }
+                });
+                if (!ht) {
+                    throw new Error(`HT dengan ID ${htId} tidak ditemukan atau sudah dialokasikan.`);
+                }
+                
                 await tx.hT.update({
-                    where: { id: ht.id },
+                    where: { id: htId },
                     data: { satkerId: pengajuan.satkerId }
                 });
                 await tx.peminjamanSatker.create({
                     data: {
-                        htId: ht.id,
+                        htId: htId,
                         satkerId: pengajuan.satkerId,
                         catatan: `Disetujui dari pengajuan #${pengajuan.id.substring(0, 8)}`
                     }
@@ -122,7 +126,6 @@ export async function approvePeminjaman(pengajuanId: string) {
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
 }
-
 
 /**
  * Menolak pengajuan.

@@ -49,12 +49,8 @@ export const columnsMutasi: ColumnDef<PengajuanMutasiWithRelations>[] = [
     header: () => <div className="text-right">Aksi</div>,
     cell: ({ row, table }) => (
       <div className="flex justify-end gap-2">
-        <Button size="sm" onClick={() => table.options.meta?.handleApprove?.(row.original.id)}>
-          Setujui
-        </Button>
-        <Button size="sm" variant="destructive" onClick={() => table.options.meta?.handleReject?.(row.original)}>
-          Tolak
-        </Button>
+        <Button size="sm">Setujui</Button>
+        <Button size="sm" variant="destructive">Tolak</Button>
       </div>
     ),
   },

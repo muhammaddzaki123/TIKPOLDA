@@ -27,11 +27,20 @@ async function getPengajuanData() {
     orderBy: { createdAt: 'asc' },
   });
 
-  return { pengajuanPeminjaman, pengajuanMutasi };
+  // TAMBAHAN: Ambil daftar HT yang tersedia di Gudang Pusat (satkerId is null)
+  const htDiGudang = await prisma.hT.findMany({
+    where: {
+      satkerId: null, // Hanya yang di gudang
+      status: 'BAIK'   // Hanya yang kondisinya baik
+    },
+    orderBy: { kodeHT: 'asc' }
+  });
+
+  return { pengajuanPeminjaman, pengajuanMutasi, htDiGudang };
 }
 
 export default async function PersetujuanPage() {
-  const { pengajuanPeminjaman, pengajuanMutasi } = await getPengajuanData();
+  const { pengajuanPeminjaman, pengajuanMutasi, htDiGudang } = await getPengajuanData();
 
   return (
     <div className="w-full space-y-6">
@@ -56,6 +65,7 @@ export default async function PersetujuanPage() {
             columns={columnsPeminjaman}
             data={pengajuanPeminjaman as PengajuanPeminjamanWithRelations[]}
             tipe="peminjaman"
+            htDiGudang={htDiGudang} // Kirim data HT yang tersedia ke komponen tabel
           />
         </TabsContent>
       </Tabs>
