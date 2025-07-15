@@ -1,28 +1,45 @@
 // app/dashboard/riwayat/page.tsx
 
 import { PrismaClient } from '@prisma/client';
-import { columns } from './columns';
-import { DateRangePicker } from '@/components/date-range-picker';
-import { RiwayatDataTable } from './data-table';
+import { RiwayatPusatTable, RiwayatPusatGrouped } from './RiwayatPusatTable';
 
 const prisma = new PrismaClient();
 
-// Fungsi untuk mengambil data riwayat peminjaman dari Super Admin ke Satker
-async function getRiwayatPusat() {
-  const data = await prisma.peminjamanSatker.findMany({
+async function getGroupedRiwayatPusat(): Promise<RiwayatPusatGrouped[]> {
+  const approvedPeminjaman = await prisma.pengajuanPeminjaman.findMany({
+    where: {
+      status: 'APPROVED',
+    },
     include: {
-      ht: true,
-      satker: true,
+      satkerPengaju: true,
     },
     orderBy: {
-      tanggalPinjam: 'desc',
+      updatedAt: 'desc',
     },
   });
-  return data;
+
+  const allPeminjamanSatker = await prisma.peminjamanSatker.findMany({
+    include: {
+      ht: true,
+    },
+  });
+
+  const groupedData = approvedPeminjaman.map((pengajuan) => {
+    const htsForThisRequest = allPeminjamanSatker
+      .filter(p => p.catatan?.includes(pengajuan.id.substring(0, 8)))
+      .map(p => p.ht);
+
+    return {
+      ...pengajuan,
+      approvedHts: htsForThisRequest,
+    };
+  });
+
+  return groupedData;
 }
 
 export default async function RiwayatPusatPage() {
-  const riwayatData = await getRiwayatPusat();
+  const riwayatData = await getGroupedRiwayatPusat();
 
   return (
     <div className="w-full space-y-4">
@@ -33,18 +50,10 @@ export default async function RiwayatPusatPage() {
             Jejak audit untuk aset yang dipinjamkan dari gudang pusat ke Satuan Kerja.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
-          <DateRangePicker />
-        </div>
       </div>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <RiwayatDataTable 
-          columns={columns} 
-          data={riwayatData}
-          filterColumn="ht_kodeHT"
-          filterPlaceholder="Cari Kode HT..."
-        />
+        <RiwayatPusatTable data={riwayatData} />
       </div>
     </div>
   );
