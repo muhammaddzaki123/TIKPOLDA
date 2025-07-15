@@ -49,6 +49,10 @@ export async function addHtBySuperAdmin(formData: FormData) {
   revalidatePath('/dashboard/satker');
 }
 
+/**
+ * Logika yang diperbarui untuk meminjamkan HT.
+ * Hanya membuat catatan peminjaman tanpa mengubah kepemilikan aset.
+ */
 export async function pinjamkanHtKeSatker(formData: FormData) {
     const htId = formData.get('htId') as string;
     const satkerId = formData.get('satkerId') as string;
@@ -59,25 +63,36 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
     }
 
     try {
-        await prisma.$transaction(async (tx) => {
-            await tx.hT.update({
-                where: { id: htId },
-                data: { satkerId: satkerId }
-            });
-
-            await tx.peminjamanSatker.create({
-                data: {
-                    htId,
-                    satkerId,
-                    catatan
-                }
-            });
+        // Validasi untuk memastikan HT tidak sedang dalam status pinjaman aktif
+        const existingLoan = await prisma.peminjamanSatker.findFirst({
+            where: {
+                htId: htId,
+                tanggalKembali: null, // Cari peminjaman yang belum dikembalikan
+            }
         });
-    } catch (error) {
+
+        if (existingLoan) {
+            throw new Error('Gagal: HT ini sudah tercatat sedang dipinjamkan.');
+        }
+
+        // Buat catatan peminjaman baru di tabel PeminjamanSatker
+        await prisma.peminjamanSatker.create({
+            data: {
+                htId,
+                satkerId,
+                catatan
+            }
+        });
+
+    } catch (error: any) {
+        if (error instanceof Error) {
+            throw error;
+        }
         console.error('Gagal meminjamkan HT ke Satker:', error);
         throw new Error('Terjadi kesalahan saat memproses peminjaman.');
     }
 
+    // Segarkan kembali data agar status di UI terupdate
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
 }

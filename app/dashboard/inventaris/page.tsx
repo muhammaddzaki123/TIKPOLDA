@@ -8,51 +8,50 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PrismaClient } from '@prisma/client';
 import { addHtBySuperAdmin } from './actions';
-import { gudangColumns, terdistribusiColumns, HtDetails } from './columns';
+import { gudangColumns, terdistribusiColumns } from './columns';
 import { InventarisDataTable } from '@/components/inventarissuperadmin/data-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const prisma = new PrismaClient();
 
 /**
- * Fungsi ini dieksekusi di server untuk mengambil semua data inventaris
- * yang dibutuhkan oleh halaman ini sebelum di-render.
+ * Fungsi ini mengambil semua data inventaris dan memisahkannya
+ * berdasarkan penempatan permanen (HT.satkerId).
  */
 async function getInventarisData() {
-  // Mengambil semua data HT beserta relasi-relasinya
   const allHt = await prisma.hT.findMany({
     include: {
-      satker: true, // Data Satker penempatan
-      peminjaman: { where: { tanggalKembali: null }, include: { personil: true } }, // Peminjaman aktif oleh personil
-      peminjamanOlehSatker: true, // Riwayat peminjaman dari pusat ke Satker
+      satker: true, // Data penempatan permanen
+      peminjaman: { where: { tanggalKembali: null }, include: { personil: true } }, // Peminjaman internal Satker
+      // Peminjaman dari GUDANG PUSAT ke Satker
+      peminjamanOlehSatker: {
+        where: { tanggalKembali: null },
+        include: { satker: true } // Sertakan detail Satker peminjam
+      }
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  // Memisahkan data HT berdasarkan apakah sudah ditempatkan di Satker atau belum
-  const gudangData = allHt.filter((ht) => !ht.satkerId); // HT yang masih di Gudang Pusat
-  const terdistribusiData = allHt.filter((ht) => ht.satkerId); // HT yang sudah di Satker
+  // Memisahkan data berdasarkan `satkerId` yang menunjukkan kepemilikan
+  const gudangData = allHt.filter((ht) => !ht.satkerId); 
+  const terdistribusiData = allHt.filter((ht) => ht.satkerId); 
 
-  // Mengambil daftar semua Satker untuk digunakan di form dan filter
   const satkerList = await prisma.satker.findMany({ orderBy: { nama: 'asc' } });
 
   return { gudangData, terdistribusiData, satkerList };
 }
 
 export default async function InventarisManagementPage() {
-  // Memanggil fungsi untuk mendapatkan data
   const { gudangData, terdistribusiData, satkerList } = await getInventarisData();
 
   return (
     <div className="w-full space-y-6">
-      {/* Header Halaman */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">Manajemen Inventaris HT (Pusat)</h1>
           <p className="text-sm text-slate-600">Kelola aset di gudang pusat dan pantau aset yang terdistribusi.</p>
         </div>
         
-        {/* Tombol dan Dialog untuk Menambah HT Baru */}
         <Dialog>
           <DialogTrigger asChild>
             <Button>
@@ -65,33 +64,14 @@ export default async function InventarisManagementPage() {
               <DialogTitle>Input Data Aset HT Baru</DialogTitle>
               <DialogDescription>Masukkan detail HT. Pilih Satker jika ingin langsung didistribusikan.</DialogDescription>
             </DialogHeader>
-            {/* Form ini menggunakan Server Action untuk menambah data */}
             <form action={addHtBySuperAdmin}>
               <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="serialNumber">Serial Number</Label>
-                  <Input id="serialNumber" name="serialNumber" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="kodeHT">Kode HT</Label>
-                  <Input id="kodeHT" name="kodeHT" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="merk">Merk HT</Label>
-                  <Input id="merk" name="merk" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="jenis">Jenis HT</Label>
-                  <Input id="jenis" name="jenis" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tahunBuat">Tahun Buat</Label>
-                  <Input id="tahunBuat" name="tahunBuat" type="number" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tahunPeroleh">Tahun Peroleh</Label>
-                  <Input id="tahunPeroleh" name="tahunPeroleh" type="number" required />
-                </div>
+                <div className="space-y-2"><Label htmlFor="serialNumber">Serial Number</Label><Input id="serialNumber" name="serialNumber" required /></div>
+                <div className="space-y-2"><Label htmlFor="kodeHT">Kode HT</Label><Input id="kodeHT" name="kodeHT" required /></div>
+                <div className="space-y-2"><Label htmlFor="merk">Merk HT</Label><Input id="merk" name="merk" required /></div>
+                <div className="space-y-2"><Label htmlFor="jenis">Jenis HT</Label><Input id="jenis" name="jenis" required /></div>
+                <div className="space-y-2"><Label htmlFor="tahunBuat">Tahun Buat</Label><Input id="tahunBuat" name="tahunBuat" type="number" required /></div>
+                <div className="space-y-2"><Label htmlFor="tahunPeroleh">Tahun Peroleh</Label><Input id="tahunPeroleh" name="tahunPeroleh" type="number" required /></div>
                 <div className="col-span-1 space-y-2 md:col-span-2">
                   <Label htmlFor="satkerId">Penempatan (Opsional)</Label>
                   <Select name="satkerId" defaultValue="gudang">
@@ -117,31 +97,28 @@ export default async function InventarisManagementPage() {
         </Dialog>
       </div>
 
-      {/* Sistem Tab untuk memisahkan tampilan data */}
-      <Tabs defaultValue="terdistribusi" className="w-full">
+      <Tabs defaultValue="gudang" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="terdistribusi">Inventaris Terdistribusi ({terdistribusiData.length})</TabsTrigger>
           <TabsTrigger value="gudang">Inventaris Gudang Pusat ({gudangData.length})</TabsTrigger>
+          <TabsTrigger value="terdistribusi">Inventaris Terdistribusi ({terdistribusiData.length})</TabsTrigger>
         </TabsList>
         
-        {/* Konten Tab untuk Inventaris Terdistribusi */}
-        <TabsContent value="terdistribusi" className="rounded-lg border bg-white p-4 shadow-sm">
+        <TabsContent value="gudang" className="rounded-lg border bg-white p-4 shadow-sm">
           <InventarisDataTable
-            columns={terdistribusiColumns}
-            data={terdistribusiData as HtDetails[]}
+            columns={gudangColumns}
+            data={gudangData}
             filterColumn="kodeHT"
-            filterPlaceholder="Cari Kode HT Terdistribusi..."
+            filterPlaceholder="Cari Kode HT di Gudang..."
             satkerList={satkerList}
           />
         </TabsContent>
         
-        {/* Konten Tab untuk Inventaris Gudang Pusat */}
-        <TabsContent value="gudang" className="rounded-lg border bg-white p-4 shadow-sm">
+        <TabsContent value="terdistribusi" className="rounded-lg border bg-white p-4 shadow-sm">
           <InventarisDataTable
-            columns={gudangColumns}
-            data={gudangData as HtDetails[]}
+            columns={terdistribusiColumns}
+            data={terdistribusiData}
             filterColumn="kodeHT"
-            filterPlaceholder="Cari Kode HT di Gudang..."
+            filterPlaceholder="Cari Kode HT Terdistribusi..."
             satkerList={satkerList}
           />
         </TabsContent>
