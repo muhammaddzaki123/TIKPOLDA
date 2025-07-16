@@ -1,46 +1,54 @@
 // app/dashboard/page.tsx
 
 import { PrismaClient, HTStatus } from '@prisma/client';
-import StatCard from '@/components/stat-card';
-import {
-  Building,
-  RadioTower,
-  Users,
-  CheckCircle,
-  AlertTriangle,
-  Wrench,
-  HelpCircle,
-} from 'lucide-react';
+import { DashboardClient } from '@/components/dashboard/DashboardClient'; // <-- Impor komponen client
 
 const prisma = new PrismaClient();
 
-async function getDashboardStats() {
-  const satkerCount = await prisma.satker.count();
-  const personilCount = await prisma.personil.count();
-  const htCount = await prisma.hT.count();
+// Fungsi untuk mengambil semua data yang dibutuhkan
+async function getDashboardData() {
+  // Hitung statistik utama
+  const [satkerCount, personilCount, htCount, dipinjamCount, rusakRinganCount, rusakBeratCount, hilangCount] = await prisma.$transaction([
+    prisma.satker.count(),
+    prisma.personil.count(),
+    prisma.hT.count(),
+    prisma.peminjaman.count({ where: { tanggalKembali: null } }),
+    prisma.hT.count({ where: { status: HTStatus.RUSAK_RINGAN } }),
+    prisma.hT.count({ where: { status: HTStatus.RUSAK_BERAT } }),
+    prisma.hT.count({ where: { status: HTStatus.HILANG } }),
+  ]);
 
-  const dipinjamCount = await prisma.peminjaman.count({
-    where: { tanggalKembali: null },
-  });
-
-  const rusakRinganCount = await prisma.hT.count({ where: { status: HTStatus.RUSAK_RINGAN } });
-  const rusakBeratCount = await prisma.hT.count({ where: { status: HTStatus.RUSAK_BERAT } });
-  const hilangCount = await prisma.hT.count({ where: { status: HTStatus.HILANG } });
-  const tersediaCount = htCount - dipinjamCount;
-
-  return {
+  const stats = {
     satkerCount,
     personilCount,
     htCount,
     dipinjamCount,
-    tersediaCount,
+    tersediaCount: htCount - dipinjamCount,
     rusakCount: rusakRinganCount + rusakBeratCount,
     hilangCount,
   };
+
+  // Ambil data detail untuk setiap kartu
+  const includeOptions = {
+    include: {
+      satker: true,
+      peminjaman: { where: { tanggalKembali: null }, include: { personil: true } },
+    }
+  };
+
+  const allHt = await prisma.hT.findMany(includeOptions);
+  const htRusak = allHt.filter(ht => ht.status === 'RUSAK_RINGAN' || ht.status === 'RUSAK_BERAT');
+  const htHilang = allHt.filter(ht => ht.status === 'HILANG');
+  const htDipinjam = allHt.filter(ht => ht.peminjaman.length > 0);
+  const htTersedia = allHt.filter(ht => ht.peminjaman.length === 0);
+
+  const htData = { allHt, htRusak, htHilang, htDipinjam, htTersedia };
+
+  return { stats, htData };
 }
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+  const { stats, htData } = await getDashboardData();
 
   return (
     <div className="space-y-8">
@@ -50,27 +58,9 @@ export default async function DashboardPage() {
           Selamat datang! Pantau seluruh aktivitas sistem dari sini.
         </p>
       </div>
-
-      {/* Bagian Kartu Statistik Utama */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-700">Ringkasan Sistem</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard title="Total Satuan Kerja" value={stats.satkerCount.toString()} icon={Building} color="bg-blue-500" />
-          <StatCard title="Total Personil" value={stats.personilCount.toString()} icon={Users} color="bg-cyan-500" />
-          <StatCard title="Total Unit HT" value={stats.htCount.toString()} icon={RadioTower} color="bg-indigo-500" />
-        </div>
-      </div>
-
-      {/* Bagian Kartu Status HT */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-700">Status Aset HT</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="HT Tersedia" value={stats.tersediaCount.toString()} icon={CheckCircle} color="bg-green-500" />
-          <StatCard title="HT Dipinjam" value={stats.dipinjamCount.toString()} icon={AlertTriangle} color="bg-yellow-500" />
-          <StatCard title="HT Rusak" value={stats.rusakCount.toString()} icon={Wrench} color="bg-orange-500" />
-          <StatCard title="HT Hilang" value={stats.hilangCount.toString()} icon={HelpCircle} color="bg-red-500" />
-        </div>
-      </div>
+      
+      {/* Render komponen client dengan data dari server */}
+      <DashboardClient stats={stats} htData={htData} />
     </div>
   );
 }
