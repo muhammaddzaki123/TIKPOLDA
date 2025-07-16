@@ -25,62 +25,59 @@ model User {
 }
 
 model Satker {
-  id                    String                 @id @default(cuid())
-  kode                  String                 @unique
+  id                    String                  @id @default(cuid())
+  kode                  String                  @unique
   nama                  String
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
   admin                 User?
   personil              Personil[]
   ht                    HT[]
-  peminjamanOlehSatker  PeminjamanSatker[]     // Riwayat peminjaman DARI Super Admin
+  peminjamanOlehSatker  PeminjamanSatker[]
   pengajuanPeminjaman   PengajuanPeminjaman[]
-  pengajuanMutasiAsal   PengajuanMutasi[]      @relation("SatkerAsal")
-  pengajuanMutasiTujuan PengajuanMutasi[]      @relation("SatkerTujuan")
+  pengajuanMutasiAsal   PengajuanMutasi[]       @relation("SatkerAsal")
+  pengajuanMutasiTujuan PengajuanMutasi[]       @relation("SatkerTujuan")
+  pengajuanPengembalian PengajuanPengembalian[] // <-- Relasi baru
 }
 
 model Personil {
-  id          String        @id @default(cuid())
-  nrp         String        @unique
-  nama        String
-  jabatan     String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  satker      Satker        @relation(fields: [satkerId], references: [id], onDelete: Cascade)
-  satkerId    String
-  peminjaman  Peminjaman[]
+  id              String            @id @default(cuid())
+  nrp             String            @unique
+  nama            String
+  jabatan         String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  satker          Satker            @relation(fields: [satkerId], references: [id], onDelete: Cascade)
+  satkerId        String
+  peminjaman      Peminjaman[]
   pengajuanMutasi PengajuanMutasi[]
 }
 
 model HT {
-  id                   String               @id @default(cuid())
-  serialNumber         String               @unique
-  kodeHT               String               @unique
+  id                   String                  @id @default(cuid())
+  serialNumber         String                  @unique
+  kodeHT               String                  @unique
   merk                 String
   jenis                String
   tahunBuat            Int
   tahunPeroleh         Int
-  status               HTStatus             @default(BAIK)
+  status               HTStatus                @default(BAIK)
   catatanKondisi       String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
 
-  // --- PERUBAHAN UTAMA ---
-  // satkerId dibuat opsional. Jika null, HT ini milik Gudang Pusat.
-  satker               Satker?              @relation(fields: [satkerId], references: [id])
+  satker               Satker?                 @relation(fields: [satkerId], references: [id])
   satkerId             String?
 
-  // Relasi untuk dua jenis peminjaman
-  peminjaman           Peminjaman[]         // Riwayat peminjaman internal di Satker
-  peminjamanOlehSatker PeminjamanSatker[]   // Riwayat peminjaman dari Super Admin ke Satker
+  peminjaman           Peminjaman[]
+  peminjamanOlehSatker PeminjamanSatker[]
+  pengajuanPengembalian PengajuanPengembalian[] // <-- Relasi baru
 
   @@map("HT")
 }
 
-
 // --- MODEL TRANSAKSI & PENGAJUAN ---
 
-// Peminjaman INTERNAL: Admin Satker -> Personil
 model Peminjaman {
   id                 String    @id @default(cuid())
   tanggalPinjam      DateTime  @default(now())
@@ -95,29 +92,27 @@ model Peminjaman {
   personilId         String
 }
 
-// --- MODEL BARU ---
-// Peminjaman EKSTERNAL: Super Admin -> Satker
 model PeminjamanSatker {
   id             String    @id @default(cuid())
   tanggalPinjam  DateTime  @default(now())
-  tanggalKembali DateTime? // Diisi jika Satker mengembalikan HT ke Gudang Pusat
+  tanggalKembali DateTime?
   catatan        String?
   ht             HT        @relation(fields: [htId], references: [id], onDelete: Cascade)
-  htId           String    @unique // Satu HT hanya bisa dipinjam oleh satu Satker pada satu waktu
+  htId           String    @unique
   satker         Satker    @relation(fields: [satkerId], references: [id], onDelete: Cascade)
   satkerId       String
 }
 
 model PengajuanPeminjaman {
-  id           String          @id @default(cuid())
-  keperluan    String
-  jumlah       Int
-  status       PengajuanStatus @default(PENDING)
-  catatanAdmin String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id            String          @id @default(cuid())
+  keperluan     String
+  jumlah        Int
+  status        PengajuanStatus @default(PENDING)
+  catatanAdmin  String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   satkerPengaju Satker          @relation(fields: [satkerId], references: [id], onDelete: Cascade)
-  satkerId     String
+  satkerId      String
 }
 
 model PengajuanMutasi {
@@ -134,6 +129,26 @@ model PengajuanMutasi {
   satkerTujuan   Satker          @relation("SatkerTujuan", fields: [satkerTujuanId], references: [id])
   satkerTujuanId String
 }
+
+// --- MODEL BARU ---
+model PengajuanPengembalian {
+  id           String          @id @default(cuid())
+  alasan       String
+  status       PengajuanStatus @default(PENDING)
+  catatanAdmin String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  ht           HT              @relation(fields: [htId], references: [id])
+  htId         String
+
+  satkerPengaju Satker          @relation(fields: [satkerId], references: [id])
+  satkerId     String
+
+  @@index([htId])
+  @@index([satkerId])
+}
+
 
 // --- ENUMS ---
 enum Role {

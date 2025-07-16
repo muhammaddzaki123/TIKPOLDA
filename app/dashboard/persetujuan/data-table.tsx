@@ -1,3 +1,5 @@
+// app/dashboard/persetujuan/data-table.tsx
+
 'use client';
 
 import { useState, useTransition, Fragment, useMemo } from 'react';
@@ -9,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { approveMutasi, approvePeminjaman, rejectPengajuan } from './actions';
+import { approveMutasi, approvePeminjaman, rejectPengajuan, approvePengembalian } from './actions';
 import { HT, HTStatus } from '@prisma/client';
 
 type Pengajuan = { id: string; jumlah?: number; [key: string]: any };
@@ -17,7 +19,7 @@ type Pengajuan = { id: string; jumlah?: number; [key: string]: any };
 interface DataTablePersetujuanProps<TData extends Pengajuan, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  tipe: 'mutasi' | 'peminjaman';
+  tipe: 'mutasi' | 'peminjaman' | 'pengembalian';
   htDiGudang?: HT[];
 }
 
@@ -43,23 +45,38 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const handleApproveClick = (pengajuan: TData) => {
-    if (tipe === 'mutasi') {
-      if (confirm(`Anda yakin ingin menyetujui mutasi untuk ${pengajuan.personil.nama}?`)) {
-        startTransition(async () => {
-          try {
-            await approveMutasi(pengajuan.id);
-            alert('Pengajuan mutasi berhasil disetujui.');
-          } catch (error: any) {
-            alert(`Error: ${error.message}`);
-          }
-        });
-      }
-    } else {
-      setSelectedPengajuan(pengajuan);
-      setSelectedHtIds(new Set());
-      setMerkFilter('all');
-      setStatusFilter('all');
-      setIsSelectHtDialogOpen(true);
+    switch (tipe) {
+      case 'mutasi':
+        if (confirm(`Anda yakin ingin menyetujui mutasi untuk ${pengajuan.personil.nama}?`)) {
+          startTransition(async () => {
+            try {
+              await approveMutasi(pengajuan.id);
+              alert('Pengajuan mutasi berhasil disetujui.');
+            } catch (error: any) {
+              alert(`Error: ${error.message}`);
+            }
+          });
+        }
+        break;
+      case 'peminjaman':
+        setSelectedPengajuan(pengajuan);
+        setSelectedHtIds(new Set());
+        setMerkFilter('all');
+        setStatusFilter('all');
+        setIsSelectHtDialogOpen(true);
+        break;
+      case 'pengembalian':
+        if (confirm(`Konfirmasi penerimaan HT ${pengajuan.ht.kodeHT} dari ${pengajuan.satkerPengaju.nama}?`)) {
+          startTransition(async () => {
+            try {
+              await approvePengembalian(pengajuan.id);
+              alert('Pengajuan pengembalian berhasil disetujui.');
+            } catch (error: any) {
+              alert(`Error: ${error.message}`);
+            }
+          });
+        }
+        break;
     }
   };
 

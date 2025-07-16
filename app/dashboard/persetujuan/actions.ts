@@ -16,9 +16,6 @@ async function getSuperAdminIdOrThrow() {
   }
 }
 
-/**
- * Menyetujui pengajuan mutasi personil.
- */
 export async function approveMutasi(pengajuanId: string) {
   await getSuperAdminIdOrThrow();
 
@@ -60,11 +57,6 @@ export async function approveMutasi(pengajuanId: string) {
   revalidatePath('/dashboard/satker');
 }
 
-/**
- * PEMBARUAN: Menyetujui pengajuan peminjaman HT dengan memilih unit spesifik.
- * @param pengajuanId ID dari pengajuan yang disetujui.
- * @param selectedHtIds Array dari string berisi ID HT yang dipilih untuk dipinjamkan.
- */
 export async function approvePeminjaman(pengajuanId: string, selectedHtIds: string[]) {
     await getSuperAdminIdOrThrow();
 
@@ -77,7 +69,6 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
             throw new Error('Pengajuan tidak valid atau sudah diproses.');
         }
 
-        // Validasi baru: Pastikan jumlah HT yang dipilih sesuai dengan yang diajukan
         if (selectedHtIds.length !== pengajuan.jumlah) {
             throw new Error(`Jumlah HT yang dipilih (${selectedHtIds.length}) tidak sesuai dengan jumlah yang diajukan (${pengajuan.jumlah}).`);
         }
@@ -86,17 +77,13 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
             throw new Error('Tidak ada HT yang dipilih untuk dipinjamkan.');
         }
 
-        // Lakukan peminjaman dalam satu transaksi
         await prisma.$transaction(async (tx) => {
-            // Update status pengajuan
             await tx.pengajuanPeminjaman.update({
                 where: { id: pengajuanId },
                 data: { status: PengajuanStatus.APPROVED }
             });
 
-            // Pindahkan HT yang DIPILIH ke Satker pemohon & catat di PeminjamanSatker
             for (const htId of selectedHtIds) {
-                // Pastikan HT yang dipilih memang ada dan tersedia di gudang
                 const ht = await tx.hT.findFirst({
                     where: { id: htId, satkerId: null }
                 });
@@ -127,22 +114,74 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
     revalidatePath('/dashboard/satker');
 }
 
-/**
- * Menolak pengajuan.
- */
+export async function approvePengembalian(pengajuanId: string) {
+  await getSuperAdminIdOrThrow();
+
+  try {
+    const pengajuan = await prisma.pengajuanPengembalian.findUnique({
+      where: { id: pengajuanId },
+    });
+
+    if (!pengajuan || pengajuan.status !== 'PENDING') {
+      throw new Error('Pengajuan tidak valid atau sudah diproses.');
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.pengajuanPengembalian.update({
+        where: { id: pengajuanId },
+        data: { status: PengajuanStatus.APPROVED },
+      });
+
+      const peminjamanAktif = await tx.peminjamanSatker.findFirst({
+        where: { htId: pengajuan.htId, tanggalKembali: null },
+      });
+
+      if (peminjamanAktif) {
+        await tx.peminjamanSatker.update({
+          where: { id: peminjamanAktif.id },
+          data: { tanggalKembali: new Date() },
+        });
+      }
+
+      await tx.hT.update({
+        where: { id: pengajuan.htId },
+        data: { satkerId: null },
+      });
+    });
+  } catch (error: any) {
+    throw error;
+  }
+
+  revalidatePath('/dashboard/persetujuan');
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
+}
+
 export async function rejectPengajuan(formData: FormData) {
   await getSuperAdminIdOrThrow();
   const pengajuanId = formData.get('pengajuanId') as string;
-  const tipe = formData.get('tipe') as 'mutasi' | 'peminjaman';
+  const tipe = formData.get('tipe') as 'mutasi' | 'peminjaman' | 'pengembalian';
   const catatanAdmin = formData.get('catatanAdmin') as string;
 
   if (!pengajuanId || !tipe || !catatanAdmin) {
     throw new Error('Alasan penolakan wajib diisi.');
   }
   
-  const model = tipe === 'mutasi' ? prisma.pengajuanMutasi : prisma.pengajuanPeminjaman;
+  let model: any;
+  switch (tipe) {
+    case 'mutasi':
+      model = prisma.pengajuanMutasi;
+      break;
+    case 'peminjaman':
+      model = prisma.pengajuanPeminjaman;
+      break;
+    case 'pengembalian':
+      model = prisma.pengajuanPengembalian;
+      break;
+    default:
+      throw new Error('Tipe pengajuan tidak valid.');
+  }
 
-  // @ts-ignore
   await model.update({
     where: { id: pengajuanId },
     data: {
