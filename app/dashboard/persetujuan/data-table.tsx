@@ -1,4 +1,3 @@
-// app/dashboard/persetujuan/data-table.tsx
 'use client';
 
 import { useState, useTransition, Fragment, useMemo } from 'react';
@@ -9,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { approveMutasi, approvePeminjaman, rejectPengajuan } from './actions';
-import { HT, HTStatus } from '@prisma/client'; // Import HTStatus
+import { HT, HTStatus } from '@prisma/client';
 
 type Pengajuan = { id: string; jumlah?: number; [key: string]: any };
 
@@ -40,8 +39,6 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
   const [selectedPengajuan, setSelectedPengajuan] = useState<TData | null>(null);
   const [selectedHtIds, setSelectedHtIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
-
-  // State baru untuk filter di dalam dialog
   const [merkFilter, setMerkFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -60,8 +57,8 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
     } else {
       setSelectedPengajuan(pengajuan);
       setSelectedHtIds(new Set());
-      setMerkFilter('all'); // Reset filter saat dialog dibuka
-      setStatusFilter('all'); // Reset filter saat dialog dibuka
+      setMerkFilter('all');
+      setStatusFilter('all');
       setIsSelectHtDialogOpen(true);
     }
   };
@@ -139,7 +136,6 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
     },
   });
 
-  // Logika untuk memfilter HT di dalam dialog
   const uniqueMerks = useMemo(() => Array.from(new Set(htDiGudang.map(ht => ht.merk))), [htDiGudang]);
   const filteredHtDiGudang = useMemo(() => {
     return htDiGudang.filter(ht => {
@@ -209,7 +205,6 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
             </DialogDescription>
           </DialogHeader>
           
-          {/* Bagian Filter */}
           <div className="flex flex-wrap items-center gap-2 border-t pt-4">
               <Select value={merkFilter} onValueChange={setMerkFilter}>
                   <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filter Merek..." /></SelectTrigger>
@@ -264,7 +259,37 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
       </Dialog>
       
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        {/* ... Konten Dialog Penolakan ... */}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tolak Pengajuan</DialogTitle>
+            <DialogDescription>
+              Berikan alasan penolakan untuk pengajuan ini. Alasan akan ditampilkan kepada Admin Satker yang bersangkutan.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={handleRejectSubmit}>
+            <input type="hidden" name="pengajuanId" value={selectedPengajuan?.id ?? ''} />
+            <input type="hidden" name="tipe" value={tipe} />
+            
+            <div className="py-4 space-y-2">
+              <Label htmlFor="catatanAdmin">Alasan Penolakan</Label>
+              <Textarea
+                id="catatanAdmin"
+                name="catatanAdmin"
+                placeholder="Contoh: Stok HT tidak tersedia, data personil tidak valid, dll."
+                required
+                rows={4}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button type="submit" variant="destructive" disabled={isPending}>
+                {isPending ? 'Memproses...' : 'Kirim Penolakan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
       </Dialog>
     </Fragment>
   );
