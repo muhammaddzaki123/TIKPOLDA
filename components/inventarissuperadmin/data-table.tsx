@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -11,6 +11,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   ColumnFiltersState,
+  RowSelectionState,
 } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { HtDetails } from '@/app/dashboard/inventaris/columns';
-import { pinjamkanHtKeSatker } from '@/app/dashboard/inventaris/actions';
+import { pinjamkanHtKeSatker, distributeMultipleHtToSatker } from '@/app/dashboard/inventaris/actions';
 import { Satker, HTStatus } from '@prisma/client';
 
 declare module '@tanstack/react-table' {
@@ -45,9 +46,11 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
   satkerList = [],
 }: InventarisDataTableProps<TData, TValue>) {
   const [isPinjamkanOpen, setIsPinjamkanOpen] = useState(false);
+  const [isDistribusiOpen, setIsDistribusiOpen] = useState(false);
   const [selectedHt, setSelectedHt] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const table = useReactTable({
     data,
@@ -56,6 +59,8 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
+    // BARIS YANG MENYEBABKAN ERROR SUDAH DIHAPUS DARI SINI
     meta: {
       openPinjamkanDialog: (ht) => {
         setSelectedHt(ht as TData);
@@ -64,6 +69,7 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
     },
     state: {
       columnFilters,
+      rowSelection,
     },
   });
 
@@ -74,10 +80,27 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
     });
   };
 
-  const uniqueMerks = Array.from(new Set(data.map((item) => item.merk))).filter(Boolean);
-  
-  // PERBAIKAN: Memeriksa keberadaan kolom berdasarkan ID 'penempatan' yang sudah kita definisikan
+  const handleDistribusiSubmit = (formData: FormData) => {
+    const satkerTujuanId = formData.get('satkerTujuanId') as string;
+    const selectedIds = table.getFilteredSelectedRowModel().rows.map(row => row.original.id);
+
+    startTransition(async () => {
+      try {
+        await distributeMultipleHtToSatker(selectedIds, satkerTujuanId);
+        alert(`${selectedIds.length} unit HT berhasil didistribusikan.`);
+        setIsDistribusiOpen(false);
+        table.resetRowSelection();
+      } catch (error: any) {
+        alert(`Error: ${error.message}`);
+      }
+    });
+  };
+
+  const uniqueMerks = useMemo(() => Array.from(new Set(data.map((item) => item.merk))).filter(Boolean), [data]);
   const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'penempatan');
+  
+  const isGudangTable = !hasSatkerColumn;
+  const selectedRowCount = Object.keys(rowSelection).length;
 
   return (
     <div>
@@ -123,10 +146,8 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           </SelectContent>
         </Select>
 
-        {/* PERBAIKAN: Logika render kondisional sekarang akan bekerja dengan benar */}
         {hasSatkerColumn && (
           <Select
-            // PERBAIKAN: Menggunakan ID 'penempatan' untuk mengontrol filter
             value={(table.getColumn('penempatan')?.getFilterValue() as string) ?? ''}
             onValueChange={(value) => table.getColumn('penempatan')?.setFilterValue(value === 'all' ? null : value)}
           >
@@ -143,6 +164,16 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
             </SelectContent>
           </Select>
         )}
+        
+        {isGudangTable && (
+          <Button
+            onClick={() => setIsDistribusiOpen(true)}
+            disabled={selectedRowCount === 0}
+            variant="outline"
+          >
+            Distribusikan Terpilih ({selectedRowCount})
+          </Button>
+        )}
       </div>
       <div className="rounded-md border">
         <Table>
@@ -158,7 +189,7 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
@@ -204,6 +235,44 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
                   </DialogFooter>
               </form>
           </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isDistribusiOpen} onOpenChange={setIsDistribusiOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Distribusikan HT ke Satker</DialogTitle>
+            <DialogDescription>
+              Anda akan mendistribusikan <strong>{selectedRowCount} unit HT</strong> yang dipilih. Pilih Satker tujuan di bawah ini.
+            </DialogDescription>
+          </DialogHeader>
+          <form action={handleDistribusiSubmit}>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="satkerTujuanId">Distribusikan Ke Satker</Label>
+                <Select name="satkerTujuanId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Satker tujuan..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {satkerList.map(satker => (
+                      <SelectItem key={satker.id} value={satker.id}>
+                        {satker.nama}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDistribusiOpen(false)}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Memproses...' : `Distribusikan ${selectedRowCount} HT`}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
       </Dialog>
     </div>
   );

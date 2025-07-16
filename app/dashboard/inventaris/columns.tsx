@@ -5,6 +5,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox
 import { HT, Satker, Peminjaman, Personil, PeminjamanSatker, HTStatus } from '@prisma/client';
 
 export type HtDetails = HT & {
@@ -15,6 +16,31 @@ export type HtDetails = HT & {
 
 // Kolom untuk tabel Inventaris Gudang Pusat
 export const gudangColumns: ColumnDef<HtDetails>[] = [
+
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   { accessorKey: 'kodeHT', header: 'Kode HT' },
   { accessorKey: 'merk', header: 'Merk' },
   {
@@ -64,7 +90,7 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
   },
 ];
 
-// Kolom untuk tabel Inventaris Terdistribusi
+// Kolom untuk tabel Inventaris Terdistribusi (tidak ada perubahan)
 export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
   { accessorKey: 'kodeHT', header: 'Kode HT' },
   { accessorKey: 'merk', header: 'Merk' },

@@ -49,10 +49,6 @@ export async function addHtBySuperAdmin(formData: FormData) {
   revalidatePath('/dashboard/satker');
 }
 
-/**
- * Logika yang diperbarui untuk meminjamkan HT.
- * Hanya membuat catatan peminjaman tanpa mengubah kepemilikan aset.
- */
 export async function pinjamkanHtKeSatker(formData: FormData) {
     const htId = formData.get('htId') as string;
     const satkerId = formData.get('satkerId') as string;
@@ -63,11 +59,10 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
     }
 
     try {
-        // Validasi untuk memastikan HT tidak sedang dalam status pinjaman aktif
         const existingLoan = await prisma.peminjamanSatker.findFirst({
             where: {
                 htId: htId,
-                tanggalKembali: null, // Cari peminjaman yang belum dikembalikan
+                tanggalKembali: null,
             }
         });
 
@@ -75,7 +70,6 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
             throw new Error('Gagal: HT ini sudah tercatat sedang dipinjamkan.');
         }
 
-        // Buat catatan peminjaman baru di tabel PeminjamanSatker
         await prisma.peminjamanSatker.create({
             data: {
                 htId,
@@ -92,7 +86,49 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
         throw new Error('Terjadi kesalahan saat memproses peminjaman.');
     }
 
-    // Segarkan kembali data agar status di UI terupdate
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
+}
+
+export async function distributeMultipleHtToSatker(htIds: string[], satkerId: string) {
+  if (!htIds || htIds.length === 0) {
+    throw new Error('Tidak ada HT yang dipilih untuk didistribusikan.');
+  }
+  if (!satkerId) {
+    throw new Error('Satker tujuan wajib dipilih.');
+  }
+
+  try {
+    const result = await prisma.hT.updateMany({
+      where: {
+        id: {
+          in: htIds,
+        },
+        satkerId: null,
+      },
+      data: {
+        satkerId: satkerId,
+      },
+    });
+
+    if (result.count === 0) {
+        throw new Error('Tidak ada HT yang berhasil didistribusikan. Mungkin aset sudah dipindahkan.');
+    }
+
+    const logEntries = htIds.map(htId => ({
+      htId: htId,
+      satkerId: satkerId,
+      catatan: `Didistribusikan secara massal pada ${new Date().toLocaleString()}`
+    }));
+    await prisma.peminjamanSatker.createMany({ data: logEntries });
+
+
+  } catch (error: any) {
+    console.error('Gagal mendistribusikan HT massal:', error);
+    throw new Error('Terjadi kesalahan pada server saat proses distribusi.');
+  }
+
+  // Revalidasi path untuk memperbarui data di UI
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
 }
