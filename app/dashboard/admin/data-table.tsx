@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { deleteAdminAndSatker, resetPassword } from './actions';
+import { deleteAdminAndSatker, resetPassword, updateAdminAndSatker } from './actions';
 import { AdminWithSatker } from '@/types/custom';
 
 interface AdminDataTableProps<TData extends AdminWithSatker, TValue> {
@@ -21,6 +21,7 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
 }: AdminDataTableProps<TData, TValue>) {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -37,8 +38,24 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
         setSelectedUser(user as TData);
         setIsDeleteDialogOpen(true);
       },
+      openEditDialog: (user) => {
+        setSelectedUser(user as TData);
+        setIsEditDialogOpen(true);
+      },
     },
   });
+  
+  const handleUpdateSubmit = (formData: FormData) => {
+    startTransition(async () => {
+        try {
+            await updateAdminAndSatker(formData);
+            setIsEditDialogOpen(false);
+            alert('Data berhasil diperbarui!');
+        } catch (error: any) {
+            alert(`Gagal: ${error.message}`);
+        }
+    });
+  };
   
   const handleResetSubmit = (formData: FormData) => {
     startTransition(async () => {
@@ -92,6 +109,46 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
         </Table>
       </div>
 
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Data Admin & Satker</DialogTitle>
+            <DialogDescription>Ubah detail untuk akun dan Satker yang dipilih.</DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <form action={handleUpdateSubmit}>
+              <input type="hidden" name="userId" value={selectedUser.id} />
+              <input type="hidden" name="satkerId" value={selectedUser.satker?.id ?? ''} />
+              <div className="grid gap-4 py-4">
+                <p className="font-semibold text-sm">Detail Satuan Kerja</p>
+                <div className="space-y-2">
+                  <Label htmlFor="kodeSatker">Kode Satker</Label>
+                  <Input id="kodeSatker" name="kodeSatker" defaultValue={selectedUser.satker?.kode} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="namaSatker">Nama Lengkap Satker</Label>
+                  <Input id="namaSatker" name="namaSatker" defaultValue={selectedUser.satker?.nama} required />
+                </div>
+                
+                <p className="font-semibold text-sm pt-4 border-t mt-4">Detail Akun Admin</p>
+                <div className="space-y-2">
+                  <Label htmlFor="namaAdmin">Nama Lengkap Admin</Label>
+                  <Input id="namaAdmin" name="namaAdmin" defaultValue={selectedUser.nama} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Admin</Label>
+                  <Input id="email" name="email" type="email" defaultValue={selectedUser.email} required />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Batal</Button>
+                <Button type="submit" disabled={isPending}>{isPending ? 'Menyimpan...' : 'Simpan Perubahan'}</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Reset Password untuk {selectedUser?.nama}</DialogTitle></DialogHeader>

@@ -4,9 +4,16 @@ import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AdminWithSatker } from '@/types/custom'; // <-- Impor dari file terpusat
+import { AdminWithSatker } from '@/types/custom';
 
-// Blok "declare module" sudah dihapus dari sini
+// Deklarasikan tipe meta untuk memberitahu TypeScript tentang fungsi baru
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> {
+    openResetDialog?: (user: TData) => void;
+    openDeleteDialog?: (user: TData) => void;
+    openEditDialog?: (user: TData) => void;
+  }
+}
 
 export const columns: ColumnDef<AdminWithSatker>[] = [
   {
@@ -42,6 +49,9 @@ export const columns: ColumnDef<AdminWithSatker>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => table.options.meta?.openEditDialog?.(user)}>
+              Edit Data
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => table.options.meta?.openResetDialog?.(user)}>
               Reset Password
             </DropdownMenuItem>
