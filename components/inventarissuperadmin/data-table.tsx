@@ -1,5 +1,3 @@
-// app/components/inventarissuperadmin/data-table.tsx
-
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
@@ -23,6 +21,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { HtDetails } from '@/app/dashboard/inventaris/columns';
 import { pinjamkanHtKeSatker, distributeMultipleHtToSatker } from '@/app/dashboard/inventaris/actions';
 import { Satker, HTStatus } from '@prisma/client';
+import { ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData> {
@@ -51,6 +53,9 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [openMerk, setOpenMerk] = useState(false);
+  const [openKondisi, setOpenKondisi] = useState(false);
+  const [openPenempatan, setOpenPenempatan] = useState(false);
 
   const table = useReactTable({
     data,
@@ -60,7 +65,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
-    // BARIS YANG MENYEBABKAN ERROR SUDAH DIHAPUS DARI SINI
     meta: {
       openPinjamkanDialog: (ht) => {
         setSelectedHt(ht as TData);
@@ -95,12 +99,23 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
       }
     });
   };
-
-  const uniqueMerks = useMemo(() => Array.from(new Set(data.map((item) => item.merk))).filter(Boolean), [data]);
-  const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'penempatan');
   
+  const uniqueMerks = useMemo(() => Array.from(new Set(data.map((item) => item.merk))).filter(Boolean).map(merk => ({ value: merk, label: merk })), [data]);
+  const kondisiOptions = useMemo(() => Object.values(HTStatus).map(status => ({ value: status, label: status.replace('_', ' ') })), []);
+  const satkerOptions = useMemo(() => satkerList.map(satker => ({ value: satker.nama, label: satker.nama })), [satkerList]);
+  
+  const hasSatkerColumn = table.getAllColumns().some(column => column.id === 'penempatan');
   const isGudangTable = !hasSatkerColumn;
   const selectedRowCount = Object.keys(rowSelection).length;
+
+  const merkFilterValue = table.getColumn('merk')?.getFilterValue() as string ?? '';
+  const kondisiFilterValue = table.getColumn('status')?.getFilterValue() as string ?? '';
+  
+  // --- PERBAIKAN UTAMA DI SINI ---
+  // Hanya ambil nilai filter 'penempatan' jika kolomnya ada
+  const penempatanFilterValue = hasSatkerColumn
+    ? table.getColumn('penempatan')?.getFilterValue() as string ?? ''
+    : '';
 
   return (
     <div>
@@ -112,57 +127,93 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           className="max-w-xs"
         />
 
-        <Select
-          value={(table.getColumn('merk')?.getFilterValue() as string) ?? ''}
-          onValueChange={(value) => table.getColumn('merk')?.setFilterValue(value === 'all' ? null : value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter Merek..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Merek</SelectItem>
-            {uniqueMerks.map((merk) => (
-              <SelectItem key={merk} value={merk}>
-                {merk}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* --- COMBOBOX Merek --- */}
+        <Popover open={openMerk} onOpenChange={setOpenMerk}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={openMerk} className="w-[180px] justify-between">
+              {merkFilterValue ? uniqueMerks.find(m => m.value === merkFilterValue)?.label : "Filter Merek..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[180px] p-0">
+            <Command>
+              <CommandInput placeholder="Cari merek..." />
+              <CommandList><CommandEmpty>Merek tidak ditemukan.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem value="all" onSelect={() => { table.getColumn('merk')?.setFilterValue(null); setOpenMerk(false); }}>
+                    <Check className={cn("mr-2 h-4 w-4", !merkFilterValue ? "opacity-100" : "opacity-0")} />
+                    Semua Merek
+                  </CommandItem>
+                  {uniqueMerks.map((merk) => (
+                    <CommandItem key={merk.value} value={merk.value} onSelect={(currentValue) => { table.getColumn('merk')?.setFilterValue(currentValue === merkFilterValue ? null : currentValue); setOpenMerk(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", merkFilterValue === merk.value ? "opacity-100" : "opacity-0")} />
+                      {merk.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-        <Select
-          value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
-          onValueChange={(value) => table.getColumn('status')?.setFilterValue(value === 'all' ? null : value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter Kondisi..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Kondisi</SelectItem>
-            {Object.values(HTStatus).map((status) => (
-              <SelectItem key={status} value={status}>
-                {status.replace('_', ' ')}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* --- COMBOBOX Kondisi --- */}
+        <Popover open={openKondisi} onOpenChange={setOpenKondisi}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={openKondisi} className="w-[180px] justify-between">
+              {kondisiFilterValue ? kondisiOptions.find(k => k.value === kondisiFilterValue)?.label : "Filter Kondisi..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[180px] p-0">
+            <Command>
+              <CommandInput placeholder="Cari kondisi..." />
+              <CommandList><CommandEmpty>Kondisi tidak ditemukan.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem value="all" onSelect={() => { table.getColumn('status')?.setFilterValue(null); setOpenKondisi(false); }}>
+                    <Check className={cn("mr-2 h-4 w-4", !kondisiFilterValue ? "opacity-100" : "opacity-0")} />
+                    Semua Kondisi
+                  </CommandItem>
+                  {kondisiOptions.map((kondisi) => (
+                    <CommandItem key={kondisi.value} value={kondisi.value} onSelect={(currentValue) => { table.getColumn('status')?.setFilterValue(currentValue === kondisiFilterValue ? null : currentValue); setOpenKondisi(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", kondisiFilterValue === kondisi.value ? "opacity-100" : "opacity-0")} />
+                      {kondisi.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
+        {/* --- COMBOBOX Penempatan (Kondisional) --- */}
         {hasSatkerColumn && (
-          <Select
-            value={(table.getColumn('penempatan')?.getFilterValue() as string) ?? ''}
-            onValueChange={(value) => table.getColumn('penempatan')?.setFilterValue(value === 'all' ? null : value)}
-          >
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Filter Penempatan..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Satker</SelectItem>
-              {satkerList.map((satker) => (
-                <SelectItem key={satker.id} value={satker.nama}>
-                  {satker.nama}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={openPenempatan} onOpenChange={setOpenPenempatan}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" role="combobox" aria-expanded={openPenempatan} className="w-[220px] justify-between">
+                {penempatanFilterValue ? satkerOptions.find(s => s.value === penempatanFilterValue)?.label : "Filter Penempatan..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[220px] p-0">
+              <Command>
+                <CommandInput placeholder="Cari penempatan..." />
+                <CommandList><CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem value="all" onSelect={() => { table.getColumn('penempatan')?.setFilterValue(null); setOpenPenempatan(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", !penempatanFilterValue ? "opacity-100" : "opacity-0")} />
+                      Semua Satker
+                    </CommandItem>
+                    {satkerOptions.map((satker) => (
+                      <CommandItem key={satker.value} value={satker.value} onSelect={(currentValue) => { table.getColumn('penempatan')?.setFilterValue(currentValue === penempatanFilterValue ? null : currentValue); setOpenPenempatan(false); }}>
+                        <Check className={cn("mr-2 h-4 w-4", penempatanFilterValue === satker.value ? "opacity-100" : "opacity-0")} />
+                        {satker.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         )}
         
         {isGudangTable && (
@@ -267,7 +318,7 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
               <Button type="button" variant="outline" onClick={() => setIsDistribusiOpen(false)}>
                 Batal
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || selectedRowCount === 0}>
                 {isPending ? 'Memproses...' : `Distribusikan ${selectedRowCount} HT`}
               </Button>
             </DialogFooter>
