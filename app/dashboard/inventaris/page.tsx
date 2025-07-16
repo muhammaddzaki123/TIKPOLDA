@@ -14,25 +14,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const prisma = new PrismaClient();
 
-/**
- * Fungsi ini mengambil semua data inventaris dan memisahkannya
- * berdasarkan penempatan permanen (HT.satkerId).
- */
 async function getInventarisData() {
   const allHt = await prisma.hT.findMany({
     include: {
       satker: true, // Data penempatan permanen
-      peminjaman: { where: { tanggalKembali: null }, include: { personil: true } }, // Peminjaman internal Satker
+      peminjaman: { where: { tanggalKembali: null }, include: { personil: true } }, 
       // Peminjaman dari GUDANG PUSAT ke Satker
       peminjamanOlehSatker: {
         where: { tanggalKembali: null },
-        include: { satker: true } // Sertakan detail Satker peminjam
+        include: { satker: true }
       }
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  // Memisahkan data berdasarkan `satkerId` yang menunjukkan kepemilikan
   const gudangData = allHt.filter((ht) => !ht.satkerId); 
   const terdistribusiData = allHt.filter((ht) => ht.satkerId); 
 
