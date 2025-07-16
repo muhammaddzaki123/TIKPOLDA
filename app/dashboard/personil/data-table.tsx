@@ -1,18 +1,27 @@
-// app/dashboard/personil/data-table.tsx
-
 'use client';
 
-import { useState, useTransition } from 'react';
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
+import { useState, useTransition, useMemo } from 'react';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  ColumnFiltersState,
+} from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PersonilWithSatker } from '@/types/custom';
 import { Satker } from '@prisma/client';
 import { mutasiPersonil } from './actions';
+import { ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 interface PersonilDataTableProps<TData extends PersonilWithSatker, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -28,10 +37,13 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
   const [isMutasiDialogOpen, setIsMutasiDialogOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [openSatker, setOpenSatker] = useState(false);
 
   const table = useReactTable({
     data,
     columns,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -41,6 +53,9 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
         setIsMutasiDialogOpen(true);
       },
     },
+    state: {
+        columnFilters,
+    },
   });
 
   const handleMutasiSubmit = (formData: FormData) => {
@@ -48,7 +63,6 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
       try {
         await mutasiPersonil(formData);
         setIsMutasiDialogOpen(false);
-        // Di aplikasi nyata, gunakan library notifikasi seperti 'sonner' atau 'react-toastify'
         alert('Mutasi personil berhasil!');
       } catch (error: any) {
         alert(`Mutasi Gagal: ${error.message}`);
@@ -56,18 +70,42 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
     });
   };
 
+  const satkerOptions = useMemo(() => satkerList.map(s => ({ value: s.nama, label: s.nama })), [satkerList]);
+  const satkerFilterValue = table.getColumn('satker_nama')?.getFilterValue() as string ?? '';
+
   return (
     <>
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Cari nama personil..."
-          value={(table.getColumn('nama')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('nama')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+      <div className="flex items-center py-4 gap-2">
+        <Popover open={openSatker} onOpenChange={setOpenSatker}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-[250px] justify-between">
+              {satkerFilterValue ? satkerOptions.find(s => s.value === satkerFilterValue)?.label : "Filter berdasarkan Satker..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[250px] p-0">
+            <Command>
+              <CommandInput placeholder="Cari Satker..." />
+              <CommandList>
+                <CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem value="all" onSelect={() => { table.getColumn('satker_nama')?.setFilterValue(null); setOpenSatker(false); }}>
+                    <Check className={cn("mr-2 h-4 w-4", !satkerFilterValue ? "opacity-100" : "opacity-0")} />
+                    Semua Satker
+                  </CommandItem>
+                  {satkerOptions.map((satker) => (
+                    <CommandItem key={satker.value} value={satker.value} onSelect={(currentValue) => { table.getColumn('satker_nama')?.setFilterValue(currentValue === satkerFilterValue ? null : currentValue); setOpenSatker(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", satkerFilterValue === satker.value ? "opacity-100" : "opacity-0")} />
+                      {satker.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -102,6 +140,7 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
           </TableBody>
         </Table>
       </div>
+
        <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"

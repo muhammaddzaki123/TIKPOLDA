@@ -1,5 +1,3 @@
-// app/dashboard/personil/columns.tsx
-
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -13,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { PersonilWithSatker } from '@/types/custom'; // Impor tipe dari file terpusat
+import { PersonilWithSatker } from '@/types/custom';
 
 export const columns: ColumnDef<PersonilWithSatker>[] = [
   {
@@ -25,8 +23,9 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
     header: 'NRP',
   },
   {
-    accessorKey: 'satker.nama', // Mengambil nama dari relasi satker
+    accessorKey: 'satker.nama',
     header: 'Satker Saat Ini',
+    id: 'satker_nama', // ID unik tetap dipertahankan untuk target filtering
   },
   {
     accessorKey: 'jabatan',
@@ -36,7 +35,6 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
     id: 'actions',
     cell: ({ row, table }) => {
       const personil = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -49,7 +47,6 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              // Panggil fungsi openMutasiDialog dari meta saat item diklik
               onClick={() => table.options.meta?.openMutasiDialog?.(personil)}
             >
               Mutasi Personil
