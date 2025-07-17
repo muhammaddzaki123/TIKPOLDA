@@ -6,55 +6,54 @@ import { redirect } from 'next/navigation';
 import { PrismaClient } from '@prisma/client';
 import { FormPeminjaman } from '@/components/peminjaman/FormPeminjaman';
 import { FormMutasi } from '@/components/peminjaman/FormMutasi';
+import { ReturnPackageForm, ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm'; // <-- Import baru
 import { RiwayatPengajuanTable, Riwayat } from './RiwayatPengajuanTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // <-- Impor komponen Tabs
-import { ArrowRightLeft, Radio } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowRightLeft, Radio, Undo2 } from 'lucide-react';
 
 const prisma = new PrismaClient();
 
 async function getData(satkerId: string) {
-  const personilList = await prisma.personil.findMany({
-    where: { satkerId },
-    orderBy: { nama: 'asc' },
-  });
+  // Ambil semua data yang dibutuhkan dalam satu transaksi prisma
+  const [
+    personilList,
+    satkerList,
+    riwayatPeminjaman,
+    riwayatMutasi,
+    riwayatPengembalian,
+    peminjamanSatker,
+  ] = await prisma.$transaction([
+    prisma.personil.findMany({ where: { satkerId }, orderBy: { nama: 'asc' } }),
+    prisma.satker.findMany({ where: { id: { not: satkerId } }, orderBy: { nama: 'asc' } }),
+    prisma.pengajuanPeminjaman.findMany({ where: { satkerId }, orderBy: { createdAt: 'desc' } }),
+    prisma.pengajuanMutasi.findMany({ where: { satkerAsalId: satkerId }, include: { personil: true, satkerTujuan: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.pengajuanPengembalian.findMany({ where: { satkerId }, include: { ht: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.peminjamanSatker.findMany({ where: { satkerId }, include: { ht: true } }),
+  ]);
 
-  const satkerList = await prisma.satker.findMany({
-    where: { id: { not: satkerId } },
-    orderBy: { nama: 'asc' },
-  });
-
-  const riwayatPeminjaman = await prisma.pengajuanPeminjaman.findMany({
-    where: { satkerId },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const riwayatMutasi = await prisma.pengajuanMutasi.findMany({
-    where: { satkerAsalId: satkerId },
-    include: { personil: true, satkerTujuan: true },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const peminjamanSatker = await prisma.peminjamanSatker.findMany({
-    where: { satkerId },
-    include: { ht: true },
-  });
-
-  // Gabungkan dan format data untuk tabel riwayat
+  // Proses data untuk tabel riwayat gabungan
   const riwayatGabungan: Riwayat[] = [
     ...riwayatPeminjaman.map(p => {
-      const approvedHts = p.status === 'APPROVED'
-        ? peminjamanSatker
-            .filter(ps => ps.catatan?.includes(p.id.substring(0, 8)))
-            .map(ps => ps.ht)
-        : [];
-      
+      const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter(ps => ps.catatan?.includes(p.id.substring(0, 8))).map(ps => ps.ht) : [];
       return { ...p, tipe: 'Peminjaman HT', approvedHts };
     }),
     ...riwayatMutasi.map(m => ({ ...m, tipe: 'Mutasi Personil' })),
+    ...riwayatPengembalian.map(p => ({ ...p, tipe: 'Pengembalian HT' })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  return { personilList, satkerList, riwayatGabungan };
+  // Proses data untuk menemukan "Paket Peminjaman Aktif"
+  const approvedLoans: ApprovedLoanPackage[] = riwayatPeminjaman
+    .filter(p => p.status === 'APPROVED')
+    .map(p => {
+      const htDetails = peminjamanSatker
+        .filter(ps => ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null)
+        .map(ps => ({ kodeHT: ps.ht.kodeHT, merk: ps.ht.merk }));
+      return { ...p, htDetails };
+    })
+    .filter(p => p.htDetails.length > 0); // Hanya tampilkan paket yang masih memiliki HT aktif
+
+  return { personilList, satkerList, riwayatGabungan, approvedLoans };
 }
 
 export default async function PengajuanPage() {
@@ -65,11 +64,12 @@ export default async function PengajuanPage() {
     redirect('/login');
   }
 
-  const { personilList, satkerList, riwayatGabungan } = await getData(satkerId);
+  const { personilList, satkerList, riwayatGabungan, approvedLoans } = await getData(satkerId);
 
-  // Pisahkan data riwayat untuk setiap tab
+  // Pisahkan data riwayat untuk setiap jenis pengajuan
   const riwayatPeminjamanData = riwayatGabungan.filter(r => r.tipe === 'Peminjaman HT');
   const riwayatMutasiData = riwayatGabungan.filter(r => r.tipe === 'Mutasi Personil');
+  const riwayatPengembalianData = riwayatGabungan.filter(r => r.tipe === 'Pengembalian HT');
 
   return (
     <div className="w-full space-y-6">
@@ -81,56 +81,52 @@ export default async function PengajuanPage() {
       </div>
 
       <Tabs defaultValue="peminjaman" className="w-full space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="peminjaman">
-            <Radio className="mr-2 h-4 w-4" />
-            Pengajuan Peminjaman HT
-          </TabsTrigger>
-          <TabsTrigger value="mutasi">
-            <ArrowRightLeft className="mr-2 h-4 w-4" />
-            Pengajuan Mutasi Personil
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="peminjaman"><Radio className="mr-2 h-4 w-4" />Peminjaman HT</TabsTrigger>
+          <TabsTrigger value="mutasi"><ArrowRightLeft className="mr-2 h-4 w-4" />Mutasi Personil</TabsTrigger>
+          <TabsTrigger value="pengembalian"><Undo2 className="mr-2 h-4 w-4" />Pengembalian HT</TabsTrigger>
         </TabsList>
 
-        {/* --- KONTEN TAB PEMINJAMAN HT --- */}
         <TabsContent value="peminjaman" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <FormPeminjaman />
-            </div>
+            <div className="lg:col-span-1"><FormPeminjaman /></div>
             <div className="lg:col-span-2">
               <Card>
-                <CardHeader>
-                  <CardTitle>Riwayat Pengajuan Peminjaman HT</CardTitle>
-                  <CardDescription>Jejak audit untuk semua permintaan peminjaman aset HT Anda.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RiwayatPengajuanTable data={riwayatPeminjamanData} />
-                </CardContent>
+                <CardHeader><CardTitle>Riwayat Pengajuan Peminjaman HT</CardTitle><CardDescription>Jejak audit untuk semua permintaan peminjaman aset HT Anda.</CardDescription></CardHeader>
+                <CardContent><RiwayatPengajuanTable data={riwayatPeminjamanData} /></CardContent>
               </Card>
             </div>
           </div>
         </TabsContent>
 
-        {/* --- KONTEN TAB MUTASI PERSONIL --- */}
         <TabsContent value="mutasi" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <FormMutasi personilList={personilList} satkerList={satkerList} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1"><FormMutasi personilList={personilList} satkerList={satkerList} /></div>
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader><CardTitle>Riwayat Pengajuan Mutasi Personil</CardTitle><CardDescription>Jejak audit untuk semua permintaan mutasi anggota Anda.</CardDescription></CardHeader>
+                        <CardContent><RiwayatPengajuanTable data={riwayatMutasiData} /></CardContent>
+                    </Card>
+                </div>
             </div>
+        </TabsContent>
+        
+        <TabsContent value="pengembalian" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Kolom kiri sekarang menampilkan daftar paket peminjaman aktif */}
+            <div className="lg:col-span-1">
+              <ReturnPackageForm approvedLoans={approvedLoans} />
+            </div>
+            {/* Kolom kanan menampilkan riwayat pengajuan pengembalian */}
             <div className="lg:col-span-2">
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Riwayat Pengajuan Mutasi Personil</CardTitle>
-                    <CardDescription>Jejak audit untuk semua permintaan mutasi anggota Anda.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <RiwayatPengajuanTable data={riwayatMutasiData} />
-                    </CardContent>
-                </Card>
+              <Card>
+                <CardHeader><CardTitle>Riwayat Pengajuan Pengembalian HT</CardTitle><CardDescription>Jejak audit untuk semua permintaan pengembalian aset HT Anda ke pusat.</CardDescription></CardHeader>
+                <CardContent><RiwayatPengajuanTable data={riwayatPengembalianData} /></CardContent>
+              </Card>
             </div>
           </div>
         </TabsContent>
+
       </Tabs>
     </div>
   );
