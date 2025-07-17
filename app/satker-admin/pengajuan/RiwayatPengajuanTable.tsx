@@ -12,16 +12,17 @@ import { PengajuanStatus, Personil, Satker, HT } from '@prisma/client';
 // Tipe data gabungan untuk semua jenis riwayat
 export type Riwayat = {
   id: string;
-  tipe: string; // 'Peminjaman HT' atau 'Mutasi Personil'
+  tipe: string;
   status: PengajuanStatus;
   createdAt: Date;
   catatanAdmin?: string | null;
   // Properti spesifik
   jumlah?: number;
   keperluan?: string;
+  alasan?: string;
   personil?: Personil;
   satkerTujuan?: Satker;
-  approvedHts?: HT[]; // <-- Properti baru untuk menampung HT yang disetujui
+  approvedHts?: HT[]; // Digunakan untuk HT yang dipinjam dan dikembalikan
 };
 
 export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
@@ -59,9 +60,11 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                   <TableCell>{new Date(item.createdAt).toLocaleDateString('id-ID')}</TableCell>
                   <TableCell className="font-medium">{item.tipe}</TableCell>
                   <TableCell>
-                    {item.tipe === 'Peminjaman HT' ? 
+                    {item.tipe === 'Peminjaman HT' ?
                      `${item.jumlah} unit - ${item.keperluan}`:
-                     `Mutasi ${item.personil?.nama} ke ${item.satkerTujuan?.nama}`
+                     item.tipe === 'Mutasi Personil' ?
+                     `Mutasi ${item.personil?.nama} ke ${item.satkerTujuan?.nama}` :
+                     `${item.approvedHts?.length || 0} unit - ${item.alasan}`
                     }
                   </TableCell>
                   <TableCell>
@@ -70,7 +73,8 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                           {item.status === 'REJECTED' && (
                               <p className="text-xs text-red-500">Alasan: {item.catatanAdmin}</p>
                           )}
-                          {item.status === 'APPROVED' && item.tipe === 'Peminjaman HT' && (
+                          {/* FIX: Tombol "Lihat Aset" akan muncul jika ada daftar HT yang bisa ditampilkan */}
+                          {(item.approvedHts && item.approvedHts.length > 0) && (
                             <Button variant="ghost" size="sm" className="h-auto p-1 text-xs" onClick={() => toggleRow(item.id)}>
                               {expandedRow === item.id ? <ChevronDown className="mr-1 h-3 w-3" /> : <ChevronRight className="mr-1 h-3 w-3" />}
                               Lihat Aset
@@ -79,12 +83,14 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                       </div>
                   </TableCell>
                 </TableRow>
-                {/* Baris untuk menampilkan detail HT yang disetujui */}
+                {/* Baris untuk menampilkan detail HT yang disetujui/dikembalikan */}
                 {expandedRow === item.id && (
                   <TableRow className="bg-slate-50 hover:bg-slate-50">
                     <TableCell colSpan={4} className="p-0">
                       <div className="p-4">
-                        <h4 className="font-semibold mb-2 text-sm">Aset HT yang Disetujui:</h4>
+                        <h4 className="font-semibold mb-2 text-sm text-slate-800">
+                          {item.tipe === 'Peminjaman HT' ? 'Aset HT yang Disetujui:' : 'Aset HT yang Dikembalikan:'}
+                        </h4>
                         <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
                           {item.approvedHts?.map(ht => (
                             <li key={ht.id}>

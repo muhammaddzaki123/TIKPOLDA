@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { PrismaClient } from '@prisma/client';
 import { FormPeminjaman } from '@/components/peminjaman/FormPeminjaman';
 import { FormMutasi } from '@/components/peminjaman/FormMutasi';
-import { ReturnPackageForm, ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm'; // <-- Import baru
+import { ReturnPackageForm, ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm';
 import { RiwayatPengajuanTable, Riwayat } from './RiwayatPengajuanTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,7 +15,6 @@ import { ArrowRightLeft, Radio, Undo2 } from 'lucide-react';
 const prisma = new PrismaClient();
 
 async function getData(satkerId: string) {
-  // Ambil semua data yang dibutuhkan dalam satu transaksi prisma
   const [
     personilList,
     satkerList,
@@ -32,17 +31,41 @@ async function getData(satkerId: string) {
     prisma.peminjamanSatker.findMany({ where: { satkerId }, include: { ht: true } }),
   ]);
 
-  // Proses data untuk tabel riwayat gabungan
+  // --- PERUBAHAN LOGIKA PENGELOMPOKAN PENGEMBALIAN DIMULAI DI SINI ---
+  const groupedReturns: { [key: string]: Riwayat } = {};
+  riwayatPengembalian.forEach(p => {
+    // Membuat kunci unik berdasarkan alasan dan waktu pembuatan (dibulatkan ke menit terdekat)
+    const groupKey = `${p.alasan}-${new Date(p.createdAt).setSeconds(0, 0)}`;
+
+    if (!groupedReturns[groupKey]) {
+      groupedReturns[groupKey] = {
+        id: p.id, // Gunakan ID dari item pertama sebagai ID grup
+        tipe: 'Pengembalian HT',
+        status: p.status,
+        createdAt: p.createdAt,
+        alasan: p.alasan,
+        catatanAdmin: p.catatanAdmin,
+        approvedHts: [], // Ganti nama 'approvedHts' menjadi 'returnedHts' atau nama yang lebih sesuai
+      };
+    }
+    // Tambahkan HT ke dalam paket
+    if (p.ht) {
+      groupedReturns[groupKey].approvedHts?.push(p.ht);
+    }
+  });
+
+  const riwayatPengembalianGrouped = Object.values(groupedReturns);
+  // --- AKHIR DARI PERUBAHAN LOGIKA ---
+
   const riwayatGabungan: Riwayat[] = [
     ...riwayatPeminjaman.map(p => {
       const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter(ps => ps.catatan?.includes(p.id.substring(0, 8))).map(ps => ps.ht) : [];
       return { ...p, tipe: 'Peminjaman HT', approvedHts };
     }),
     ...riwayatMutasi.map(m => ({ ...m, tipe: 'Mutasi Personil' })),
-    ...riwayatPengembalian.map(p => ({ ...p, tipe: 'Pengembalian HT' })),
+    ...riwayatPengembalianGrouped, // Gunakan data yang sudah dikelompokkan
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  // Proses data untuk menemukan "Paket Peminjaman Aktif"
   const approvedLoans: ApprovedLoanPackage[] = riwayatPeminjaman
     .filter(p => p.status === 'APPROVED')
     .map(p => {
@@ -51,7 +74,7 @@ async function getData(satkerId: string) {
         .map(ps => ({ kodeHT: ps.ht.kodeHT, merk: ps.ht.merk }));
       return { ...p, htDetails };
     })
-    .filter(p => p.htDetails.length > 0); // Hanya tampilkan paket yang masih memiliki HT aktif
+    .filter(p => p.htDetails.length > 0);
 
   return { personilList, satkerList, riwayatGabungan, approvedLoans };
 }
@@ -66,7 +89,6 @@ export default async function PengajuanPage() {
 
   const { personilList, satkerList, riwayatGabungan, approvedLoans } = await getData(satkerId);
 
-  // Pisahkan data riwayat untuk setiap jenis pengajuan
   const riwayatPeminjamanData = riwayatGabungan.filter(r => r.tipe === 'Peminjaman HT');
   const riwayatMutasiData = riwayatGabungan.filter(r => r.tipe === 'Mutasi Personil');
   const riwayatPengembalianData = riwayatGabungan.filter(r => r.tipe === 'Pengembalian HT');
@@ -113,11 +135,9 @@ export default async function PengajuanPage() {
         
         <TabsContent value="pengembalian" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Kolom kiri sekarang menampilkan daftar paket peminjaman aktif */}
             <div className="lg:col-span-1">
               <ReturnPackageForm approvedLoans={approvedLoans} />
             </div>
-            {/* Kolom kanan menampilkan riwayat pengajuan pengembalian */}
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader><CardTitle>Riwayat Pengajuan Pengembalian HT</CardTitle><CardDescription>Jejak audit untuk semua permintaan pengembalian aset HT Anda ke pusat.</CardDescription></CardHeader>
