@@ -35,4 +35,9 @@ export const columnsPengembalian: ColumnDef<PengajuanPengembalianWithRelations>[
     header: 'Tgl. Pengajuan',
     cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString('id-ID'),
   },
+  // -- KOLOM AKSI YANG DITAMBAHKAN --
+  {
+    id: 'actions',
+    header: () => <div className="text-right">Aksi</div>,
+  },
 ];

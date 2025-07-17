@@ -98,7 +98,7 @@ model PeminjamanSatker {
   tanggalKembali DateTime?
   catatan        String?
   ht             HT        @relation(fields: [htId], references: [id], onDelete: Cascade)
-  htId           String    @unique
+  htId           String
   satker         Satker    @relation(fields: [satkerId], references: [id], onDelete: Cascade)
   satkerId       String
 }
