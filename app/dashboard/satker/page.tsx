@@ -20,7 +20,7 @@ async function getSatkerMonitoringData() {
           peminjaman: {
             where: { tanggalKembali: null }, // Hanya yang belum dikembalikan
             include: {
-              personil: true, // Sertakan detail personil yang meminjam
+              personil: true, // Sertakan detail personil yang meminjam (termasuk subSatker)
             },
           },
         },

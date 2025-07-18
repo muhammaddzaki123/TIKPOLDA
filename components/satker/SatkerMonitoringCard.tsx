@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
+// Tipe data diperbarui untuk menyertakan subSatker pada personil
 type SatkerWithDetails = Prisma.SatkerGetPayload<{
   include: {
     personil: true;
@@ -47,12 +48,22 @@ const StatBox = ({ title, value, icon: Icon }: { title: string, value: string | 
 
 
 export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
+  // State untuk filter aset
   const [merkFilter, setMerkFilter] = useState<string>('');
   const [kondisiFilter, setKondisiFilter] = useState<string>('');
-  const [statusPinjamFilter, setStatusPinjamFilter] = useState<string>('');
+  const [asetPenempatanFilter, setAsetPenempatanFilter] = useState<string>('');
+  
+  // --- STATE BARU UNTUK FILTER PERSONIL ---
+  const [personilPenempatanFilter, setPersonilPenempatanFilter] = useState<string>('');
+
+  // State untuk kontrol popover
   const [openMerk, setOpenMerk] = useState(false);
   const [openKondisi, setOpenKondisi] = useState(false);
-  const [openStatusPinjam, setOpenStatusPinjam] = useState(false);
+  const [openAsetPenempatan, setOpenAsetPenempatan] = useState(false);
+  
+  // --- STATE POPOVER BARU ---
+  const [openPersonilPenempatan, setOpenPersonilPenempatan] = useState(false);
+
 
   // --- KALKULASI STATISTIK ---
   const htDipinjamCount = satker.ht.filter(h => h.peminjaman.length > 0).length;
@@ -72,20 +83,43 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
     }, {} as Record<string, number>);
   }, [satker.ht]);
 
+  const penempatanOptions = useMemo(() => {
+    const penempatanSet = new Set<string>();
+    penempatanSet.add(satker.nama); 
+    satker.personil.forEach(p => {
+        if (p.subSatker) {
+            penempatanSet.add(p.subSatker);
+        }
+    });
+    return Array.from(penempatanSet).sort().map(p => ({ value: p, label: p }));
+  }, [satker.personil, satker.nama]);
 
   const uniqueMerks = useMemo(() => Object.keys(statsByMerk).map(m => ({ value: m, label: m })), [statsByMerk]);
   const kondisiOptions = useMemo(() => Object.values(HTStatus).map(s => ({ value: s, label: s.replace('_', ' ') })), []);
-  const statusPinjamOptions = [{ value: 'tersedia', label: 'Tersedia' }, { value: 'dipinjam', label: 'Dipinjam' }];
 
   const filteredHts = useMemo(() => {
     return satker.ht.filter(ht => {
-      const isDipinjam = ht.peminjaman.length > 0;
+      const pemegang = ht.peminjaman[0]?.personil;
+      const penempatan = pemegang?.subSatker || satker.nama;
+
       const merkMatch = !merkFilter || ht.merk === merkFilter;
       const kondisiMatch = !kondisiFilter || ht.status === kondisiFilter;
-      const statusPinjamMatch = !statusPinjamFilter || (statusPinjamFilter === 'dipinjam' ? isDipinjam : !isDipinjam);
-      return merkMatch && kondisiMatch && statusPinjamMatch;
+      const penempatanMatch = !asetPenempatanFilter || penempatan === asetPenempatanFilter;
+
+      return merkMatch && kondisiMatch && penempatanMatch;
     });
-  }, [satker.ht, merkFilter, kondisiFilter, statusPinjamFilter]);
+  }, [satker.ht, satker.nama, merkFilter, kondisiFilter, asetPenempatanFilter]);
+
+  // --- LOGIKA BARU UNTUK FILTER PERSONIL ---
+  const filteredPersonil = useMemo(() => {
+      if (!personilPenempatanFilter) {
+          return satker.personil;
+      }
+      return satker.personil.filter(p => {
+          const penempatan = p.subSatker || satker.nama;
+          return penempatan === personilPenempatanFilter;
+      });
+  }, [satker.personil, satker.nama, personilPenempatanFilter]);
 
   return (
     <Dialog>
@@ -115,10 +149,9 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
           <DialogTitle className="text-2xl">Dashboard Satuan Kerja: {satker.nama}</DialogTitle>
         </DialogHeader>
         
-        {/* --- BAGIAN STATISTIK --- */}
         <div className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold flex items-center"><BarChart3 className="mr-2 h-5 w-5"/> Ringkasan Aset HT</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <StatBox title="Total Personil" value={satker._count.personil} icon={Users} />
                 <StatBox title="Total HT Tersedia" value={htTersediaCount} icon={PackageOpen} />
                 <StatBox title="Total HT Dipinjam" value={htDipinjamCount} icon={Package} />
                 <StatBox title="Kondisi Baik" value={statsByKondisi.BAIK || 0} icon={ShieldCheck} />
@@ -138,23 +171,24 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
             <Tabs defaultValue="aset" className="h-full flex flex-col">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="aset">Detail Aset HT ({filteredHts.length})</TabsTrigger>
-                    <TabsTrigger value="personil">Daftar Personil ({satker.personil.length})</TabsTrigger>
+                    <TabsTrigger value="personil">Daftar Personil ({filteredPersonil.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="aset" className="flex-grow flex flex-col h-[calc(100%-40px)] mt-2">
                     <div className="flex flex-wrap items-center gap-2 py-2">
                         <Combobox aptions={uniqueMerks} value={merkFilter} setValue={setMerkFilter} open={openMerk} setOpen={setOpenMerk} placeholder="Filter Merek..." />
                         <Combobox aptions={kondisiOptions} value={kondisiFilter} setValue={setKondisiFilter} open={openKondisi} setOpen={setOpenKondisi} placeholder="Filter Kondisi..." />
-                        <Combobox aptions={statusPinjamOptions} value={statusPinjamFilter} setValue={setStatusPinjamFilter} open={openStatusPinjam} setOpen={setOpenStatusPinjam} placeholder="Filter Status Pinjam..." />
+                        <Combobox aptions={penempatanOptions} value={asetPenempatanFilter} setValue={setAsetPenempatanFilter} open={openAsetPenempatan} setOpen={setOpenAsetPenempatan} placeholder="Filter Penempatan..." />
                     </div>
                     <div className="flex-grow overflow-y-auto pt-2 space-y-2 pr-2">
-                        {filteredHts.map((h) => {
+                        {filteredHts.length > 0 ? filteredHts.map((h) => {
                             const pemegang = h.peminjaman[0]?.personil;
+                            const penempatan = pemegang?.subSatker || satker.nama;
                             return (
                             <div key={h.id} className="grid grid-cols-4 gap-4 items-center text-sm p-3 border rounded-lg hover:bg-slate-50 transition-colors">
                                 <div className="col-span-2">
                                     <p className="font-semibold">{h.kodeHT} <span className="font-normal text-slate-600">({h.merk})</span></p>
-                                    <p className="text-xs text-slate-500">SN: {h.serialNumber}</p>
+                                    <p className="text-xs text-slate-500">Penempatan: {penempatan}</p>
                                 </div>
                                 <div className="col-span-2 flex justify-end items-center gap-2">
                                     <Badge variant={h.status !== 'BAIK' ? 'secondary' : 'outline'}>{h.status.replace('_', ' ')}</Badge>
@@ -162,19 +196,45 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
                                 </div>
                             </div>
                             );
-                        })}
+                        }) : (
+                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Tidak ada aset yang cocok dengan filter.</div>
+                        )}
                     </div>
                 </TabsContent>
 
-                <TabsContent value="personil" className="flex-grow overflow-y-auto mt-2 pr-2">
-                     <div className="space-y-2">
-                        {satker.personil.map((p) => (
-                        <div key={p.id} className="flex justify-between items-center text-sm p-3 border rounded-lg hover:bg-slate-50 transition-colors">
-                            <div><p className="font-semibold">{p.nama}</p><p className="text-xs text-slate-500">NRP: {p.nrp}</p></div>
-                            <Badge variant="outline">{p.jabatan}</Badge>
+                <TabsContent value="personil" className="flex-grow flex flex-col h-[calc(100%-40px)] mt-2">
+                     {/* --- FILTER BARU UNTUK PERSONIL --- */}
+                     <div className="py-2">
+                        <Combobox aptions={penempatanOptions} value={personilPenempatanFilter} setValue={setPersonilPenempatanFilter} open={openPersonilPenempatan} setOpen={setOpenPersonilPenempatan} placeholder="Filter Penempatan..." />
+                     </div>
+                     <div className="flex-grow overflow-y-auto pt-2 pr-2">
+                        <div className="rounded-md border">
+                            <table className="w-full text-sm">
+                            <thead className="bg-slate-50">
+                                <tr>
+                                    <th className="p-3 text-left font-medium text-slate-600">Nama Personil</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">NRP</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">Penempatan</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">Jabatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredPersonil.length > 0 ? filteredPersonil.map((p) => (
+                                <tr key={p.id} className="border-b last:border-b-0 hover:bg-slate-50 transition-colors">
+                                    <td className="p-3 font-medium text-slate-800">{p.nama}</td>
+                                    <td className="p-3 text-slate-500">{p.nrp}</td>
+                                    <td className="p-3 text-slate-600">{p.subSatker || satker.nama}</td>
+                                    <td className="p-3"><Badge variant="outline">{p.jabatan}</Badge></td>
+                                </tr>
+                                )) : (
+                                <tr>
+                                    <td colSpan={4} className="h-24 text-center text-muted-foreground">Tidak ada personil yang cocok dengan filter.</td>
+                                </tr>
+                                )}
+                            </tbody>
+                            </table>
                         </div>
-                        ))}
-                    </div>
+                     </div>
                 </TabsContent>
             </Tabs>
         </div>
