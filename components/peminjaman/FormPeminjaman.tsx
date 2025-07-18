@@ -14,6 +14,18 @@ export function FormPeminjaman() {
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
+    const file = formData.get('file') as File;
+
+    // Client-side validation
+    if (file && file.size > 0 && file.type !== 'application/pdf') {
+      alert('Error: File yang diunggah harus berformat PDF.');
+      return;
+    }
+    if (file && file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('Error: Ukuran file tidak boleh lebih dari 2MB.');
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createPengajuanPeminjaman(formData);
@@ -57,6 +69,18 @@ export function FormPeminjaman() {
               required
             />
           </div>
+          {/* --- INPUT FILE PDF BARU --- */}
+          <div className="space-y-2">
+            <Label htmlFor="file">Unggah Surat Permohonan (PDF)</Label>
+            <Input
+              id="file"
+              name="file"
+              type="file"
+              accept=".pdf" // Hanya izinkan file PDF
+            />
+            <p className="text-xs text-muted-foreground">Opsional. Ukuran file maksimal 2MB.</p>
+          </div>
+          {/* --- AKHIR INPUT FILE PDF BARU --- */}
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? 'Mengirim...' : 'Kirim Pengajuan Peminjaman'}
           </Button>

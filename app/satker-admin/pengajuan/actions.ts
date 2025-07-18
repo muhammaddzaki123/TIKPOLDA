@@ -6,6 +6,8 @@ import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -25,16 +27,53 @@ export async function createPengajuanPeminjaman(formData: FormData) {
 
   const jumlah = parseInt(formData.get('jumlah') as string);
   const keperluan = formData.get('keperluan') as string;
+  const file = formData.get('file') as File;
 
   if (!jumlah || !keperluan || jumlah <= 0) {
     throw new Error('Jumlah HT dan Keperluan wajib diisi dengan benar.');
   }
+
+  let fileUrl: string | null = null;
+
+  // --- LOGIKA UNTUK MENANGANI DAN MENYIMPAN FILE UPLOAD ---
+  if (file && file.size > 0) {
+    // Validasi di sisi server untuk keamanan
+    if (file.size > 2 * 1024 * 1024) { // 2MB
+      throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+    }
+    if (file.type !== 'application/pdf') {
+       throw new Error('File yang diunggah harus berformat PDF.');
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Buat nama file yang unik untuk menghindari penimpaan file
+    const filename = `${Date.now()}_${satkerId}_${file.name.replace(/\s/g, '_')}`;
+    
+    // Tentukan path direktori
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'surat_permohonan');
+    
+    // Buat direktori jika belum ada
+    await mkdir(uploadDir, { recursive: true });
+
+    // Tentukan path lengkap file
+    const filePath = path.join(uploadDir, filename);
+    
+    // Tulis file ke sistem
+    await writeFile(filePath, buffer);
+    
+    // Simpan URL yang dapat diakses publik ke database
+    fileUrl = `/uploads/surat_permohonan/${filename}`;
+  }
+  // --- AKHIR LOGIKA FILE UPLOAD ---
 
   try {
     await prisma.pengajuanPeminjaman.create({
       data: {
         jumlah,
         keperluan,
+        fileUrl: fileUrl, // Simpan URL file jika ada
         satkerId: satkerId,
       },
     });
@@ -53,6 +92,7 @@ export async function createPengajuanMutasi(formData: FormData) {
     const personilId = formData.get('personilId') as string;
     const satkerTujuanId = formData.get('satkerTujuanId') as string;
     const alasan = formData.get('alasan') as string;
+    const file = formData.get('file') as File; // Ambil file dari form data
 
     if (!personilId || !satkerTujuanId || !alasan) {
         throw new Error('Personil, Satker Tujuan, dan Alasan wajib diisi.');
@@ -61,6 +101,32 @@ export async function createPengajuanMutasi(formData: FormData) {
     if (satkerAsalId === satkerTujuanId) {
         throw new Error('Satker Tujuan tidak boleh sama dengan Satker asal.');
     }
+
+    let fileUrl: string | null = null;
+
+    // --- LOGIKA UNTUK MENANGANI FILE UPLOAD ---
+    if (file && file.size > 0) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB
+        throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+      }
+      if (file.type !== 'application/pdf') {
+         throw new Error('File yang diunggah harus berformat PDF.');
+      }
+  
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+  
+      const filename = `${Date.now()}_${satkerAsalId}_${file.name.replace(/\s/g, '_')}`;
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'surat_mutasi');
+      
+      await mkdir(uploadDir, { recursive: true });
+  
+      const filePath = path.join(uploadDir, filename);
+      await writeFile(filePath, buffer);
+      
+      fileUrl = `/uploads/surat_mutasi/${filename}`;
+    }
+    // --- AKHIR LOGIKA FILE UPLOAD ---
 
     try {
         const existingPengajuan = await prisma.pengajuanMutasi.findFirst({
@@ -80,6 +146,7 @@ export async function createPengajuanMutasi(formData: FormData) {
                 satkerAsalId,
                 satkerTujuanId,
                 alasan,
+                fileUrl: fileUrl, // Simpan URL file jika ada
             },
         });
     } catch (error: any) {

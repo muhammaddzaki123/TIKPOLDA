@@ -107,6 +107,7 @@ model PengajuanPeminjaman {
   id            String          @id @default(cuid())
   keperluan     String
   jumlah        Int
+  fileUrl       String?
   status        PengajuanStatus @default(PENDING)
   catatanAdmin  String?
   createdAt     DateTime        @default(now())
@@ -118,6 +119,7 @@ model PengajuanPeminjaman {
 model PengajuanMutasi {
   id             String          @id @default(cuid())
   alasan         String
+  fileUrl        String?
   status         PengajuanStatus @default(PENDING)
   catatanAdmin   String?
   createdAt      DateTime        @default(now())

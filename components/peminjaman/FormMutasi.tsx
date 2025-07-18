@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { createPengajuanMutasi } from '@/app/satker-admin/pengajuan/actions';
 import type { Personil, Satker } from '@prisma/client';
+import { Input } from '@/components/ui/input'; // <-- Import Input
 
 interface FormMutasiProps {
   personilList: Personil[];
@@ -20,11 +21,21 @@ export function FormMutasi({ personilList, satkerList }: FormMutasiProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
+    // Client-side validation
+    const file = formData.get('file') as File;
+    if (file && file.size > 0 && file.type !== 'application/pdf') {
+      alert('Error: File yang diunggah harus berformat PDF.');
+      return;
+    }
+     if (file && file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('Error: Ukuran file tidak boleh lebih dari 2MB.');
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createPengajuanMutasi(formData);
         alert('Pengajuan mutasi personil berhasil dikirim.');
-        // Opsi: reset form setelah berhasil
         const form = document.getElementById('form-mutasi') as HTMLFormElement;
         form.reset();
       } catch (error: any) {
@@ -74,6 +85,18 @@ export function FormMutasi({ personilList, satkerList }: FormMutasiProps) {
               required
             />
           </div>
+          {/* --- TAMBAHAN FORM UNTUK UPLOAD PDF --- */}
+          <div className="space-y-2">
+            <Label htmlFor="file">Unggah Surat Perintah (PDF)</Label>
+            <Input
+              id="file"
+              name="file"
+              type="file"
+              accept=".pdf" // Hanya menerima file PDF
+            />
+             <p className="text-xs text-muted-foreground">Opsional. Ukuran file maksimal 2MB.</p>
+          </div>
+          {/* --- AKHIR TAMBAHAN --- */}
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? 'Mengirim...' : 'Kirim Pengajuan Mutasi'}
           </Button>
