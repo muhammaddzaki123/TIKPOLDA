@@ -14,7 +14,8 @@ import {
   History,
   Archive,
   ArrowRightLeft,
-  CheckSquare, // <-- Import Ikon Baru
+  CheckSquare,
+  ClipboardList, // <-- Import Ikon Baru
 } from 'lucide-react';
 
 // Definisikan item menu baru untuk Super Admin
@@ -24,10 +25,12 @@ const sidebarItems = [
   { name: 'Pemantauan Satker', href: '/dashboard/satker', icon: Building },
   { name: 'Inventaris Pusat', href: '/dashboard/inventaris', icon: RadioTower },
   { name: 'Manajemen Personil', href: '/dashboard/personil', icon: UserCheck },
-  { name: 'Pusat Persetujuan', href: '/dashboard/persetujuan', icon: CheckSquare }, // <-- TAMBAHKAN ITEM INI
+  { name: 'Pusat Persetujuan', href: '/dashboard/persetujuan', icon: CheckSquare },
   { name: 'Riwayat Pinjam (Pusat)', href: '/dashboard/riwayat', icon: Archive },
+  { name: 'Riwayat Mutasi', href: '/dashboard/riwayat-mutasi', icon: ClipboardList }, // <-- TAMBAHKAN ITEM INI
   { name: 'Riwayat Internal (Satker)', href: '/dashboard/riwayat-internal', icon: ArrowRightLeft },
 ];
+
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -45,7 +48,7 @@ export default function Sidebar() {
               <Link
                 href={item.href}
                 className={`flex items-center space-x-3 rounded-md p-3 text-sm font-medium transition-colors ${
-                  pathname === item.href
+                  pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === item.href
                     ? 'bg-slate-700 text-white'
                     : 'text-gray-300 hover:bg-slate-700 hover:text-white'
                 }`}
