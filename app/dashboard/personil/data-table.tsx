@@ -29,18 +29,23 @@ interface PersonilDataTableProps<TData extends PersonilWithSatker, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   satkerList: Satker[];
+  penempatanList: string[];
 }
 
 export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
   columns,
   data,
-  satkerList
+  satkerList,
+  penempatanList,
 }: PersonilDataTableProps<TData, TValue>) {
   const [isMutasiDialogOpen, setIsMutasiDialogOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  
+  // State untuk popover
   const [openSatker, setOpenSatker] = useState(false);
+  const [openPenempatan, setOpenPenempatan] = useState(false);
 
   const table = useReactTable({
     data,
@@ -73,15 +78,19 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
   };
 
   const satkerOptions = useMemo(() => satkerList.map(s => ({ value: s.nama, label: s.nama })), [satkerList]);
+  const penempatanOptions = useMemo(() => penempatanList.map(p => ({ value: p, label: p })), [penempatanList]);
+
   const satkerFilterValue = table.getColumn('satker_nama')?.getFilterValue() as string ?? '';
+  const penempatanFilterValue = table.getColumn('penempatan')?.getFilterValue() as string ?? '';
 
   return (
     <>
-      <div className="flex items-center py-4 gap-2">
+      <div className="flex items-center py-4 gap-2 flex-wrap">
+        {/* Filter Satker Induk */}
         <Popover open={openSatker} onOpenChange={setOpenSatker}>
           <PopoverTrigger asChild>
             <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-[250px] justify-between">
-              {satkerFilterValue ? satkerOptions.find(s => s.value === satkerFilterValue)?.label : "Filter berdasarkan Satker..."}
+              {satkerFilterValue ? satkerOptions.find(s => s.value === satkerFilterValue)?.label : "Filter Satker Induk..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -91,14 +100,44 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
               <CommandList>
                 <CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
                 <CommandGroup>
-                  <CommandItem value="all" onSelect={() => { table.getColumn('satker_nama')?.setFilterValue(null); setOpenSatker(false); }}>
+                  <CommandItem value="all" onSelect={() => { table.getColumn('satker_nama')?.setFilterValue(''); setOpenSatker(false); }}>
                     <Check className={cn("mr-2 h-4 w-4", !satkerFilterValue ? "opacity-100" : "opacity-0")} />
                     Semua Satker
                   </CommandItem>
                   {satkerOptions.map((satker) => (
-                    <CommandItem key={satker.value} value={satker.value} onSelect={(currentValue) => { table.getColumn('satker_nama')?.setFilterValue(currentValue === satkerFilterValue ? null : currentValue); setOpenSatker(false); }}>
+                    <CommandItem key={satker.value} value={satker.value} onSelect={() => { table.getColumn('satker_nama')?.setFilterValue(satker.value); setOpenSatker(false); }}>
                       <Check className={cn("mr-2 h-4 w-4", satkerFilterValue === satker.value ? "opacity-100" : "opacity-0")} />
                       {satker.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {/* Filter Penempatan */}
+        <Popover open={openPenempatan} onOpenChange={setOpenPenempatan}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" role="combobox" aria-expanded={openPenempatan} className="w-[250px] justify-between">
+              {penempatanFilterValue ? penempatanOptions.find(p => p.value === penempatanFilterValue)?.label : "Filter Penempatan..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[250px] p-0">
+            <Command>
+              <CommandInput placeholder="Cari Penempatan..." />
+              <CommandList>
+                <CommandEmpty>Penempatan tidak ditemukan.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem value="all" onSelect={() => { table.getColumn('penempatan')?.setFilterValue(''); setOpenPenempatan(false); }}>
+                    <Check className={cn("mr-2 h-4 w-4", !penempatanFilterValue ? "opacity-100" : "opacity-0")} />
+                    Semua Penempatan
+                  </CommandItem>
+                  {penempatanOptions.map((option) => (
+                    <CommandItem key={option.value} value={option.value} onSelect={() => { table.getColumn('penempatan')?.setFilterValue(option.value); setOpenPenempatan(false); }}>
+                      <Check className={cn("mr-2 h-4 w-4", penempatanFilterValue === option.value ? "opacity-100" : "opacity-0")} />
+                      {option.label}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -167,7 +206,6 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
           <DialogHeader>
             <DialogTitle>Mutasi Personil</DialogTitle>
             <DialogDescription>
-              {/* --- Teks Deskripsi Diperbarui --- */}
               Pindahkan <strong>{selectedPersonil?.nama}</strong> (NRP: {selectedPersonil?.nrp}) dari Penempatan{' '}
               <strong>{selectedPersonil?.subSatker || selectedPersonil?.satker.nama}</strong> ke Satker lain.
             </DialogDescription>

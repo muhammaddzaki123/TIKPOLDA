@@ -29,15 +29,15 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
     header: 'Satker Induk',
     id: 'satker_nama', 
   },
-  // --- KOLOM BARU UNTUK PENEMPATAN ---
   {
     header: 'Penempatan',
+    id: 'penempatan', // <-- TAMBAHKAN ID UNIK INI
+    accessorFn: (row) => row.subSatker || row.satker.nama, // Helper untuk filter
     cell: ({ row }) => {
       const personil = row.original;
       return personil.subSatker || personil.satker.nama;
     },
   },
-  // --- AKHIR KOLOM BARU ---
   {
     accessorKey: 'jabatan',
     header: 'Jabatan/Pangkat',

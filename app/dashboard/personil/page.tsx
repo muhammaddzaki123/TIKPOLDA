@@ -17,7 +17,6 @@ async function getPersonilData(): Promise<PersonilWithSatker[]> {
       { nama: 'asc' },
     ],
   });
-  // Pastikan satker tidak null untuk type safety
   return data.filter(p => p.satker) as PersonilWithSatker[];
 }
 
@@ -27,9 +26,36 @@ async function getSatkerList() {
     });
 }
 
+// --- FUNGSI BARU UNTUK MENGAMBIL DAFTAR PENEMPATAN ---
+async function getPenempatanList() {
+    const personilList = await prisma.personil.findMany({
+        select: {
+            subSatker: true,
+            satker: {
+                select: {
+                    nama: true,
+                },
+            },
+        },
+    });
+
+    const penempatanSet = new Set<string>();
+    personilList.forEach(p => {
+        if (p.subSatker) {
+            penempatanSet.add(p.subSatker);
+        } else if (p.satker) {
+            penempatanSet.add(p.satker.nama);
+        }
+    });
+
+    return Array.from(penempatanSet).sort();
+}
+// --- AKHIR FUNGSI BARU ---
+
 export default async function PersonilManagementPage() {
   const personilData = await getPersonilData();
   const satkerList = await getSatkerList();
+  const penempatanList = await getPenempatanList(); // <-- Panggil fungsi baru
 
   return (
     <div className="w-full space-y-4">
@@ -41,7 +67,12 @@ export default async function PersonilManagementPage() {
       </div>
 
       <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <PersonilDataTable columns={columns} data={personilData} satkerList={satkerList} />
+        <PersonilDataTable 
+            columns={columns} 
+            data={personilData} 
+            satkerList={satkerList}
+            penempatanList={penempatanList} // <-- Kirim daftar penempatan ke komponen
+        />
       </div>
     </div>
   );
