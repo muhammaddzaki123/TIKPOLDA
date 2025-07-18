@@ -55,7 +55,7 @@ const StatBox = ({ title, value, icon: Icon, onClick, className }: { title: stri
 export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
   // State untuk dialog utama
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  // --- STATE BARU UNTUK DIALOG RINCIAN PERSONIL ---
+  // State untuk dialog rincian personil
   const [isPersonilDetailOpen, setIsPersonilDetailOpen] = useState(false);
 
   // State untuk filter aset
@@ -73,17 +73,20 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
   const htDipinjamCount = satker.ht.filter(h => h.peminjaman.length > 0).length;
   const htTersediaCount = satker._count.ht - htDipinjamCount;
   
-  const statsByMerk = useMemo(() => satker.ht.reduce((acc, ht) => {
-    acc[ht.merk] = (acc[ht.merk] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>), [satker.ht]);
+  const statsByMerk = useMemo(() => {
+    return satker.ht.reduce((acc, ht) => {
+        acc[ht.merk] = (acc[ht.merk] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+  }, [satker.ht]);
 
-  const statsByKondisi = useMemo(() => satker.ht.reduce((acc, ht) => {
-    acc[ht.status] = (acc[ht.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>), [satker.ht]);
+  const statsByKondisi = useMemo(() => {
+    return satker.ht.reduce((acc, ht) => {
+        acc[ht.status] = (acc[ht.status] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+  }, [satker.ht]);
 
-  // --- LOGIKA BARU UNTUK MENGHITUNG RINCIAN PERSONIL ---
   const personilByPenempatan = useMemo(() => {
     const counts: Record<string, number> = {};
     satker.personil.forEach(p => {
@@ -153,7 +156,7 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
           </CardContent>
         </Card>
 
-        <DialogContent className="max-w-7xl h-[90vh] flex flex-col p-0">
+        <DialogContent className="max-w-[95vw] h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle className="text-2xl">Dashboard Satuan Kerja: {satker.nama}</DialogTitle>
           </DialogHeader>
@@ -184,50 +187,73 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
                   </TabsList>
 
                   <TabsContent value="aset" className="flex-grow flex flex-col h-[calc(100%-40px)] mt-2">
-                    {/* ... (Konten Tab Aset tidak berubah) ... */}
+                    <div className="flex flex-wrap items-center gap-2 py-2">
+                        <Combobox aptions={uniqueMerks} value={merkFilter} setValue={setMerkFilter} open={openMerk} setOpen={setOpenMerk} placeholder="Filter Merek..." />
+                        <Combobox aptions={kondisiOptions} value={kondisiFilter} setValue={setKondisiFilter} open={openKondisi} setOpen={setOpenKondisi} placeholder="Filter Kondisi..." />
+                        <Combobox aptions={penempatanOptions} value={asetPenempatanFilter} setValue={setAsetPenempatanFilter} open={openAsetPenempatan} setOpen={setOpenAsetPenempatan} placeholder="Filter Penempatan..." />
+                    </div>
+                    <div className="flex-grow overflow-y-auto pt-2 space-y-2 pr-2">
+                        {filteredHts.length > 0 ? filteredHts.map((h) => {
+                            const pemegang = h.peminjaman[0]?.personil;
+                            const penempatan = pemegang?.subSatker || satker.nama;
+                            return (
+                            <div key={h.id} className="grid grid-cols-4 gap-4 items-center text-sm p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                <div className="col-span-2">
+                                    <p className="font-semibold">{h.kodeHT} <span className="font-normal text-slate-600">({h.merk})</span></p>
+                                    <p className="text-xs text-slate-500">Penempatan: {penempatan}</p>
+                                </div>
+                                <div className="col-span-2 flex justify-end items-center gap-2">
+                                    <Badge variant={h.status !== 'BAIK' ? 'secondary' : 'outline'}>{h.status.replace('_', ' ')}</Badge>
+                                    <Badge variant={pemegang ? 'destructive' : 'default'}>{pemegang ? `Dipinjam: ${pemegang.nama}` : 'Tersedia'}</Badge>
+                                </div>
+                            </div>
+                            );
+                        }) : (
+                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Tidak ada aset yang cocok dengan filter.</div>
+                        )}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="personil" className="flex-grow flex flex-col h-[calc(100%-40px)] mt-2">
-                      <div className="py-2">
-                          <Combobox aptions={penempatanOptions} value={personilPenempatanFilter} setValue={setPersonilPenempatanFilter} open={openPersonilPenempatan} setOpen={setOpenPersonilPenempatan} placeholder="Filter Penempatan..." />
-                      </div>
-                      <div className="flex-grow overflow-y-auto pt-2 pr-2">
-                          <div className="rounded-md border">
-                              <table className="w-full text-sm">
-                              <thead className="bg-slate-50">
-                                  <tr>
-                                      <th className="p-3 text-left font-medium text-slate-600">Nama Personil</th>
-                                      <th className="p-3 text-left font-medium text-slate-600">NRP</th>
-                                      <th className="p-3 text-left font-medium text-slate-600">Penempatan</th>
-                                      <th className="p-3 text-left font-medium text-slate-600">Jabatan</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  {filteredPersonil.length > 0 ? filteredPersonil.map((p) => (
-                                  <tr key={p.id} className="border-b last:border-b-0 hover:bg-slate-50 transition-colors">
-                                      <td className="p-3 font-medium text-slate-800">{p.nama}</td>
-                                      <td className="p-3 text-slate-500">{p.nrp}</td>
-                                      <td className="p-3 text-slate-600">{p.subSatker || satker.nama}</td>
-                                      <td className="p-3"><Badge variant="outline">{p.jabatan}</Badge></td>
-                                  </tr>
-                                  )) : (
-                                  <tr>
-                                      <td colSpan={4} className="h-24 text-center text-muted-foreground">Tidak ada personil yang cocok dengan filter.</td>
-                                  </tr>
-                                  )}
-                              </tbody>
-                              </table>
-                          </div>
-                      </div>
+                     <div className="py-2">
+                        <Combobox aptions={penempatanOptions} value={personilPenempatanFilter} setValue={setPersonilPenempatanFilter} open={openPersonilPenempatan} setOpen={setOpenPersonilPenempatan} placeholder="Filter Penempatan..." />
+                     </div>
+                     <div className="flex-grow overflow-y-auto pt-2 pr-2">
+                        <div className="rounded-md border">
+                            <table className="w-full text-sm">
+                            <thead className="bg-slate-50">
+                                <tr>
+                                    <th className="p-3 text-left font-medium text-slate-600">Nama Personil</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">NRP</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">Penempatan</th>
+                                    <th className="p-3 text-left font-medium text-slate-600">Jabatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredPersonil.length > 0 ? filteredPersonil.map((p) => (
+                                <tr key={p.id} className="border-b last:border-b-0 hover:bg-slate-50 transition-colors">
+                                    <td className="p-3 font-medium text-slate-800">{p.nama}</td>
+                                    <td className="p-3 text-slate-500">{p.nrp}</td>
+                                    <td className="p-3 text-slate-600">{p.subSatker || satker.nama}</td>
+                                    <td className="p-3"><Badge variant="outline">{p.jabatan}</Badge></td>
+                                </tr>
+                                )) : (
+                                <tr>
+                                    <td colSpan={4} className="h-24 text-center text-muted-foreground">Tidak ada personil yang cocok dengan filter.</td>
+                                </tr>
+                                )}
+                            </tbody>
+                            </table>
+                        </div>
+                     </div>
                   </TabsContent>
               </Tabs>
           </div>
         </DialogContent>
       </Dialog>
       
-      {/* --- DIALOG BARU UNTUK RINCIAN PERSONIL BERDASARKAN PENEMPATAN --- */}
       <Dialog open={isPersonilDetailOpen} onOpenChange={setIsPersonilDetailOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                   <DialogTitle>Rincian Personil di {satker.nama}</DialogTitle>
                   <DialogDescription>
