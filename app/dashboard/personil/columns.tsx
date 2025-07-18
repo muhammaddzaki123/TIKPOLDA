@@ -1,3 +1,5 @@
+// app/dashboard/personil/columns.tsx
+
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
@@ -24,9 +26,18 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
   },
   {
     accessorKey: 'satker.nama',
-    header: 'Satker Saat Ini',
-    id: 'satker_nama', // ID unik tetap dipertahankan untuk target filtering
+    header: 'Satker Induk',
+    id: 'satker_nama', 
   },
+  // --- KOLOM BARU UNTUK PENEMPATAN ---
+  {
+    header: 'Penempatan',
+    cell: ({ row }) => {
+      const personil = row.original;
+      return personil.subSatker || personil.satker.nama;
+    },
+  },
+  // --- AKHIR KOLOM BARU ---
   {
     accessorKey: 'jabatan',
     header: 'Jabatan/Pangkat',

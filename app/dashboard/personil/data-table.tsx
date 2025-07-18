@@ -1,3 +1,5 @@
+// app/dashboard/personil/data-table.tsx
+
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
@@ -165,8 +167,9 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
           <DialogHeader>
             <DialogTitle>Mutasi Personil</DialogTitle>
             <DialogDescription>
-              Pindahkan <strong>{selectedPersonil?.nama}</strong> (NRP: {selectedPersonil?.nrp}) dari Satker{' '}
-              <strong>{selectedPersonil?.satker.nama}</strong> ke Satker lain.
+              {/* --- Teks Deskripsi Diperbarui --- */}
+              Pindahkan <strong>{selectedPersonil?.nama}</strong> (NRP: {selectedPersonil?.nrp}) dari Penempatan{' '}
+              <strong>{selectedPersonil?.subSatker || selectedPersonil?.satker.nama}</strong> ke Satker lain.
             </DialogDescription>
           </DialogHeader>
           <form action={handleMutasiSubmit}>

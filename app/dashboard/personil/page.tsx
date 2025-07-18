@@ -7,20 +7,20 @@ import { PersonilWithSatker } from '@/types/custom';
 
 const prisma = new PrismaClient();
 
-// Fungsi untuk mengambil data semua personil beserta satkernya
 async function getPersonilData(): Promise<PersonilWithSatker[]> {
   const data = await prisma.personil.findMany({
     include: {
       satker: true,
     },
-    orderBy: {
-      nama: 'asc',
-    },
+    orderBy: [
+      { satker: { nama: 'asc' } },
+      { nama: 'asc' },
+    ],
   });
-  return data;
+  // Pastikan satker tidak null untuk type safety
+  return data.filter(p => p.satker) as PersonilWithSatker[];
 }
 
-// Fungsi untuk mengambil daftar semua satker sebagai tujuan mutasi
 async function getSatkerList() {
     return await prisma.satker.findMany({
         orderBy: { nama: 'asc' }
