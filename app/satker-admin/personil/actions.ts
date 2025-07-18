@@ -10,31 +10,37 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 const prisma = new PrismaClient();
 
 /**
- * Mendapatkan ID Satker dari admin yang sedang login.
- * Fungsi helper ini digunakan untuk otorisasi.
+ * Mendapatkan sesi admin yang sedang login dan memastikan mereka memiliki Satker.
+ * Melemparkan error jika tidak terotentikasi.
  */
-async function getSatkerIdOrThrow() {
+async function getSessionOrThrow() {
   const session = await getServerSession(authOptions);
-  const satkerId = session?.user?.satkerId;
-
-  if (!satkerId) {
+  if (!session?.user?.satkerId || !session.user.satker?.nama) {
     throw new Error('Otentikasi gagal: Anda tidak memiliki wewenang.');
   }
-  return satkerId;
+  return session;
 }
 
 /**
  * Aksi untuk Admin Satker menambah Personil baru ke unit kerjanya.
  */
 export async function addPersonil(formData: FormData) {
-  const satkerId = await getSatkerIdOrThrow();
+  const session = await getSessionOrThrow();
+  const satkerId = session.user.satkerId!;
+  const satkerName = session.user.satker!.nama;
 
   const nama = formData.get('nama') as string;
   const nrp = formData.get('nrp') as string;
   const jabatan = formData.get('jabatan') as string;
+  let subSatker = formData.get('subSatker') as string;
 
   if (!nama || !nrp || !jabatan) {
-    throw new Error('Semua kolom wajib diisi.');
+    throw new Error('Nama, NRP, dan Jabatan wajib diisi.');
+  }
+
+  // Jika subSatker yang dipilih sama dengan nama Satker utama, anggap itu null
+  if (subSatker === satkerName) {
+    subSatker = '';
   }
 
   try {
@@ -43,7 +49,8 @@ export async function addPersonil(formData: FormData) {
         nama,
         nrp,
         jabatan,
-        satkerId: satkerId, // satkerId diambil dari sesi login admin
+        subSatker: subSatker || null, // Simpan sebagai null jika string kosong
+        satkerId: satkerId,
       },
     });
   } catch (error: any) {
@@ -54,6 +61,7 @@ export async function addPersonil(formData: FormData) {
     throw new Error('Terjadi kesalahan saat menyimpan data personil.');
   }
 
+  // Memperbarui cache untuk halaman-halaman yang relevan
   revalidatePath('/satker-admin/personil');
   revalidatePath('/dashboard/personil');
   revalidatePath('/dashboard/satker');
@@ -63,21 +71,33 @@ export async function addPersonil(formData: FormData) {
  * Aksi untuk Admin Satker mengubah data Personil.
  */
 export async function updatePersonil(formData: FormData) {
-  await getSatkerIdOrThrow(); // Otorisasi
+  const session = await getSessionOrThrow();
+  const satkerName = session.user.satker!.nama;
 
   const personilId = formData.get('personilId') as string;
   const nama = formData.get('nama') as string;
   const nrp = formData.get('nrp') as string;
   const jabatan = formData.get('jabatan') as string;
+  let subSatker = formData.get('subSatker') as string;
 
   if (!personilId || !nama || !nrp || !jabatan) {
     throw new Error('Semua kolom wajib diisi.');
   }
 
+  // Jika subSatker yang dipilih sama dengan nama Satker utama, anggap itu null
+  if (subSatker === satkerName) {
+    subSatker = '';
+  }
+
   try {
     await prisma.personil.update({
       where: { id: personilId },
-      data: { nama, nrp, jabatan },
+      data: { 
+        nama, 
+        nrp, 
+        jabatan,
+        subSatker: subSatker || null, // Simpan sebagai null jika string kosong
+       },
     });
   } catch (error: any) {
     if (error.code === 'P2002' && error.meta?.target?.includes('nrp')) {
@@ -95,7 +115,7 @@ export async function updatePersonil(formData: FormData) {
  * Aksi untuk Admin Satker menghapus data Personil.
  */
 export async function deletePersonil(personilId: string) {
-  await getSatkerIdOrThrow(); // Otorisasi
+  await getSessionOrThrow(); // Otorisasi
 
   if (!personilId) throw new Error('ID Personil tidak valid.');
 

@@ -45,6 +45,7 @@ model Personil {
   nrp             String            @unique
   nama            String
   jabatan         String
+  subSatker       String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   satker          Satker            @relation(fields: [satkerId], references: [id], onDelete: Cascade)

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,22 +10,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Personil } from '@prisma/client';
-import { updatePersonil, deletePersonil } from './actions';
+import { addPersonil, updatePersonil, deletePersonil } from './actions';
+import { PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import { PersonilWithSatkerName } from './columns';
 
-interface PersonilDataTableProps<TData extends Personil, TValue> {
+interface PersonilDataTableProps<TData extends PersonilWithSatkerName, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  initialSubSatkers: string[];
+  satkerName: string;
 }
 
-export function PersonilDataTable<TData extends Personil, TValue>({
+export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>({
   columns,
   data,
+  initialSubSatkers,
+  satkerName,
 }: PersonilDataTableProps<TData, TValue>) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddSubSatkerOpen, setIsAddSubSatkerOpen] = useState(false); // State untuk dialog tambah sub satker
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
-
+  
+  const [subSatkerOptions, setSubSatkerOptions] = useState<string[]>(initialSubSatkers);
+  const [selectedSubSatker, setSelectedSubSatker] = useState('');
+  const [newSubSatkerInput, setNewSubSatkerInput] = useState("");
+  const [openPopover, setOpenPopover] = useState(false);
+  
+  useEffect(() => {
+    if (!subSatkerOptions.includes(satkerName)) {
+      setSubSatkerOptions(prev => [satkerName, ...prev].sort());
+    }
+  }, [satkerName, subSatkerOptions]);
+  
   const table = useReactTable({
     data,
     columns,
@@ -35,6 +57,7 @@ export function PersonilDataTable<TData extends Personil, TValue>({
     meta: {
       openEditPersonilDialog: (personil) => {
         setSelectedPersonil(personil as TData);
+        setSelectedSubSatker(personil.subSatker || satkerName);
         setIsEditDialogOpen(true);
       },
       openDeletePersonilDialog: (personil) => {
@@ -44,10 +67,23 @@ export function PersonilDataTable<TData extends Personil, TValue>({
     },
   });
 
-  const handleUpdateSubmit = (formData: FormData) => {
+  const handleFormSubmit = (formData: FormData) => {
+    formData.append('subSatker', selectedSubSatker);
+    const action = selectedPersonil ? updatePersonil : addPersonil;
+
     startTransition(async () => {
-      await updatePersonil(formData);
-      setIsEditDialogOpen(false);
+      try {
+        await action(formData);
+        // Cek lagi untuk menambahkan sub satker baru ke state jika belum ada
+        if (selectedSubSatker && !subSatkerOptions.includes(selectedSubSatker)) {
+          setSubSatkerOptions(prev => [...prev, selectedSubSatker].sort());
+        }
+        setIsEditDialogOpen(false);
+        setIsAddDialogOpen(false);
+        setSelectedPersonil(null);
+      } catch (error: any) {
+        alert(`Gagal: ${error.message}`);
+      }
     });
   };
 
@@ -59,36 +95,112 @@ export function PersonilDataTable<TData extends Personil, TValue>({
     });
   };
 
+  const handleOpenAddDialog = () => {
+    setSelectedPersonil(null);
+    setSelectedSubSatker(satkerName);
+    setIsAddDialogOpen(true);
+  };
+  
+  // Fungsi untuk menangani penambahan Sub Satker baru
+  const handleAddSubSatker = () => {
+    if (newSubSatkerInput && !subSatkerOptions.includes(newSubSatkerInput)) {
+        setSubSatkerOptions(prev => [...prev, newSubSatkerInput].sort());
+        setSelectedSubSatker(newSubSatkerInput); // Langsung pilih yang baru ditambahkan
+    }
+    setNewSubSatkerInput("");
+    setIsAddSubSatkerOpen(false);
+  };
+
+
+  const FormContent = ({ personil }: { personil?: TData | null }) => (
+    <form action={handleFormSubmit}>
+      {personil && <input type="hidden" name="personilId" value={personil.id} />}
+      <div className="py-4 space-y-4">
+        <div className="space-y-2"><Label htmlFor="nama">Nama Lengkap</Label><Input id="nama" name="nama" defaultValue={personil?.nama} required /></div>
+        <div className="space-y-2"><Label htmlFor="nrp">NRP</Label><Input id="nrp" name="nrp" defaultValue={personil?.nrp} required /></div>
+        <div className="space-y-2"><Label htmlFor="jabatan">Jabatan / Pangkat</Label><Input id="jabatan" name="jabatan" defaultValue={personil?.jabatan} required /></div>
+        <div className="space-y-2">
+            <Label>Satker / Sub Satker (Unit)</Label>
+            <div className="flex items-center gap-2">
+                <Popover open={openPopover} onOpenChange={setOpenPopover}>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" className="w-full justify-between">
+                            {selectedSubSatker || "Pilih Sub Satker..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                            <CommandInput placeholder="Cari Sub Satker..." />
+                            <CommandList>
+                                <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                <CommandGroup>
+                                    {subSatkerOptions.map((option) => (
+                                        <CommandItem
+                                            key={option}
+                                            value={option}
+                                            onSelect={(currentValue) => {
+                                                setSelectedSubSatker(currentValue === selectedSubSatker ? "" : currentValue);
+                                                setOpenPopover(false);
+                                            }}
+                                        >
+                                            <Check className={cn("mr-2 h-4 w-4", selectedSubSatker === option ? "opacity-100" : "opacity-0")} />
+                                            {option}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+                {/* --- TOMBOL BARU UNTUK MENAMBAHKAN SUB SATKER --- */}
+                <Button type="button" variant="secondary" size="icon" onClick={() => setIsAddSubSatkerOpen(true)}>
+                    <PlusCircle className="h-4 w-4"/>
+                    <span className="sr-only">Tambah Sub Satker Baru</span>
+                </Button>
+            </div>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>Batal</Button>
+        <Button type="submit" disabled={isPending}>{isPending ? 'Menyimpan...' : 'Simpan Data'}</Button>
+      </DialogFooter>
+    </form>
+  );
+
   return (
     <>
-      <div className="flex items-center py-4">
+      <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Cari nama personil..."
           value={(table.getColumn('nama')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('nama')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
+        <Button onClick={handleOpenAddDialog}><PlusCircle className="mr-2 h-4 w-4" />Tambah Personil</Button>
       </div>
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>{headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-              ))}</TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>{row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                ))}</TableRow>
-              ))
-            ) : (
-              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Tidak ada data personil.</TableCell></TableRow>
-            )}
-          </TableBody>
+            <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                    ))}
+                </TableRow>
+                ))}
+            </TableHeader>
+            <TableBody>
+                {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>{row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    ))}</TableRow>
+                ))
+                ) : (
+                <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Tidak ada data personil.</TableCell></TableRow>
+                )}
+            </TableBody>
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
@@ -96,31 +208,42 @@ export function PersonilDataTable<TData extends Personil, TValue>({
         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
       </div>
 
+      {/* --- DIALOG BARU UNTUK INPUT NAMA SUB SATKER --- */}
+      <Dialog open={isAddSubSatkerOpen} onOpenChange={setIsAddSubSatkerOpen}>
+          <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                  <DialogTitle>Tambah Sub Satker Baru</DialogTitle>
+                  <DialogDescription>Masukkan nama unit baru (contoh: Polsek Sandubaya).</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 py-4">
+                  <Label htmlFor="new-subsatker-name">Nama Sub Satker</Label>
+                  <Input 
+                    id="new-subsatker-name" 
+                    value={newSubSatkerInput}
+                    onChange={(e) => setNewSubSatkerInput(e.target.value)}
+                    placeholder="Nama unit..."
+                  />
+              </div>
+              <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddSubSatkerOpen(false)}>Batal</Button>
+                  <Button type="button" onClick={handleAddSubSatker}>Tambah ke Pilihan</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent><DialogHeader><DialogTitle>Tambah Personil Baru</DialogTitle><DialogDescription>Masukkan data lengkap untuk anggota baru di unit Anda.</DialogDescription></DialogHeader><FormContent /></DialogContent>
+      </Dialog>
+      
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Data Personil</DialogTitle></DialogHeader>
-          <form action={handleUpdateSubmit}>
-            <input type="hidden" name="personilId" value={selectedPersonil?.id ?? ''} />
-            <div className="py-4 space-y-4">
-              <div className="space-y-2"><Label htmlFor="nama">Nama Lengkap</Label><Input id="nama" name="nama" defaultValue={selectedPersonil?.nama} required /></div>
-              <div className="space-y-2"><Label htmlFor="nrp">NRP</Label><Input id="nrp" name="nrp" defaultValue={selectedPersonil?.nrp} required /></div>
-              <div className="space-y-2"><Label htmlFor="jabatan">Jabatan / Pangkat</Label><Input id="jabatan" name="jabatan" defaultValue={selectedPersonil?.jabatan} required /></div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Batal</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? 'Memperbarui...' : 'Simpan Perubahan'}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Edit Data Personil</DialogTitle></DialogHeader><FormContent personil={selectedPersonil} /></DialogContent>
       </Dialog>
       
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Anda yakin ingin menghapus data ini?</DialogTitle>
-            <DialogDescription>
-              Tindakan ini akan menghapus data personil <strong>{selectedPersonil?.nama}</strong> secara permanen.
-            </DialogDescription>
+            <DialogDescription>Tindakan ini akan menghapus data personil <strong>{selectedPersonil?.nama}</strong> secara permanen.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Batal</Button>

@@ -15,7 +15,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Personil } from '@prisma/client';
 
-export const columns: ColumnDef<Personil>[] = [
+// Ubah tipe data kolom agar bisa menerima nama Satker utama
+export type PersonilWithSatkerName = Personil & {
+  satkerName: string;
+};
+
+export const columns: ColumnDef<PersonilWithSatkerName>[] = [
   {
     accessorKey: 'nama',
     header: 'Nama Lengkap',
@@ -27,6 +32,14 @@ export const columns: ColumnDef<Personil>[] = [
   {
     accessorKey: 'jabatan',
     header: 'Jabatan / Pangkat',
+  },
+  {
+    accessorKey: 'subSatker',
+    header: 'Satker / Sub Satker', // <-- HEADER DIPERBARUI
+    cell: ({ row }) => {
+      // Jika subSatker ada, tampilkan. Jika tidak, tampilkan nama Satker utama.
+      return row.original.subSatker || row.original.satkerName;
+    },
   },
   {
     id: 'actions',
