@@ -5,7 +5,9 @@
 import { useState, Fragment } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { PengajuanPeminjaman, Satker, HT } from '@prisma/client';
 
 export type RiwayatPusatGrouped = PengajuanPeminjaman & {
@@ -20,6 +22,12 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  const getStatusVariant = (status: 'APPROVED' | 'REJECTED' | 'PENDING'): "default" | "destructive" | "secondary" => {
+    if (status === 'APPROVED') return 'default';
+    if (status === 'REJECTED') return 'destructive';
+    return 'secondary';
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -29,7 +37,9 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
             <TableHead>Satker Peminjam</TableHead>
             <TableHead>Keperluan</TableHead>
             <TableHead className="text-center">Jumlah</TableHead>
-            <TableHead>Tanggal Disetujui</TableHead>
+            <TableHead>Tanggal Proses</TableHead>
+            <TableHead>Dokumen</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -38,19 +48,43 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
               <Fragment key={item.id}>
                 <TableRow>
                   <TableCell>
-                    <Button variant="ghost" size="sm" className="w-9 p-0" onClick={() => toggleRow(item.id)}>
-                      {expandedRow === item.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </Button>
+                    {item.status === 'APPROVED' && item.approvedHts.length > 0 && (
+                      <Button variant="ghost" size="sm" className="w-9 p-0" onClick={() => toggleRow(item.id)}>
+                        {expandedRow === item.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    )}
                   </TableCell>
                   <TableCell className="font-medium">{item.satkerPengaju.nama}</TableCell>
-                  <TableCell>{item.keperluan}</TableCell>
+                  <TableCell className="max-w-[250px] truncate" title={item.keperluan}>
+                    {item.keperluan}
+                  </TableCell>
                   <TableCell className="text-center">{item.jumlah}</TableCell>
                   <TableCell>{new Date(item.updatedAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</TableCell>
+                  <TableCell>
+                    {item.fileUrl ? (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={item.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <FileText className="mr-2 h-3 w-3" /> PDF
+                        </Link>
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(item.status)}>
+                      {item.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}
+                    </Badge>
+                     {item.status === 'REJECTED' && item.catatanAdmin && (
+                        <p className="text-xs text-muted-foreground mt-1 max-w-[150px] truncate" title={item.catatanAdmin}>
+                          Alasan: {item.catatanAdmin}
+                        </p>
+                    )}
+                  </TableCell>
                 </TableRow>
-                
                 {expandedRow === item.id && (
                   <TableRow className="bg-slate-50 hover:bg-slate-50">
-                    <TableCell colSpan={5} className="p-0">
+                    <TableCell colSpan={7} className="p-0">
                       <div className="p-4">
                         <h4 className="font-semibold mb-2 text-sm text-slate-800">Detail Aset HT yang Dipinjamkan:</h4>
                         <div className="rounded-md border">
@@ -81,7 +115,7 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 Tidak ada data riwayat yang cocok dengan filter.
               </TableCell>
             </TableRow>

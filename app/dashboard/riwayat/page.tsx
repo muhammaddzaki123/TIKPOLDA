@@ -20,7 +20,10 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
 
   // Bangun kondisi filter dinamis untuk Prisma
   const whereCondition: any = {
-    status: 'APPROVED',
+    // HAPUS filter status agar semua data (approved & rejected) terambil
+    status: {
+      in: ['APPROVED', 'REJECTED'],
+    },
   };
 
   if (q) {
@@ -41,7 +44,7 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
     };
   }
 
-  const approvedPeminjaman = await prisma.pengajuanPeminjaman.findMany({
+  const allPeminjaman = await prisma.pengajuanPeminjaman.findMany({
     where: whereCondition,
     include: {
       satkerPengaju: true,
@@ -54,7 +57,7 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
   const allPeminjamanSatker = await prisma.peminjamanSatker.findMany({
     where: {
         satkerId: {
-            in: approvedPeminjaman.map(p => p.satkerId)
+            in: allPeminjaman.map(p => p.satkerId)
         }
     },
     include: {
@@ -62,10 +65,13 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
     },
   });
 
-  const groupedData = approvedPeminjaman.map((pengajuan) => {
-    const htsForThisRequest = allPeminjamanSatker
-      .filter(p => p.catatan?.includes(pengajuan.id.substring(0, 8)))
-      .map(p => p.ht);
+  const groupedData = allPeminjaman.map((pengajuan) => {
+    // Hanya cari HT jika statusnya APPROVED
+    const htsForThisRequest = pengajuan.status === 'APPROVED' 
+      ? allPeminjamanSatker
+          .filter(p => p.catatan?.includes(pengajuan.id.substring(0, 8)))
+          .map(p => p.ht)
+      : [];
     return { ...pengajuan, approvedHts: htsForThisRequest };
   });
 
@@ -89,7 +95,7 @@ export default async function RiwayatPusatPage(props: RiwayatPusatPageProps) {
         <div>
           <h1 className="text-2xl font-bold">Riwayat Peminjaman (Pusat ke Satker)</h1>
           <p className="text-sm text-slate-600">
-            Jejak audit untuk aset yang dipinjamkan dari gudang pusat ke Satuan Kerja.
+            Jejak audit untuk semua aset yang dipinjamkan atau ditolak dari gudang pusat ke Satuan Kerja.
           </p>
         </div>
       </div>
