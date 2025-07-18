@@ -156,7 +156,8 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
           </CardContent>
         </Card>
 
-        <DialogContent className="max-w-[95vw] h-[90vh] flex flex-col p-0">
+        {/* --- PERUBAHAN DI SINI --- */}
+        <DialogContent className="max-w-full xl:max-w-7xl h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle className="text-2xl">Dashboard Satuan Kerja: {satker.nama}</DialogTitle>
           </DialogHeader>
