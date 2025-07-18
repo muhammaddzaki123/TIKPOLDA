@@ -33,7 +33,7 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isAddSubSatkerOpen, setIsAddSubSatkerOpen] = useState(false); // State untuk dialog tambah sub satker
+  const [isAddSubSatkerOpen, setIsAddSubSatkerOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   
@@ -41,12 +41,6 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
   const [selectedSubSatker, setSelectedSubSatker] = useState('');
   const [newSubSatkerInput, setNewSubSatkerInput] = useState("");
   const [openPopover, setOpenPopover] = useState(false);
-  
-  useEffect(() => {
-    if (!subSatkerOptions.includes(satkerName)) {
-      setSubSatkerOptions(prev => [satkerName, ...prev].sort());
-    }
-  }, [satkerName, subSatkerOptions]);
   
   const table = useReactTable({
     data,
@@ -74,8 +68,7 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
     startTransition(async () => {
       try {
         await action(formData);
-        // Cek lagi untuk menambahkan sub satker baru ke state jika belum ada
-        if (selectedSubSatker && !subSatkerOptions.includes(selectedSubSatker)) {
+        if (selectedSubSatker && !subSatkerOptions.includes(selectedSubSatker) && selectedSubSatker !== satkerName) {
           setSubSatkerOptions(prev => [...prev, selectedSubSatker].sort());
         }
         setIsEditDialogOpen(false);
@@ -101,72 +94,75 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
     setIsAddDialogOpen(true);
   };
   
-  // Fungsi untuk menangani penambahan Sub Satker baru
   const handleAddSubSatker = () => {
-    if (newSubSatkerInput && !subSatkerOptions.includes(newSubSatkerInput)) {
+    if (newSubSatkerInput && !subSatkerOptions.includes(newSubSatkerInput) && newSubSatkerInput !== satkerName) {
         setSubSatkerOptions(prev => [...prev, newSubSatkerInput].sort());
-        setSelectedSubSatker(newSubSatkerInput); // Langsung pilih yang baru ditambahkan
+        setSelectedSubSatker(newSubSatkerInput);
     }
     setNewSubSatkerInput("");
     setIsAddSubSatkerOpen(false);
   };
 
+  const FormContent = ({ personil }: { personil?: TData | null }) => {
+    // --- PERBAIKAN UTAMA DI SINI ---
+    // Pastikan daftar pilihan unik untuk menghindari error key
+    const uniqueOptions = Array.from(new Set([satkerName, ...subSatkerOptions]));
 
-  const FormContent = ({ personil }: { personil?: TData | null }) => (
-    <form action={handleFormSubmit}>
-      {personil && <input type="hidden" name="personilId" value={personil.id} />}
-      <div className="py-4 space-y-4">
-        <div className="space-y-2"><Label htmlFor="nama">Nama Lengkap</Label><Input id="nama" name="nama" defaultValue={personil?.nama} required /></div>
-        <div className="space-y-2"><Label htmlFor="nrp">NRP</Label><Input id="nrp" name="nrp" defaultValue={personil?.nrp} required /></div>
-        <div className="space-y-2"><Label htmlFor="jabatan">Jabatan / Pangkat</Label><Input id="jabatan" name="jabatan" defaultValue={personil?.jabatan} required /></div>
-        <div className="space-y-2">
-            <Label>Satker / Sub Satker (Unit)</Label>
-            <div className="flex items-center gap-2">
-                <Popover open={openPopover} onOpenChange={setOpenPopover}>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" className="w-full justify-between">
-                            {selectedSubSatker || "Pilih Sub Satker..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                            <CommandInput placeholder="Cari Sub Satker..." />
-                            <CommandList>
-                                <CommandEmpty>Tidak ditemukan.</CommandEmpty>
-                                <CommandGroup>
-                                    {subSatkerOptions.map((option) => (
-                                        <CommandItem
-                                            key={option}
-                                            value={option}
-                                            onSelect={(currentValue) => {
-                                                setSelectedSubSatker(currentValue === selectedSubSatker ? "" : currentValue);
-                                                setOpenPopover(false);
-                                            }}
-                                        >
-                                            <Check className={cn("mr-2 h-4 w-4", selectedSubSatker === option ? "opacity-100" : "opacity-0")} />
-                                            {option}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
-                {/* --- TOMBOL BARU UNTUK MENAMBAHKAN SUB SATKER --- */}
-                <Button type="button" variant="secondary" size="icon" onClick={() => setIsAddSubSatkerOpen(true)}>
-                    <PlusCircle className="h-4 w-4"/>
-                    <span className="sr-only">Tambah Sub Satker Baru</span>
-                </Button>
+    return (
+        <form action={handleFormSubmit}>
+        {personil && <input type="hidden" name="personilId" value={personil.id} />}
+        <div className="py-4 space-y-4">
+            <div className="space-y-2"><Label htmlFor="nama">Nama Lengkap</Label><Input id="nama" name="nama" defaultValue={personil?.nama} required /></div>
+            <div className="space-y-2"><Label htmlFor="nrp">NRP</Label><Input id="nrp" name="nrp" defaultValue={personil?.nrp} required /></div>
+            <div className="space-y-2"><Label htmlFor="jabatan">Jabatan / Pangkat</Label><Input id="jabatan" name="jabatan" defaultValue={personil?.jabatan} required /></div>
+            <div className="space-y-2">
+                <Label>Penempatan</Label>
+                <div className="flex items-center gap-2">
+                    <Popover open={openPopover} onOpenChange={setOpenPopover}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" className="w-full justify-between">
+                                {selectedSubSatker || "Pilih Penempatan..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Cari Penempatan..." />
+                                <CommandList>
+                                    <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                                    <CommandGroup>
+                                        {uniqueOptions.map((option) => (
+                                            <CommandItem
+                                                key={option} // Key sekarang dijamin unik
+                                                value={option}
+                                                onSelect={() => {
+                                                    setSelectedSubSatker(option);
+                                                    setOpenPopover(false);
+                                                }}
+                                            >
+                                                <Check className={cn("mr-2 h-4 w-4", selectedSubSatker === option ? "opacity-100" : "opacity-0")} />
+                                                {option}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <Button type="button" variant="secondary" size="icon" onClick={() => setIsAddSubSatkerOpen(true)}>
+                        <PlusCircle className="h-4 w-4"/>
+                        <span className="sr-only">Tambah Penempatan Baru</span>
+                    </Button>
+                </div>
             </div>
         </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>Batal</Button>
-        <Button type="submit" disabled={isPending}>{isPending ? 'Menyimpan...' : 'Simpan Data'}</Button>
-      </DialogFooter>
-    </form>
-  );
+        <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>Batal</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? 'Menyimpan...' : 'Simpan Data'}</Button>
+        </DialogFooter>
+        </form>
+    );
+  }
 
   return (
     <>
@@ -208,15 +204,14 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
       </div>
 
-      {/* --- DIALOG BARU UNTUK INPUT NAMA SUB SATKER --- */}
       <Dialog open={isAddSubSatkerOpen} onOpenChange={setIsAddSubSatkerOpen}>
           <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                  <DialogTitle>Tambah Sub Satker Baru</DialogTitle>
+                  <DialogTitle>Tambah Penempatan Baru</DialogTitle>
                   <DialogDescription>Masukkan nama unit baru (contoh: Polsek Sandubaya).</DialogDescription>
               </DialogHeader>
               <div className="space-y-2 py-4">
-                  <Label htmlFor="new-subsatker-name">Nama Sub Satker</Label>
+                  <Label htmlFor="new-subsatker-name">Nama Penempatan</Label>
                   <Input 
                     id="new-subsatker-name" 
                     value={newSubSatkerInput}

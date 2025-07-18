@@ -9,10 +9,6 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-/**
- * Mendapatkan sesi admin yang sedang login dan memastikan mereka memiliki Satker.
- * Melemparkan error jika tidak terotentikasi.
- */
 async function getSessionOrThrow() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.satkerId || !session.user.satker?.nama) {
@@ -21,9 +17,6 @@ async function getSessionOrThrow() {
   return session;
 }
 
-/**
- * Aksi untuk Admin Satker menambah Personil baru ke unit kerjanya.
- */
 export async function addPersonil(formData: FormData) {
   const session = await getSessionOrThrow();
   const satkerId = session.user.satkerId!;
@@ -32,13 +25,13 @@ export async function addPersonil(formData: FormData) {
   const nama = formData.get('nama') as string;
   const nrp = formData.get('nrp') as string;
   const jabatan = formData.get('jabatan') as string;
-  let subSatker = formData.get('subSatker') as string;
+  let subSatker = formData.get('subSatker') as string; // Ini adalah nilai penempatan
 
   if (!nama || !nrp || !jabatan) {
     throw new Error('Nama, NRP, dan Jabatan wajib diisi.');
   }
 
-  // Jika subSatker yang dipilih sama dengan nama Satker utama, anggap itu null
+  // Jika penempatannya adalah Satker utama, maka subSatker di database adalah null
   if (subSatker === satkerName) {
     subSatker = '';
   }
@@ -49,7 +42,7 @@ export async function addPersonil(formData: FormData) {
         nama,
         nrp,
         jabatan,
-        subSatker: subSatker || null, // Simpan sebagai null jika string kosong
+        subSatker: subSatker || null,
         satkerId: satkerId,
       },
     });
@@ -61,15 +54,9 @@ export async function addPersonil(formData: FormData) {
     throw new Error('Terjadi kesalahan saat menyimpan data personil.');
   }
 
-  // Memperbarui cache untuk halaman-halaman yang relevan
   revalidatePath('/satker-admin/personil');
-  revalidatePath('/dashboard/personil');
-  revalidatePath('/dashboard/satker');
 }
 
-/**
- * Aksi untuk Admin Satker mengubah data Personil.
- */
 export async function updatePersonil(formData: FormData) {
   const session = await getSessionOrThrow();
   const satkerName = session.user.satker!.nama;
@@ -78,13 +65,13 @@ export async function updatePersonil(formData: FormData) {
   const nama = formData.get('nama') as string;
   const nrp = formData.get('nrp') as string;
   const jabatan = formData.get('jabatan') as string;
-  let subSatker = formData.get('subSatker') as string;
+  let subSatker = formData.get('subSatker') as string; // Ini adalah nilai penempatan
 
   if (!personilId || !nama || !nrp || !jabatan) {
     throw new Error('Semua kolom wajib diisi.');
   }
 
-  // Jika subSatker yang dipilih sama dengan nama Satker utama, anggap itu null
+  // Jika penempatannya adalah Satker utama, maka subSatker di database adalah null
   if (subSatker === satkerName) {
     subSatker = '';
   }
@@ -96,7 +83,7 @@ export async function updatePersonil(formData: FormData) {
         nama, 
         nrp, 
         jabatan,
-        subSatker: subSatker || null, // Simpan sebagai null jika string kosong
+        subSatker: subSatker || null,
        },
     });
   } catch (error: any) {
@@ -108,19 +95,14 @@ export async function updatePersonil(formData: FormData) {
   }
 
   revalidatePath('/satker-admin/personil');
-  revalidatePath('/dashboard/personil');
 }
 
-/**
- * Aksi untuk Admin Satker menghapus data Personil.
- */
 export async function deletePersonil(personilId: string) {
-  await getSessionOrThrow(); // Otorisasi
+  await getSessionOrThrow();
 
   if (!personilId) throw new Error('ID Personil tidak valid.');
 
   try {
-    // Validasi: Pastikan personil tidak sedang meminjam HT
     const peminjamanAktif = await prisma.peminjaman.count({
       where: { personilId: personilId, tanggalKembali: null },
     });
@@ -129,10 +111,7 @@ export async function deletePersonil(personilId: string) {
       throw new Error('Personil tidak dapat dihapus karena masih memiliki tanggungan peminjaman HT.');
     }
 
-    // Hapus semua data terkait personil (misal: riwayat peminjaman)
     await prisma.peminjaman.deleteMany({ where: { personilId } });
-
-    // Hapus personil
     await prisma.personil.delete({ where: { id: personilId } });
   } catch (error: any) {
     if (error instanceof Error) throw error;
@@ -141,6 +120,4 @@ export async function deletePersonil(personilId: string) {
   }
   
   revalidatePath('/satker-admin/personil');
-  revalidatePath('/dashboard/personil');
-  revalidatePath('/dashboard/satker');
 }

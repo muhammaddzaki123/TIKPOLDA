@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Personil } from '@prisma/client';
 
-// Ubah tipe data kolom agar bisa menerima nama Satker utama
+// Tipe data ini akan membawa nama Satker utama
 export type PersonilWithSatkerName = Personil & {
   satkerName: string;
 };
@@ -27,17 +27,19 @@ export const columns: ColumnDef<PersonilWithSatkerName>[] = [
   },
   {
     accessorKey: 'nrp',
-    header: 'NRP (Nomor Registrasi Pokok)',
+    header: 'NRP',
   },
+  // --- KOLOM BARU UNTUK SATKER INDUK ---
   {
-    accessorKey: 'jabatan',
-    header: 'Jabatan / Pangkat',
+    accessorKey: 'satkerName',
+    header: 'Satker',
   },
+  // --- KOLOM PENEMPATAN (SUB SATKER) ---
   {
     accessorKey: 'subSatker',
-    header: 'Satker / Sub Satker', // <-- HEADER DIPERBARUI
+    header: 'Penempatan',
     cell: ({ row }) => {
-      // Jika subSatker ada, tampilkan. Jika tidak, tampilkan nama Satker utama.
+      // Jika personil punya subSatker, tampilkan. Jika tidak, tampilkan nama Satker utama.
       return row.original.subSatker || row.original.satkerName;
     },
   },
