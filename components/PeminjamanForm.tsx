@@ -5,6 +5,7 @@
 import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input'; // <-- Import Input
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,11 +21,23 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
+    // Validasi file di sisi klien
+    const file = formData.get('file') as File;
+    if (file && file.size > 0 && file.type !== 'application/pdf') {
+      alert('Error: File yang diunggah harus berformat PDF.');
+      return;
+    }
+     if (file && file.size > 2 * 1024 * 1024) { // 2MB limit
+      alert('Error: Ukuran file tidak boleh lebih dari 2MB.');
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createPeminjaman(formData);
         alert('Peminjaman HT berhasil dicatat!');
-        // Reset form bisa ditambahkan di sini jika diperlukan
+        const form = document.getElementById('form-peminjaman-internal') as HTMLFormElement;
+        form.reset();
       } catch (error: any) {
         alert(`Error: ${error.message}`);
       }
@@ -37,7 +50,7 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
         <CardTitle>Formulir Peminjaman Baru</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form id="form-peminjaman-internal" action={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="htId">Pilih HT yang Tersedia</Label>
             <Select name="htId" required>
@@ -72,6 +85,18 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
             <Label htmlFor="catatan">Catatan Tambahan (Opsional)</Label>
             <Textarea id="catatan" name="catatan" placeholder="Catatan jika ada..." />
           </div>
+          {/* --- INPUT FILE PDF BARU --- */}
+          <div className="space-y-2">
+            <Label htmlFor="file">Unggah Berita Acara (PDF)</Label>
+            <Input
+              id="file"
+              name="file"
+              type="file"
+              accept=".pdf"
+            />
+            <p className="text-xs text-muted-foreground">Opsional. Ukuran file maksimal 2MB.</p>
+          </div>
+          {/* --- AKHIR INPUT FILE PDF BARU --- */}
           <Button type="submit" className="w-full" disabled={isPending || htTersedia.length === 0}>
             {isPending ? 'Memproses...' : 'Catat Peminjaman'}
           </Button>

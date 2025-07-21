@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { createPengembalian } from '@/app/satker-admin/peminjaman/actions';
 import type { Peminjaman, HT, Personil } from '@prisma/client';
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
 
 // Tipe data untuk properti komponen
 type PeminjamanAktif = (Peminjaman & { ht: HT; personil: Personil });
@@ -50,6 +52,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               <TableHead>Nama Peminjam</TableHead>
               <TableHead>NRP</TableHead>
               <TableHead>Tgl. Pinjam</TableHead>
+              <TableHead>Sprint</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -61,6 +64,17 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                   <TableCell>{peminjaman.personil.nama}</TableCell>
                   <TableCell>{peminjaman.personil.nrp}</TableCell>
                   <TableCell>{new Date(peminjaman.tanggalPinjam).toLocaleDateString('id-ID')}</TableCell>
+                  <TableCell>
+                    {peminjaman.fileUrl ? (
+                      <Button variant="outline" size="sm" className="h-8" asChild>
+                        <Link href={peminjaman.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <FileText className="mr-2 h-3 w-3" /> PDF
+                        </Link>
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
                   </TableCell>
@@ -68,7 +82,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   Tidak ada HT yang sedang dipinjam.
                 </TableCell>
               </TableRow>

@@ -6,6 +6,8 @@ import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { writeFile, mkdir } from 'fs/promises'; // Import modul fs
+import path from 'path'; // Import modul path
 
 const prisma = new PrismaClient();
 
@@ -16,7 +18,6 @@ export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
   const satkerId = session?.user?.satkerId;
 
-  // Validasi otorisasi
   if (!satkerId) {
     throw new Error('Otentikasi gagal: Anda tidak memiliki wewenang.');
   }
@@ -25,46 +26,66 @@ export async function createPeminjaman(formData: FormData) {
   const personilId = formData.get('personilId') as string;
   const kondisiSaatPinjam = formData.get('kondisiSaatPinjam') as string;
   const catatan = formData.get('catatan') as string | null;
+  const file = formData.get('file') as File; // Ambil file dari form
 
   if (!htId || !personilId || !kondisiSaatPinjam) {
     throw new Error('HT, Personil, dan Kondisi wajib diisi.');
   }
 
+  let fileUrl: string | null = null;
+
+  // --- LOGIKA UPLOAD FILE ---
+  if (file && file.size > 0) {
+    if (file.size > 2 * 1024 * 1024) { // 2MB
+      throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+    }
+    if (file.type !== 'application/pdf') {
+       throw new Error('File yang diunggah harus berformat PDF.');
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const filename = `${Date.now()}_${personilId}_${file.name.replace(/\s/g, '_')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'berita_acara');
+    
+    await mkdir(uploadDir, { recursive: true });
+
+    const filePath = path.join(uploadDir, filename);
+    await writeFile(filePath, buffer);
+    
+    fileUrl = `/uploads/berita_acara/${filename}`;
+  }
+  // --- AKHIR LOGIKA UPLOAD FILE ---
+
   try {
-    // Gunakan transaksi untuk memastikan konsistensi data
     await prisma.$transaction(async (tx) => {
-      // 1. Cek apakah HT tersedia untuk dipinjam
       const peminjamanAktif = await tx.peminjaman.findFirst({
         where: { htId: htId, tanggalKembali: null },
       });
 
-      // Jika sudah ada peminjaman aktif untuk HT ini, lempar error
       if (peminjamanAktif) {
         throw new Error('Peminjaman gagal: HT tersebut sedang tidak tersedia atau sudah dipinjam.');
       }
 
-      // 2. Buat record peminjaman baru
       await tx.peminjaman.create({
         data: {
           htId,
           personilId,
           kondisiSaatPinjam,
           catatan,
-          adminPencatatId: session.user.id, // Catat admin yang melakukan aksi
+          fileUrl: fileUrl, // Simpan URL file ke database
+          adminPencatatId: session.user.id,
         },
       });
     });
   } catch (error: any) {
-    // Teruskan pesan error spesifik dari dalam transaksi
     if (error instanceof Error) {
       throw new Error(error.message);
     }
-    // Tangani error umum lainnya
     console.error(error);
     throw new Error('Terjadi kesalahan pada server saat mencatat peminjaman.');
   }
 
-  // Segarkan kembali data pada halaman-halaman yang relevan
   revalidatePath('/satker-admin/peminjaman');
   revalidatePath('/satker-admin/inventaris');
   revalidatePath('/dashboard/inventaris');
@@ -83,7 +104,6 @@ export async function createPengembalian(formData: FormData) {
   }
   
   try {
-    // Update record peminjaman dengan tanggal kembali
     await prisma.peminjaman.update({
         where: { id: peminjamanId },
         data: {
@@ -96,7 +116,6 @@ export async function createPengembalian(formData: FormData) {
       throw new Error('Terjadi kesalahan saat mencatat pengembalian.');
   }
 
-  // Segarkan kembali data pada halaman-halaman yang relevan
   revalidatePath('/satker-admin/peminjaman');
   revalidatePath('/satker-admin/inventaris');
   revalidatePath('/dashboard/inventaris');
