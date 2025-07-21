@@ -86,6 +86,7 @@ model Peminjaman {
   kondisiSaatPinjam  String
   kondisiSaatKembali String?
   catatan            String?
+  fileUrl            String?
   adminPencatatId    String
   ht                 HT        @relation(fields: [htId], references: [id], onDelete: Cascade)
   htId               String
