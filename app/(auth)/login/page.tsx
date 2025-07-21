@@ -24,20 +24,24 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Memanggil NextAuth untuk proses otentikasi
       const result = await signIn('credentials', {
-        redirect: false, // Kita handle redirect secara manual
+        redirect: false, // Kita tangani redirect secara manual untuk menampilkan pesan error
         email,
         password,
       });
 
       if (result?.error) {
+        // Jika NextAuth mengembalikan error (cth: kredensial salah)
         throw new Error('Email atau password salah. Silakan coba lagi.');
       }
-      
-      // Arahkan ke halaman utama setelah login berhasil.
-      // Middleware akan menangani pengalihan berdasarkan peran.
-      router.replace('/');
 
+      if (result?.ok) {
+        // Jika login berhasil, arahkan ke halaman netral.
+        // Middleware akan mengambil alih dari sini untuk mengarahkan
+        // pengguna berdasarkan perannya.
+        router.replace('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -65,6 +69,7 @@ export default function LoginPage() {
                 id="email" name="email" type="email"
                 placeholder="email@polda.ntb"
                 required value={email} onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -73,6 +78,7 @@ export default function LoginPage() {
                 id="password" name="password" type="password"
                 placeholder="Masukkan password Anda"
                 required value={password} onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             

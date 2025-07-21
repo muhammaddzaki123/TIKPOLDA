@@ -1,9 +1,9 @@
 // components/header-dashboard.tsx
 
-'use client'; // Jadikan Client Component untuk interaksi (klik, state)
+'use client';
 
 import { Bell, UserCircle, LogOut } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react'; // Import useSession dan signOut
+import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +15,15 @@ import {
 import { Button } from './ui/button';
 
 export default function HeaderDashboard() {
-  // Ambil data sesi pengguna yang sedang login
   const { data: session } = useSession();
 
-  const handleLogout = () => {
-    signOut({
-      callbackUrl: '/login', // Arahkan ke halaman login setelah logout
+  // Fungsi ini akan menghancurkan sesi dan mengarahkan pengguna
+  // ke halaman login. URL lengkap akan dibangun secara aman
+  // oleh NextAuth menggunakan variabel NEXTAUTH_URL.
+  const handleLogout = async () => {
+    await signOut({
+      callbackUrl: '/login', // Setelah logout, kembali ke halaman login
+      redirect: true,        // Pastikan redirect terjadi
     });
   };
 
@@ -28,7 +31,6 @@ export default function HeaderDashboard() {
     <header className="flex items-center justify-between border-b bg-white p-4 shadow-sm">
       <div>
         <h1 className="text-xl font-bold text-slate-800">
-          {/* Tampilkan role pengguna secara dinamis */}
           Dashboard {session?.user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin Satker'}
         </h1>
       </div>
@@ -38,13 +40,11 @@ export default function HeaderDashboard() {
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
         </button>
 
-        {/* Menu Dropdown untuk Profil Pengguna */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center space-x-2 p-2 h-auto">
               <UserCircle className="h-8 w-8 text-slate-600" />
               <div className="hidden text-right md:block">
-                {/* Tampilkan nama pengguna dari sesi */}
                 <p className="text-sm font-semibold">{session?.user?.nama || 'Pengguna'}</p>
                 <p className="text-xs text-slate-500">{session?.user?.role?.replace('_', ' ') || 'Role'}</p>
               </div>
@@ -57,7 +57,7 @@ export default function HeaderDashboard() {
               Profil
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={handleLogout} // Panggil fungsi logout saat diklik
+              onClick={handleLogout} // Panggil fungsi logout
               className="text-red-600 focus:bg-red-50 focus:text-red-700"
             >
               <LogOut className="mr-2 h-4 w-4" />
