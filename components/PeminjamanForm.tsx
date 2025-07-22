@@ -87,7 +87,7 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
           </div>
           {/* --- INPUT FILE PDF BARU --- */}
           <div className="space-y-2">
-            <Label htmlFor="file">Unggah Berita Acara (PDF)</Label>
+            <Label htmlFor="file">Unggah SPRINT (PDF)</Label>
             <Input
               id="file"
               name="file"
