@@ -109,6 +109,8 @@ model PeminjamanSatker {
 model PengajuanPeminjaman {
   id            String          @id @default(cuid())
   keperluan     String
+  tanggalMulai    DateTime?
+  tanggalSelesai  DateTime?
   jumlah        Int
   fileUrl       String?
   status        PengajuanStatus @default(PENDING)

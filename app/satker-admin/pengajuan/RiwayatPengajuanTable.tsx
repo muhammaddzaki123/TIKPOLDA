@@ -1,4 +1,4 @@
-// app/satker-admin/pengajuan/RiwayatPengajuanTable.tsx
+// File: app/satker-admin/pengajuan/RiwayatPengajuanTable.tsx
 
 'use client';
 
@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { PengajuanStatus, Personil, Satker, HT } from '@prisma/client';
 
-// Tipe data gabungan untuk semua jenis riwayat
+// <-- Impor tambahan untuk format tanggal -->
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
+
+// <-- PERUBAHAN 1: Menambahkan properti tanggal pada tipe data -->
 export type Riwayat = {
   id: string;
   tipe: string;
@@ -19,10 +23,12 @@ export type Riwayat = {
   // Properti spesifik
   jumlah?: number;
   keperluan?: string;
+  tanggalMulai?: Date | null;
+  tanggalSelesai?: Date | null;
   alasan?: string;
   personil?: Personil;
   satkerTujuan?: Satker;
-  approvedHts?: HT[]; // Digunakan untuk HT yang dipinjam dan dikembalikan
+  approvedHts?: HT[];
 };
 
 export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
@@ -60,8 +66,18 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                   <TableCell>{new Date(item.createdAt).toLocaleDateString('id-ID')}</TableCell>
                   <TableCell className="font-medium">{item.tipe}</TableCell>
                   <TableCell>
+                    {/* <-- PERUBAHAN 2: Menampilkan detail peminjaman dengan rentang tanggal --> */}
                     {item.tipe === 'Peminjaman HT' ?
-                     `${item.jumlah} unit - ${item.keperluan}`:
+                      (
+                        <div>
+                          <p className="font-medium">{`${item.jumlah} unit - ${item.keperluan}`}</p>
+                          {item.tanggalMulai && item.tanggalSelesai && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Rentang: {format(new Date(item.tanggalMulai), 'd MMM yyyy', { locale: id })} - {format(new Date(item.tanggalSelesai), 'd MMM yyyy', { locale: id })}
+                            </p>
+                          )}
+                        </div>
+                      ) :
                      item.tipe === 'Mutasi Personil' ?
                      `Mutasi ${item.personil?.nama} ke ${item.satkerTujuan?.nama}` :
                      `${item.approvedHts?.length || 0} unit - ${item.alasan}`
@@ -73,7 +89,6 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                           {item.status === 'REJECTED' && (
                               <p className="text-xs text-red-500">Alasan: {item.catatanAdmin}</p>
                           )}
-                          {/* FIX: Tombol "Lihat Aset" akan muncul jika ada daftar HT yang bisa ditampilkan */}
                           {(item.approvedHts && item.approvedHts.length > 0) && (
                             <Button variant="ghost" size="sm" className="h-auto p-1 text-xs" onClick={() => toggleRow(item.id)}>
                               {expandedRow === item.id ? <ChevronDown className="mr-1 h-3 w-3" /> : <ChevronRight className="mr-1 h-3 w-3" />}
@@ -83,7 +98,6 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                       </div>
                   </TableCell>
                 </TableRow>
-                {/* Baris untuk menampilkan detail HT yang disetujui/dikembalikan */}
                 {expandedRow === item.id && (
                   <TableRow className="bg-slate-50 hover:bg-slate-50">
                     <TableCell colSpan={4} className="p-0">

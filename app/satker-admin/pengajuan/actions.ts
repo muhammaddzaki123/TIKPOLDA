@@ -1,4 +1,4 @@
-// app/satker-admin/pengajuan/actions.ts
+// File: app/satker-admin/pengajuan/actions.ts
 
 'use server';
 
@@ -21,6 +21,7 @@ async function getSatkerIdOrThrow() {
   return satkerId;
 }
 
+// --- FUNGSI YANG DIMODIFIKASI ---
 // Aksi untuk membuat pengajuan peminjaman HT baru
 export async function createPengajuanPeminjaman(formData: FormData) {
   const satkerId = await getSatkerIdOrThrow();
@@ -29,41 +30,39 @@ export async function createPengajuanPeminjaman(formData: FormData) {
   const keperluan = formData.get('keperluan') as string;
   const file = formData.get('file') as File;
 
+  // <-- PERUBAHAN 1: Mengambil data tanggal dari FormData -->
+  const tanggalMulaiString = formData.get('tanggalMulai') as string;
+  const tanggalSelesaiString = formData.get('tanggalSelesai') as string;
+
   if (!jumlah || !keperluan || jumlah <= 0) {
     throw new Error('Jumlah HT dan Keperluan wajib diisi dengan benar.');
   }
 
+  // <-- PERUBAHAN 2: Validasi dan konversi tanggal -->
+  if (!tanggalMulaiString || !tanggalSelesaiString) {
+    throw new Error('Rentang tanggal peminjaman wajib diisi.');
+  }
+  const tanggalMulai = new Date(tanggalMulaiString);
+  const tanggalSelesai = new Date(tanggalSelesaiString);
+
+
   let fileUrl: string | null = null;
 
-  // --- LOGIKA UNTUK MENANGANI DAN MENYIMPAN FILE UPLOAD ---
+  // --- LOGIKA UNTUK MENANGANI DAN MENYIMPAN FILE UPLOAD (TIDAK BERUBAH) ---
   if (file && file.size > 0) {
-    // Validasi di sisi server untuk keamanan
     if (file.size > 2 * 1024 * 1024) { // 2MB
       throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
     }
     if (file.type !== 'application/pdf') {
        throw new Error('File yang diunggah harus berformat PDF.');
     }
-
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Buat nama file yang unik untuk menghindari penimpaan file
     const filename = `${Date.now()}_${satkerId}_${file.name.replace(/\s/g, '_')}`;
-    
-    // Tentukan path direktori
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'surat_permohonan');
-    
-    // Buat direktori jika belum ada
     await mkdir(uploadDir, { recursive: true });
-
-    // Tentukan path lengkap file
     const filePath = path.join(uploadDir, filename);
-    
-    // Tulis file ke sistem
     await writeFile(filePath, buffer);
-    
-    // Simpan URL yang dapat diakses publik ke database
     fileUrl = `/uploads/surat_permohonan/${filename}`;
   }
   // --- AKHIR LOGIKA FILE UPLOAD ---
@@ -73,7 +72,10 @@ export async function createPengajuanPeminjaman(formData: FormData) {
       data: {
         jumlah,
         keperluan,
-        fileUrl: fileUrl, // Simpan URL file jika ada
+        // <-- PERUBAHAN 3: Menyimpan tanggal ke database -->
+        tanggalMulai: tanggalMulai,
+        tanggalSelesai: tanggalSelesai,
+        fileUrl: fileUrl,
         satkerId: satkerId,
       },
     });
@@ -85,6 +87,10 @@ export async function createPengajuanPeminjaman(formData: FormData) {
   revalidatePath('/satker-admin/pengajuan');
 }
 
+// ==========================================================
+// --- SEMUA FUNGSI DI BAWAH INI TIDAK DIUBAH SAMA SEKALI ---
+// ==========================================================
+
 // Aksi untuk membuat pengajuan mutasi personil
 export async function createPengajuanMutasi(formData: FormData) {
     const satkerAsalId = await getSatkerIdOrThrow();
@@ -92,7 +98,7 @@ export async function createPengajuanMutasi(formData: FormData) {
     const personilId = formData.get('personilId') as string;
     const satkerTujuanId = formData.get('satkerTujuanId') as string;
     const alasan = formData.get('alasan') as string;
-    const file = formData.get('file') as File; // Ambil file dari form data
+    const file = formData.get('file') as File;
 
     if (!personilId || !satkerTujuanId || !alasan) {
         throw new Error('Personil, Satker Tujuan, dan Alasan wajib diisi.');
@@ -104,29 +110,22 @@ export async function createPengajuanMutasi(formData: FormData) {
 
     let fileUrl: string | null = null;
 
-    // --- LOGIKA UNTUK MENANGANI FILE UPLOAD ---
     if (file && file.size > 0) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB
+      if (file.size > 2 * 1024 * 1024) {
         throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
       }
       if (file.type !== 'application/pdf') {
          throw new Error('File yang diunggah harus berformat PDF.');
       }
-  
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-  
       const filename = `${Date.now()}_${satkerAsalId}_${file.name.replace(/\s/g, '_')}`;
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'surat_mutasi');
-      
       await mkdir(uploadDir, { recursive: true });
-  
       const filePath = path.join(uploadDir, filename);
       await writeFile(filePath, buffer);
-      
       fileUrl = `/uploads/surat_mutasi/${filename}`;
     }
-    // --- AKHIR LOGIKA FILE UPLOAD ---
 
     try {
         const existingPengajuan = await prisma.pengajuanMutasi.findFirst({
@@ -146,7 +145,7 @@ export async function createPengajuanMutasi(formData: FormData) {
                 satkerAsalId,
                 satkerTujuanId,
                 alasan,
-                fileUrl: fileUrl, // Simpan URL file jika ada
+                fileUrl: fileUrl,
             },
         });
     } catch (error: any) {
@@ -158,9 +157,7 @@ export async function createPengajuanMutasi(formData: FormData) {
     revalidatePath('/satker-admin/pengajuan');
 }
 
-/**
- * [DESAIN BARU] Aksi untuk membuat pengajuan pengembalian untuk satu PAKET peminjaman.
- */
+
 export async function createPackagePengembalian(formData: FormData) {
   const satkerId = await getSatkerIdOrThrow();
   const pengajuanPeminjamanId = formData.get('pengajuanPeminjamanId') as string;
@@ -170,7 +167,6 @@ export async function createPackagePengembalian(formData: FormData) {
     throw new Error('ID Paket Peminjaman dan Alasan wajib diisi.');
   }
 
-  // 1. Cari semua HT yang terkait dengan paket peminjaman ini dan masih aktif (belum dikembalikan)
   const activeLoans = await prisma.peminjamanSatker.findMany({
     where: {
       satkerId: satkerId,
@@ -190,7 +186,6 @@ export async function createPackagePengembalian(formData: FormData) {
     throw new Error('Tidak ada HT aktif yang bisa dikembalikan untuk paket ini. Mungkin sudah dalam proses pengembalian.');
   }
 
-  // 2. Cek apakah salah satu HT dalam paket ini sudah dalam proses pengajuan pengembalian
   const existingPendingReturns = await prisma.pengajuanPengembalian.count({
     where: {
       htId: { in: htIdsToReturn },
@@ -202,7 +197,6 @@ export async function createPackagePengembalian(formData: FormData) {
     throw new Error('Satu atau lebih HT dalam paket ini sudah memiliki pengajuan pengembalian yang sedang diproses.');
   }
 
-  // 3. Buat pengajuan pengembalian untuk SETIAP HT dalam paket secara atomik
   try {
     const returnSubmissions = htIdsToReturn.map(htId => ({
       htId: htId,
@@ -219,7 +213,6 @@ export async function createPackagePengembalian(formData: FormData) {
     throw new Error('Terjadi kesalahan saat mengirim pengajuan paket pengembalian.');
   }
 
-  // Revalidasi path untuk memperbarui UI
   revalidatePath('/satker-admin/pengajuan');
   revalidatePath('/dashboard/persetujuan');
 }

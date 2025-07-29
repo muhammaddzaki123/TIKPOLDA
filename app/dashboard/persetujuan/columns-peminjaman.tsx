@@ -1,11 +1,15 @@
-// app/dashboard/persetujuan/columns-peminjaman.tsx
+// File: app/dashboard/persetujuan/columns-peminjaman.tsx
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Prisma } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { FileText } from 'lucide-react'; // <-- Import ikon
-import Link from 'next/link'; // <-- Import Link
+import { FileText } from 'lucide-react';
+import Link from 'next/link';
+
+// --- Impor tambahan untuk memformat tanggal ---
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 export type PengajuanPeminjamanWithRelations = Prisma.PengajuanPeminjamanGetPayload<{
   include: {
@@ -25,10 +29,24 @@ export const columnsPeminjaman: ColumnDef<PengajuanPeminjamanWithRelations>[] = 
   {
     accessorKey: 'keperluan',
     header: 'Keperluan',
-    // Tambahkan style agar tidak terlalu lebar
     cell: ({ row }) => <div className="max-w-[300px] truncate">{row.getValue('keperluan')}</div>,
   },
-  // --- KOLOM BARU UNTUK DOKUMEN ---
+  // --- KOLOM BARU UNTUK RENTANG TANGGAL ---
+  {
+    header: 'Rentang Peminjaman',
+    cell: ({ row }) => {
+      const { tanggalMulai, tanggalSelesai } = row.original;
+      if (tanggalMulai && tanggalSelesai) {
+        return (
+          <div className="text-sm">
+            {format(new Date(tanggalMulai), 'd MMM yyyy', { locale: id })} - {format(new Date(tanggalSelesai), 'd MMM yyyy', { locale: id })}
+          </div>
+        );
+      }
+      return <span className="text-xs text-muted-foreground">-</span>;
+    },
+  },
+  // --- AKHIR KOLOM BARU ---
   {
     header: 'Dokumen',
     cell: ({ row }) => {
@@ -46,7 +64,6 @@ export const columnsPeminjaman: ColumnDef<PengajuanPeminjamanWithRelations>[] = 
       return <span className="text-xs text-muted-foreground">-</span>;
     },
   },
-  // --- AKHIR KOLOM BARU ---
   {
     accessorKey: 'createdAt',
     header: 'Tgl. Pengajuan',
