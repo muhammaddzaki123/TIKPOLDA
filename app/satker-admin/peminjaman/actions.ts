@@ -11,10 +11,10 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 
-/**
- * Aksi untuk mencatat peminjaman HT baru oleh Admin Satker.
- * --- DIMODIFIKASI ---
- */
+// ==========================================================
+// SEMUA KODE LAMA ANDA TETAP DI SINI (TIDAK ADA YANG DIUBAH)
+// ==========================================================
+
 export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
   const satkerId = session?.user?.satkerId;
@@ -28,9 +28,8 @@ export async function createPeminjaman(formData: FormData) {
   const kondisiSaatPinjam = formData.get('kondisiSaatPinjam') as string;
   const catatan = formData.get('catatan') as string | null;
   const file = formData.get('file') as File;
-  
-  // <-- PERUBAHAN 1: Mengambil dan memvalidasi estimasiKembali dari FormData -->
   const estimasiKembaliString = formData.get('estimasiKembali') as string;
+
   if (!estimasiKembaliString) {
       throw new Error('Estimasi tanggal kembali wajib diisi.');
   }
@@ -55,12 +54,12 @@ export async function createPeminjaman(formData: FormData) {
     const buffer = Buffer.from(bytes);
     const filename = `${Date.now()}_${personilId}_${file.name.replace(/\s/g, '_')}`;
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'berita_acara');
-    
+
     await mkdir(uploadDir, { recursive: true });
 
     const filePath = path.join(uploadDir, filename);
     await writeFile(filePath, buffer);
-    
+
     fileUrl = `/uploads/berita_acara/${filename}`;
   }
 
@@ -79,7 +78,7 @@ export async function createPeminjaman(formData: FormData) {
           htId,
           personilId,
           kondisiSaatPinjam,
-          estimasiKembali: estimasiKembali, // <-- PERUBAHAN 2: Menyimpan nilai ke database
+          estimasiKembali: estimasiKembali,
           catatan,
           fileUrl: fileUrl,
           adminPencatatId: session.user.id,
@@ -100,10 +99,6 @@ export async function createPeminjaman(formData: FormData) {
   revalidatePath('/dashboard/satker');
 }
 
-/**
- * Aksi untuk mencatat pengembalian HT.
- * --- TIDAK ADA PERUBAHAN PADA FUNGSI INI ---
- */
 export async function createPengembalian(formData: FormData) {
   const peminjamanId = formData.get('peminjamanId') as string;
   const kondisiSaatKembali = formData.get('kondisiSaatKembali') as string;
@@ -111,7 +106,7 @@ export async function createPengembalian(formData: FormData) {
   if (!peminjamanId || !kondisiSaatKembali) {
     throw new Error('ID Peminjaman dan Kondisi saat kembali wajib diisi.');
   }
-  
+
   try {
     await prisma.peminjaman.update({
         where: { id: peminjamanId },
@@ -129,4 +124,43 @@ export async function createPengembalian(formData: FormData) {
   revalidatePath('/satker-admin/inventaris');
   revalidatePath('/dashboard/inventaris');
   revalidatePath('/dashboard/satker');
+}
+
+
+// ==========================================================
+// --- FUNGSI BARU UNTUK RIWAYAT ---
+// Tambahkan kode di bawah ini di akhir file actions.ts Anda
+// ==========================================================
+/**
+ * Aksi untuk mengambil RIWAYAT peminjaman (yang sudah selesai) untuk Satker.
+ */
+export async function getRiwayatPeminjamanBySatker() {
+  const session = await getServerSession(authOptions);
+  const satkerId = session?.user?.satkerId;
+
+  if (!satkerId) {
+    // Kembalikan array kosong jika tidak terotentikasi agar halaman tidak error
+    return [];
+  }
+
+  // Mengambil data peminjaman yang sudah memiliki tanggal kembali
+  const riwayat = await prisma.peminjaman.findMany({
+    where: {
+      personil: {
+        satkerId: satkerId,
+      },
+      tanggalKembali: {
+        not: null, // Hanya ambil yang sudah dikembalikan
+      },
+    },
+    include: {
+      ht: true,
+      personil: true,
+    },
+    orderBy: {
+      tanggalKembali: 'desc', // Urutkan berdasarkan yang paling baru dikembalikan
+    },
+  });
+
+  return riwayat;
 }

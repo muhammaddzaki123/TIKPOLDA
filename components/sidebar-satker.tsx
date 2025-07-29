@@ -1,4 +1,4 @@
-// components/sidebar-satker.tsx
+// File: components/sidebar-satker.tsx
 
 'use client';
 
@@ -11,7 +11,7 @@ import {
   Users,
   Send,
   History,
-  ClipboardPenLine,
+  ClipboardPenLine, // Ikon ini akan kita gunakan untuk riwayat
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
@@ -21,6 +21,8 @@ const sidebarItems = [
   { name: 'Inventaris HT', href: '/satker-admin/inventaris', icon: Warehouse },
   { name: 'Data Personil', href: '/satker-admin/personil', icon: Users },
   { name: 'Peminjaman & Pengembalian', href: '/satker-admin/peminjaman', icon: History },
+  // --- MENU BARU DITAMBAHKAN DI SINI ---
+  { name: 'Riwayat Peminjaman', href: '/satker-admin/riwayat-peminjaman', icon: ClipboardPenLine },
   { name: 'Pengajuan', href: '/satker-admin/pengajuan', icon: Send },
 ];
 
@@ -43,7 +45,8 @@ export default function SidebarSatker() {
               <Link
                 href={item.href}
                 className={`flex items-center space-x-3 rounded-md p-3 text-sm font-medium transition-colors ${
-                  pathname.startsWith(item.href) && item.href !== '/satker-admin' || pathname === item.href
+                  // Logika untuk highlight menu aktif
+                  pathname === item.href || (item.href !== '/satker-admin' && pathname.startsWith(item.href))
                     ? 'bg-slate-700 text-white'
                     : 'text-gray-300 hover:bg-slate-700 hover:text-white'
                 }`}
