@@ -1,4 +1,4 @@
-// app/satker-admin/peminjaman/actions.ts
+// File: app/satker-admin/peminjaman/actions.ts
 
 'use server';
 
@@ -6,13 +6,14 @@ import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { writeFile, mkdir } from 'fs/promises'; // Import modul fs
-import path from 'path'; // Import modul path
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
 /**
  * Aksi untuk mencatat peminjaman HT baru oleh Admin Satker.
+ * --- DIMODIFIKASI ---
  */
 export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -26,7 +27,15 @@ export async function createPeminjaman(formData: FormData) {
   const personilId = formData.get('personilId') as string;
   const kondisiSaatPinjam = formData.get('kondisiSaatPinjam') as string;
   const catatan = formData.get('catatan') as string | null;
-  const file = formData.get('file') as File; // Ambil file dari form
+  const file = formData.get('file') as File;
+  
+  // <-- PERUBAHAN 1: Mengambil dan memvalidasi estimasiKembali dari FormData -->
+  const estimasiKembaliString = formData.get('estimasiKembali') as string;
+  if (!estimasiKembaliString) {
+      throw new Error('Estimasi tanggal kembali wajib diisi.');
+  }
+  const estimasiKembali = new Date(estimasiKembaliString);
+
 
   if (!htId || !personilId || !kondisiSaatPinjam) {
     throw new Error('HT, Personil, dan Kondisi wajib diisi.');
@@ -34,7 +43,6 @@ export async function createPeminjaman(formData: FormData) {
 
   let fileUrl: string | null = null;
 
-  // --- LOGIKA UPLOAD FILE ---
   if (file && file.size > 0) {
     if (file.size > 2 * 1024 * 1024) { // 2MB
       throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
@@ -55,7 +63,6 @@ export async function createPeminjaman(formData: FormData) {
     
     fileUrl = `/uploads/berita_acara/${filename}`;
   }
-  // --- AKHIR LOGIKA UPLOAD FILE ---
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -72,8 +79,9 @@ export async function createPeminjaman(formData: FormData) {
           htId,
           personilId,
           kondisiSaatPinjam,
+          estimasiKembali: estimasiKembali, // <-- PERUBAHAN 2: Menyimpan nilai ke database
           catatan,
-          fileUrl: fileUrl, // Simpan URL file ke database
+          fileUrl: fileUrl,
           adminPencatatId: session.user.id,
         },
       });
@@ -94,6 +102,7 @@ export async function createPeminjaman(formData: FormData) {
 
 /**
  * Aksi untuk mencatat pengembalian HT.
+ * --- TIDAK ADA PERUBAHAN PADA FUNGSI INI ---
  */
 export async function createPengembalian(formData: FormData) {
   const peminjamanId = formData.get('peminjamanId') as string;

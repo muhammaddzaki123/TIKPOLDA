@@ -1,4 +1,4 @@
-// app/satker-admin/peminjaman/components/PengembalianTable.tsx
+// File: components/PengembalianTable.tsx
 
 'use client';
 
@@ -12,9 +12,21 @@ import { createPengembalian } from '@/app/satker-admin/peminjaman/actions';
 import type { Peminjaman, HT, Personil } from '@prisma/client';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
-// Tipe data untuk properti komponen
-type PeminjamanAktif = (Peminjaman & { ht: HT; personil: Personil });
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+/*
+  PERUBAHAN DI SINI:
+  - Tipe `estimasiKembali` diubah menjadi `Date | null` agar bisa menerima data lama.
+*/
+type PeminjamanAktif = (Peminjaman & { 
+  ht: HT; 
+  personil: Personil; 
+  estimasiKembali: Date | null; // <-- Tipe diubah di sini
+});
 
 interface PengembalianTableProps {
   data: PeminjamanAktif[];
@@ -35,9 +47,9 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
       try {
         await createPengembalian(formData);
         setIsDialogOpen(false);
-        alert('Pengembalian HT berhasil dicatat.');
+        toast.success('Pengembalian HT berhasil dicatat.');
       } catch (error: any) {
-        alert(`Error: ${error.message}`);
+        toast.error(error.message);
       }
     });
   };
@@ -49,37 +61,58 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Kode HT</TableHead>
-              <TableHead>Nama Peminjam</TableHead>
-              <TableHead>NRP</TableHead>
-              <TableHead>Tgl. Pinjam</TableHead>
+              <TableHead>Peminjam</TableHead>
+              <TableHead>Tgl Pinjam</TableHead>
+              <TableHead>Batas Kembali</TableHead>
               <TableHead>Sprint</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.length > 0 ? (
-              data.map((peminjaman) => (
-                <TableRow key={peminjaman.id}>
-                  <TableCell className="font-medium">{peminjaman.ht.kodeHT}</TableCell>
-                  <TableCell>{peminjaman.personil.nama}</TableCell>
-                  <TableCell>{peminjaman.personil.nrp}</TableCell>
-                  <TableCell>{new Date(peminjaman.tanggalPinjam).toLocaleDateString('id-ID')}</TableCell>
-                  <TableCell>
-                    {peminjaman.fileUrl ? (
-                      <Button variant="outline" size="sm" className="h-8" asChild>
-                        <Link href={peminjaman.fileUrl} target="_blank" rel="noopener noreferrer">
-                          <FileText className="mr-2 h-3 w-3" /> PDF
-                        </Link>
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              data.map((peminjaman) => {
+                /*
+                  PERUBAHAN DI SINI:
+                  - Logika `isOverdue` sekarang mengecek apakah `estimasiKembali` ada sebelum membandingkan.
+                */
+                const isOverdue = peminjaman.estimasiKembali ? new Date() > new Date(peminjaman.estimasiKembali) : false;
+
+                return (
+                  <TableRow key={peminjaman.id} className={cn(isOverdue && "bg-red-50 text-red-900")}>
+                    <TableCell className="font-medium">{peminjaman.ht.kodeHT}</TableCell>
+                    <TableCell>
+                      <div>{peminjaman.personil.nama}</div>
+                      <div className="text-xs text-muted-foreground">{peminjaman.personil.nrp}</div>
+                    </TableCell>
+                    <TableCell>{format(new Date(peminjaman.tanggalPinjam), 'dd MMM yyyy', { locale: id })}</TableCell>
+                    
+                    {/*
+                      PERUBAHAN DI SINI:
+                      - Tampilkan tanggal jika ada, atau tampilkan placeholder jika null.
+                    */}
+                    <TableCell className={cn(isOverdue && "font-bold")}>
+                      {peminjaman.estimasiKembali 
+                        ? format(new Date(peminjaman.estimasiKembali), 'dd MMM yyyy', { locale: id }) 
+                        : <span className="text-xs text-muted-foreground">-</span>}
+                    </TableCell>
+                    
+                    <TableCell>
+                      {peminjaman.fileUrl ? (
+                        <Button variant="outline" size="sm" className="h-8" asChild>
+                          <Link href={peminjaman.fileUrl} target="_blank" rel="noopener noreferrer">
+                            <FileText className="mr-2 h-3 w-3" /> PDF
+                          </Link>
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">

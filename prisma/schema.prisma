@@ -82,6 +82,7 @@ model HT {
 model Peminjaman {
   id                 String    @id @default(cuid())
   tanggalPinjam      DateTime  @default(now())
+  estimasiKembali    DateTime?
   tanggalKembali     DateTime?
   kondisiSaatPinjam  String
   kondisiSaatKembali String?
