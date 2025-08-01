@@ -6,7 +6,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("directUrl")
 }
 
 // Model untuk Pengguna (Super Admin & Admin Satker)
@@ -114,7 +113,11 @@ model PengajuanPeminjaman {
   jumlah        Int
   fileUrl       String?
   status        PengajuanStatus @default(PENDING)
+  trackingStatus TrackingStatus @default(SUBMITTED)
   catatanAdmin  String?
+  estimasiSelesai DateTime?
+  tanggalPickup DateTime?
+  tanggalReturn DateTime?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   satkerPengaju Satker          @relation(fields: [satkerId], references: [id], onDelete: Cascade)
@@ -174,4 +177,16 @@ enum PengajuanStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum TrackingStatus {
+  SUBMITTED      // Pengajuan dikirim
+  UNDER_REVIEW   // Sedang ditinjau
+  APPROVED       // Disetujui
+  PROCESSING     // Sedang diproses (HT sedang disiapkan)
+  READY_PICKUP   // Siap diambil
+  IN_USE         // Sedang digunakan
+  RETURN_REQUESTED // Permintaan pengembalian
+  RETURNED       // Sudah dikembalikan
+  REJECTED       // Ditolak
 }

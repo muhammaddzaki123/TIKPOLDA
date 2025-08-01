@@ -191,4 +191,62 @@ export async function rejectPengajuan(formData: FormData) {
   });
 
   revalidatePath('/dashboard/persetujuan');
+  revalidatePath('/satker-admin/pengajuan');
+}
+
+export async function updateTrackingStatus(pengajuanId: string, trackingStatus: string, notes?: string) {
+  await getSuperAdminIdOrThrow();
+
+  try {
+    // Update catatan admin untuk tracking
+    await prisma.pengajuanPeminjaman.update({
+      where: { id: pengajuanId },
+      data: {
+        catatanAdmin: notes ? `[${trackingStatus}] ${notes}` : `Status: ${trackingStatus}`,
+        updatedAt: new Date()
+      }
+    });
+
+    // Jika status adalah RETURNED, kembalikan HT ke gudang
+    if (trackingStatus === 'RETURNED') {
+      const pengajuan = await prisma.pengajuanPeminjaman.findUnique({
+        where: { id: pengajuanId }
+      });
+
+      if (pengajuan) {
+        // Update semua peminjaman satker yang terkait
+        await prisma.peminjamanSatker.updateMany({
+          where: {
+            satkerId: pengajuan.satkerId,
+            catatan: { contains: pengajuan.id.substring(0, 8) },
+            tanggalKembali: null
+          },
+          data: { tanggalKembali: new Date() }
+        });
+
+        // Kembalikan HT ke gudang pusat
+        const peminjamanSatker = await prisma.peminjamanSatker.findMany({
+          where: {
+            satkerId: pengajuan.satkerId,
+            catatan: { contains: pengajuan.id.substring(0, 8) }
+          }
+        });
+
+        for (const peminjaman of peminjamanSatker) {
+          await prisma.hT.update({
+            where: { id: peminjaman.htId },
+            data: { satkerId: null }
+          });
+        }
+      }
+    }
+
+  } catch (error: any) {
+    console.error('Error updating tracking status:', error);
+    throw new Error('Gagal mengupdate status tracking.');
+  }
+
+  revalidatePath('/dashboard/persetujuan');
+  revalidatePath('/satker-admin/pengajuan');
+  revalidatePath('/dashboard/inventaris');
 }
