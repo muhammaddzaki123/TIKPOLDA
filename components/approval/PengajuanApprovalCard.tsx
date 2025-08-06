@@ -60,6 +60,9 @@ interface PengajuanData {
   
   // Pengembalian specific
   ht?: { kodeHT: string; merk: string; serialNumber: string };
+  pengembalianDetails?: {
+    ht: { kodeHT: string; merk: string; serialNumber: string };
+  }[];
 }
 
 interface PengajuanApprovalCardProps {
@@ -288,7 +291,22 @@ export function PengajuanApprovalCard({
                 </div>
                 <div>
                   <h4 className="font-medium text-sm text-gray-600 mb-1">HT yang Dikembalikan</h4>
-                  <p className="text-sm">{pengajuan.ht?.kodeHT} ({pengajuan.ht?.merk})</p>
+                  {pengajuan.pengembalianDetails && pengajuan.pengembalianDetails.length > 0 ? (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">{pengajuan.pengembalianDetails.length} unit HT:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {pengajuan.pengembalianDetails.map((detail, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {detail.ht.kodeHT} ({detail.ht.merk})
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : pengajuan.ht ? (
+                    <p className="text-sm">{pengajuan.ht.kodeHT} ({pengajuan.ht.merk})</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Tidak ada data HT</p>
+                  )}
                 </div>
                 <div>
                   <h4 className="font-medium text-sm text-gray-600 mb-1">Alasan</h4>

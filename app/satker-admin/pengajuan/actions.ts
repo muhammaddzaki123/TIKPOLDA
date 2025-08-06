@@ -163,53 +163,97 @@ export async function createPackagePengembalian(formData: FormData) {
   const pengajuanPeminjamanId = formData.get('pengajuanPeminjamanId') as string;
   const alasan = formData.get('alasan') as string;
 
-  if (!pengajuanPeminjamanId || !alasan) {
+  if (!pengajuanPeminjamanId || !alasan.trim()) {
     throw new Error('ID Paket Peminjaman dan Alasan wajib diisi.');
   }
 
-  const activeLoans = await prisma.peminjamanSatker.findMany({
-    where: {
-      satkerId: satkerId,
-      tanggalKembali: null,
-      catatan: {
-        contains: pengajuanPeminjamanId.substring(0, 8),
-      },
-    },
-    select: {
-      htId: true,
-    },
-  });
-
-  const htIdsToReturn = activeLoans.map(loan => loan.htId);
-
-  if (htIdsToReturn.length === 0) {
-    throw new Error('Tidak ada HT aktif yang bisa dikembalikan untuk paket ini. Mungkin sudah dalam proses pengembalian.');
-  }
-
-  const existingPendingReturns = await prisma.pengajuanPengembalian.count({
-    where: {
-      htId: { in: htIdsToReturn },
-      status: 'PENDING',
-    },
-  });
-
-  if (existingPendingReturns > 0) {
-    throw new Error('Satu atau lebih HT dalam paket ini sudah memiliki pengajuan pengembalian yang sedang diproses.');
-  }
-
   try {
-    const returnSubmissions = htIdsToReturn.map(htId => ({
-      htId: htId,
-      alasan: alasan,
-      satkerId: satkerId,
-    }));
-
-    await prisma.pengajuanPengembalian.createMany({
-      data: returnSubmissions,
+    // Validate the original loan request exists and is approved
+    const originalLoan = await prisma.pengajuanPeminjaman.findUnique({
+      where: { id: pengajuanPeminjamanId },
+      include: { satkerPengaju: true }
     });
 
-  } catch (error) {
-    console.error('Gagal membuat pengajuan pengembalian paket:', error);
+    if (!originalLoan) {
+      throw new Error('Pengajuan peminjaman tidak ditemukan.');
+    }
+
+    if (originalLoan.status !== 'APPROVED') {
+      throw new Error('Hanya pengajuan yang sudah disetujui yang dapat dikembalikan.');
+    }
+
+    if (originalLoan.satkerId !== satkerId) {
+      throw new Error('Anda tidak memiliki wewenang untuk mengembalikan paket ini.');
+    }
+
+    // Find active loans for this package
+    const activeLoans = await prisma.peminjamanSatker.findMany({
+      where: {
+        satkerId: satkerId,
+        tanggalKembali: null,
+        catatan: {
+          contains: pengajuanPeminjamanId.substring(0, 8),
+        },
+      },
+      include: {
+        ht: {
+          select: {
+            id: true,
+            kodeHT: true,
+            merk: true
+          }
+        }
+      }
+    });
+
+    const htIdsToReturn = activeLoans.map(loan => loan.htId);
+
+    if (htIdsToReturn.length === 0) {
+      throw new Error('Tidak ada HT aktif yang dapat dikembalikan untuk paket ini. Mungkin sudah dalam proses pengembalian atau sudah dikembalikan.');
+    }
+
+    // Check for existing pending returns for this package
+    const existingPendingReturn = await prisma.pengajuanPengembalian.findFirst({
+      where: {
+        pengajuanPeminjamanId: pengajuanPeminjamanId,
+        status: 'PENDING',
+      },
+    });
+
+    if (existingPendingReturn) {
+      throw new Error('Paket ini sudah memiliki pengajuan pengembalian yang sedang diproses.');
+    }
+
+    // Create package return request in a transaction
+    await prisma.$transaction(async (tx) => {
+      // Create the main return request
+      const returnRequest = await tx.pengajuanPengembalian.create({
+        data: {
+          alasan: alasan.trim(),
+          status: 'PENDING',
+          satkerId: satkerId,
+          pengajuanPeminjamanId: pengajuanPeminjamanId,
+        },
+      });
+
+      // Create detail records for each HT in the package
+      await tx.pengembalianDetail.createMany({
+        data: htIdsToReturn.map(htId => ({
+          pengajuanPengembalianId: returnRequest.id,
+          htId: htId,
+        })),
+      });
+    });
+
+    console.log(`Package return request created successfully for loan ${pengajuanPeminjamanId} with ${htIdsToReturn.length} HT units`);
+
+  } catch (error: any) {
+    console.error('Error creating package return request:', error);
+    
+    // Re-throw with user-friendly message
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('Terjadi kesalahan saat mengirim pengajuan paket pengembalian.');
   }
 

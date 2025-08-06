@@ -37,7 +37,7 @@ model Satker {
   pengajuanPeminjaman   PengajuanPeminjaman[]
   pengajuanMutasiAsal   PengajuanMutasi[]       @relation("SatkerAsal")
   pengajuanMutasiTujuan PengajuanMutasi[]       @relation("SatkerTujuan")
-  pengajuanPengembalian PengajuanPengembalian[] // <-- Relasi baru
+  pengajuanPengembalian PengajuanPengembalian[] // Updated relation
 }
 
 model Personil {
@@ -72,7 +72,7 @@ model HT {
 
   peminjaman           Peminjaman[]
   peminjamanOlehSatker PeminjamanSatker[]
-  pengajuanPengembalian PengajuanPengembalian[] // <-- Relasi baru
+  pengembalianDetails  PengembalianDetail[]    // Updated relation
 
   @@map("HT")
 }
@@ -143,21 +143,35 @@ model PengajuanMutasi {
 
 // --- MODEL BARU ---
 model PengajuanPengembalian {
-  id           String          @id @default(cuid())
-  alasan       String
-  status       PengajuanStatus @default(PENDING)
-  catatanAdmin String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                     String                    @id @default(cuid())
+  alasan                 String
+  status                 PengajuanStatus           @default(PENDING)
+  catatanAdmin           String?
+  pengajuanPeminjamanId  String?                   // Link to original loan request
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
 
-  ht           HT              @relation(fields: [htId], references: [id])
-  htId         String
+  satkerPengaju          Satker                    @relation(fields: [satkerId], references: [id])
+  satkerId               String
 
-  satkerPengaju Satker          @relation(fields: [satkerId], references: [id])
-  satkerId     String
+  // One-to-many relationship for package returns
+  pengembalianDetails    PengembalianDetail[]
 
-  @@index([htId])
   @@index([satkerId])
+  @@index([pengajuanPeminjamanId])
+}
+
+// Detail table for package returns
+model PengembalianDetail {
+  id                     String                 @id @default(cuid())
+  pengajuanPengembalian  PengajuanPengembalian  @relation(fields: [pengajuanPengembalianId], references: [id], onDelete: Cascade)
+  pengajuanPengembalianId String
+  ht                     HT                     @relation(fields: [htId], references: [id])
+  htId                   String
+  createdAt              DateTime               @default(now())
+
+  @@index([pengajuanPengembalianId])
+  @@index([htId])
 }
 
 

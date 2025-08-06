@@ -28,7 +28,11 @@ async function getPengajuanData() {
     where: { status: 'PENDING' },
     include: {
       satkerPengaju: { select: { nama: true } },
-      ht: { select: { kodeHT: true, merk: true, serialNumber: true } }
+      pengembalianDetails: {
+        include: {
+          ht: { select: { kodeHT: true, merk: true, serialNumber: true } }
+        }
+      }
     },
     orderBy: { createdAt: 'asc' },
   });

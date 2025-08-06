@@ -36,6 +36,9 @@ interface EnhancedPengajuan {
   satkerAsal?: { nama: string };
   satkerTujuan?: { nama: string };
   ht?: { kodeHT: string; merk: string; serialNumber: string };
+  pengembalianDetails?: {
+    ht: { kodeHT: string; merk: string; serialNumber: string };
+  }[];
 }
 
 interface EnhancedPersetujuanTableProps {

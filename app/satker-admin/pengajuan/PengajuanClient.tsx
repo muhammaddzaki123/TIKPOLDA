@@ -31,15 +31,22 @@ export default function PengajuanClient({
       // Cari pengajuan yang sesuai untuk mendapatkan detail HT
       const pengajuan = riwayatGabungan.find(r => r.id === pengajuanId);
       if (!pengajuan || !pengajuan.approvedHts || pengajuan.approvedHts.length === 0) {
-        throw new Error('Tidak ada HT yang dapat dikembalikan untuk pengajuan ini.');
+        throw new Error('Tidak ada HT yang dapat dikembalikan untuk pengajuan ini atau HT sudah dalam proses pengembalian.');
       }
+
+      // Confirm with user before proceeding
+      const confirmed = confirm(
+        `Anda akan mengajukan pengembalian untuk ${pengajuan.approvedHts.length} unit HT dengan keperluan "${pengajuan.keperluan}". Lanjutkan?`
+      );
+      
+      if (!confirmed) return;
 
       const formData = new FormData();
       formData.append('pengajuanPeminjamanId', pengajuanId);
-      formData.append('alasan', 'Permintaan pengembalian dari tracking pengajuan');
+      formData.append('alasan', 'Permintaan pengembalian dari tracking pengajuan - kegiatan telah selesai');
       
       await createPackagePengembalian(formData);
-      toast.success('Permintaan pengembalian berhasil dikirim.');
+      toast.success('Permintaan pengembalian berhasil dikirim dan sedang menunggu persetujuan.');
     } catch (error: any) {
       console.error('Error creating return request:', error);
       toast.error(`Error: ${error.message}`);

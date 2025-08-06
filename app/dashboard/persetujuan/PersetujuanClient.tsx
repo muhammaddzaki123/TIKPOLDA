@@ -50,7 +50,9 @@ interface PengajuanPengembalian {
   createdAt: Date;
   updatedAt: Date;
   satkerPengaju: { nama: string };
-  ht: { kodeHT: string; merk: string; serialNumber: string };
+  pengembalianDetails: {
+    ht: { kodeHT: string; merk: string; serialNumber: string };
+  }[];
 }
 
 interface PersetujuanClientProps {

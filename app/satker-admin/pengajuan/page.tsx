@@ -22,7 +22,17 @@ async function getData(satkerId: string) {
     prisma.satker.findMany({ where: { id: { not: satkerId } }, orderBy: { nama: 'asc' } }),
     prisma.pengajuanPeminjaman.findMany({ where: { satkerId }, orderBy: { createdAt: 'desc' } }),
     prisma.pengajuanMutasi.findMany({ where: { satkerAsalId: satkerId }, include: { personil: true, satkerTujuan: true }, orderBy: { createdAt: 'desc' } }),
-    prisma.pengajuanPengembalian.findMany({ where: { satkerId }, include: { ht: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.pengajuanPengembalian.findMany({ 
+      where: { satkerId }, 
+      include: { 
+        pengembalianDetails: {
+          include: {
+            ht: true
+          }
+        }
+      }, 
+      orderBy: { createdAt: 'desc' } 
+    }),
     prisma.peminjamanSatker.findMany({ where: { satkerId }, include: { ht: true } }),
   ]);
 
@@ -42,12 +52,16 @@ async function getData(satkerId: string) {
         updatedAt: p.updatedAt,
         alasan: p.alasan,
         catatanAdmin: p.catatanAdmin,
-        approvedHts: [], // Ganti nama 'approvedHts' menjadi 'returnedHts' atau nama yang lebih sesuai
+        approvedHts: [], // Daftar HT yang dikembalikan
       };
     }
-    // Tambahkan HT ke dalam paket
-    if (p.ht) {
-      groupedReturns[groupKey].approvedHts?.push(p.ht);
+    // Tambahkan HT ke dalam paket dari pengembalianDetails
+    if (p.pengembalianDetails && p.pengembalianDetails.length > 0) {
+      p.pengembalianDetails.forEach(detail => {
+        if (detail.ht) {
+          groupedReturns[groupKey].approvedHts?.push(detail.ht);
+        }
+      });
     }
   });
 

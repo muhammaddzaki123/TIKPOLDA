@@ -118,43 +118,79 @@ export async function approvePengembalian(pengajuanId: string) {
   await getSuperAdminIdOrThrow();
 
   try {
+    // Find the return request with its details
     const pengajuan = await prisma.pengajuanPengembalian.findUnique({
       where: { id: pengajuanId },
+      include: {
+        pengembalianDetails: {
+          include: {
+            ht: true
+          }
+        },
+        satkerPengaju: true
+      }
     });
 
     if (!pengajuan || pengajuan.status !== 'PENDING') {
       throw new Error('Pengajuan tidak valid atau sudah diproses.');
     }
 
+    if (pengajuan.pengembalianDetails.length === 0) {
+      throw new Error('Tidak ada HT yang terdaftar dalam pengajuan pengembalian ini.');
+    }
+
     await prisma.$transaction(async (tx) => {
+      // Update the main return request status to APPROVED
       await tx.pengajuanPengembalian.update({
         where: { id: pengajuanId },
-        data: { status: PengajuanStatus.APPROVED },
+        data: { 
+          status: PengajuanStatus.APPROVED,
+          updatedAt: new Date()
+        },
       });
 
-      const peminjamanAktif = await tx.peminjamanSatker.findFirst({
-        where: { htId: pengajuan.htId, tanggalKembali: null },
-      });
+      // Process each HT in the return package
+      for (const detail of pengajuan.pengembalianDetails) {
+        // Find and update the active loan record
+        const peminjamanAktif = await tx.peminjamanSatker.findFirst({
+          where: { 
+            htId: detail.htId, 
+            tanggalKembali: null,
+            satkerId: pengajuan.satkerId
+          },
+        });
 
-      if (peminjamanAktif) {
-        await tx.peminjamanSatker.update({
-          where: { id: peminjamanAktif.id },
-          data: { tanggalKembali: new Date() },
+        if (peminjamanAktif) {
+          // Mark the loan as returned
+          await tx.peminjamanSatker.update({
+            where: { id: peminjamanAktif.id },
+            data: { tanggalKembali: new Date() },
+          });
+        }
+
+        // Return the HT to central warehouse
+        await tx.hT.update({
+          where: { id: detail.htId },
+          data: { satkerId: null },
         });
       }
-
-      await tx.hT.update({
-        where: { id: pengajuan.htId },
-        data: { satkerId: null },
-      });
     });
+
+    console.log(`Package return approved: ${pengajuan.pengembalianDetails.length} HT units returned to warehouse from ${pengajuan.satkerPengaju.nama}`);
+
   } catch (error: any) {
-    throw error;
+    console.error('Error approving return request:', error);
+    
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Terjadi kesalahan saat menyetujui pengajuan pengembalian.');
   }
 
   revalidatePath('/dashboard/persetujuan');
   revalidatePath('/dashboard/inventaris');
   revalidatePath('/dashboard/satker');
+  revalidatePath('/satker-admin/pengajuan');
 }
 
 export async function rejectPengajuan(formData: FormData) {
