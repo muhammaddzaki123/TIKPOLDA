@@ -257,6 +257,9 @@ export async function createPackagePengembalian(formData: FormData) {
     throw new Error('Terjadi kesalahan saat mengirim pengajuan paket pengembalian.');
   }
 
+  // Revalidate paths to update tracking status
   revalidatePath('/satker-admin/pengajuan');
   revalidatePath('/dashboard/persetujuan');
+  
+  console.log(`Revalidated paths after creating return request for loan ${pengajuanPeminjamanId}`);
 }

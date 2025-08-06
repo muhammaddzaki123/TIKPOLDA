@@ -55,6 +55,7 @@ export async function approveMutasi(pengajuanId: string) {
   revalidatePath('/dashboard/persetujuan');
   revalidatePath('/dashboard/personil');
   revalidatePath('/dashboard/satker');
+  revalidatePath('/satker-admin/pengajuan');
 }
 
 export async function approvePeminjaman(pengajuanId: string, selectedHtIds: string[]) {
@@ -112,6 +113,7 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
     revalidatePath('/dashboard/persetujuan');
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
+    revalidatePath('/satker-admin/pengajuan');
 }
 
 export async function approvePengembalian(pengajuanId: string) {

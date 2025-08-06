@@ -71,15 +71,52 @@ async function getData(satkerId: string) {
   const riwayatGabungan: any[] = [
     ...riwayatPeminjaman.map(p => {
       const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter(ps => ps.catatan?.includes(p.id.substring(0, 8))).map(ps => ps.ht) : [];
+      
+      // Tentukan tracking status berdasarkan kondisi peminjaman dan pengembalian
+      let trackingStatus = 'SUBMITTED';
+      if (p.status === 'APPROVED') {
+        // Cek apakah ada pengajuan pengembalian untuk paket ini
+        const hasReturnRequest = riwayatPengembalian.some(r => 
+          r.pengajuanPeminjamanId === p.id && r.status === 'PENDING'
+        );
+        
+        // Cek apakah sudah ada pengembalian yang disetujui
+        const hasApprovedReturn = riwayatPengembalian.some(r => 
+          r.pengajuanPeminjamanId === p.id && r.status === 'APPROVED'
+        );
+        
+        // Cek apakah semua HT sudah dikembalikan (tanggalKembali tidak null)
+        const allHtsReturned = peminjamanSatker
+          .filter(ps => ps.catatan?.includes(p.id.substring(0, 8)))
+          .every(ps => ps.tanggalKembali !== null);
+        
+        if (hasApprovedReturn || allHtsReturned) {
+          trackingStatus = 'RETURNED';
+        } else if (hasReturnRequest) {
+          trackingStatus = 'RETURN_REQUESTED';
+        } else {
+          trackingStatus = 'IN_USE';
+        }
+      } else if (p.status === 'REJECTED') {
+        trackingStatus = 'REJECTED';
+      }
+      
       return { 
         ...p, 
         tipe: 'Peminjaman HT', 
-        trackingStatus: p.status === 'APPROVED' ? 'IN_USE' : 'SUBMITTED',
+        trackingStatus,
         approvedHts 
       };
     }),
-    ...riwayatMutasi.map(m => ({ ...m, tipe: 'Mutasi Personil', trackingStatus: 'SUBMITTED' })),
-    ...riwayatPengembalianGrouped, // Gunakan data yang sudah dikelompokkan
+    ...riwayatMutasi.map(m => ({ 
+      ...m, 
+      tipe: 'Mutasi Personil', 
+      trackingStatus: m.status === 'APPROVED' ? 'APPROVED' : m.status === 'REJECTED' ? 'REJECTED' : 'SUBMITTED' 
+    })),
+    ...riwayatPengembalianGrouped.map(r => ({
+      ...r,
+      trackingStatus: r.status === 'APPROVED' ? 'APPROVED' : r.status === 'REJECTED' ? 'REJECTED' : 'SUBMITTED'
+    })), // Gunakan data yang sudah dikelompokkan
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const approvedLoans: ApprovedLoanPackage[] = riwayatPeminjaman
