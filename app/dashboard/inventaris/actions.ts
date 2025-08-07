@@ -214,7 +214,10 @@ export async function tarikHtKeGudangPusat(htId: string) {
     const htWithLoans = await prisma.hT.findUnique({
       where: { id: htId },
       include: {
-        peminjaman: { where: { tanggalKembali: null } },
+        peminjaman: { 
+          where: { tanggalKembali: null },
+          include: { personil: true }
+        },
         peminjamanOlehSatker: { where: { tanggalKembali: null } },
         satker: true
       }
@@ -274,7 +277,10 @@ export async function tarikMultipleHtKeGudangPusat(htIds: string[]) {
     const htList = await prisma.hT.findMany({
       where: { id: { in: htIds } },
       include: {
-        peminjaman: { where: { tanggalKembali: null } },
+        peminjaman: { 
+          where: { tanggalKembali: null },
+          include: { personil: true }
+        },
         peminjamanOlehSatker: { where: { tanggalKembali: null } },
         satker: true
       }
