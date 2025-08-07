@@ -18,12 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PersonilWithSatker } from '@/types/custom';
-import { Satker } from '@prisma/client';
+// import { Satker } from '@prisma/client'; // Satker tidak digunakan, jadi dihapus
 import { mutasiPersonil } from './actions';
 import { ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { Satker } from '@prisma/client';
 
 interface PersonilDataTableProps<TData extends PersonilWithSatker, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,6 +41,7 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
 }: PersonilDataTableProps<TData, TValue>) {
   const [isMutasiDialogOpen, setIsMutasiDialogOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   
@@ -58,6 +60,10 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
       openMutasiDialog: (personil) => {
         setSelectedPersonil(personil as TData);
         setIsMutasiDialogOpen(true);
+      },
+      openPhotoDialog: (personil) => {
+        setSelectedPersonil(personil as TData);
+        setIsPhotoDialogOpen(true);
       },
     },
     state: {

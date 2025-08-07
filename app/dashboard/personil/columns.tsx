@@ -17,6 +17,29 @@ import { PersonilWithSatker } from '@/types/custom';
 
 export const columns: ColumnDef<PersonilWithSatker>[] = [
   {
+    id: 'foto',
+    header: 'Foto',
+    cell: ({ row, table }) => {
+      const fotoUrl = row.original.fotoUrl;
+      return (
+        <div className="flex items-center justify-center">
+          {fotoUrl ? (
+            <img 
+              src={fotoUrl} 
+              alt={`Foto ${row.original.nama}`}
+              className="w-12 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => table.options.meta?.openPhotoDialog?.(row.original)}
+            />
+          ) : (
+            <div className="w-12 h-16 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
+              No Photo
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: 'nama',
     header: 'Nama Personil',
   },
@@ -39,8 +62,12 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
     },
   },
   {
+    accessorKey: 'pangkat',
+    header: 'Pangkat',
+  },
+  {
     accessorKey: 'jabatan',
-    header: 'Jabatan/Pangkat',
+    header: 'Jabatan',
   },
   {
     id: 'actions',
