@@ -13,6 +13,7 @@ import type { Peminjaman, HT, Personil } from '@prisma/client';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { KartuPeminjamanModal } from './KartuPeminjamanModal';
 
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -36,10 +37,19 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPeminjaman, setSelectedPeminjaman] = useState<PeminjamanAktif | null>(null);
   const [isPending, startTransition] = useTransition();
+  
+  // State untuk modal kartu
+  const [isKartuModalOpen, setIsKartuModalOpen] = useState(false);
+  const [selectedKartuData, setSelectedKartuData] = useState<PeminjamanAktif | null>(null);
 
   const openDialog = (peminjaman: PeminjamanAktif) => {
     setSelectedPeminjaman(peminjaman);
     setIsDialogOpen(true);
+  };
+
+  const openKartuModal = (peminjaman: PeminjamanAktif) => {
+    setSelectedKartuData(peminjaman);
+    setIsKartuModalOpen(true);
   };
 
   const handleSubmit = (formData: FormData) => {
@@ -65,6 +75,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               <TableHead>Tgl Pinjam</TableHead>
               <TableHead>Batas Kembali</TableHead>
               <TableHead>Sprint</TableHead>
+              <TableHead>Kartu</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -107,6 +118,18 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
+                    
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                        onClick={() => openKartuModal(peminjaman)}
+                      >
+                        Lihat Kartu
+                      </Button>
+                    </TableCell>
+                    
                     <TableCell className="text-right">
                       <Button size="sm" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
                     </TableCell>
@@ -115,7 +138,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   Tidak ada HT yang sedang dipinjam.
                 </TableCell>
               </TableRow>
@@ -147,6 +170,13 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Kartu Peminjaman */}
+      <KartuPeminjamanModal
+        isOpen={isKartuModalOpen}
+        onClose={() => setIsKartuModalOpen(false)}
+        data={selectedKartuData}
+      />
     </>
   );
 }
