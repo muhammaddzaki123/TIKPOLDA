@@ -45,6 +45,8 @@ model Personil {
   nrp             String            @unique
   nama            String
   jabatan         String
+  pangkat         String
+  fotoUrl         String?
   subSatker       String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt

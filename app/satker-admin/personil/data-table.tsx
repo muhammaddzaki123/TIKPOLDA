@@ -34,6 +34,7 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isAddSubSatkerOpen, setIsAddSubSatkerOpen] = useState(false);
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   
@@ -57,6 +58,10 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
       openDeletePersonilDialog: (personil) => {
         setSelectedPersonil(personil as TData);
         setIsDeleteDialogOpen(true);
+      },
+      openPhotoDialog: (personil) => {
+        setSelectedPersonil(personil as TData);
+        setIsPhotoDialogOpen(true);
       },
     },
   });
@@ -112,9 +117,51 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
         <form action={handleFormSubmit}>
         {personil && <input type="hidden" name="personilId" value={personil.id} />}
         <div className="py-4 space-y-4">
-            <div className="space-y-2"><Label htmlFor="nama">Nama Lengkap</Label><Input id="nama" name="nama" defaultValue={personil?.nama} required /></div>
-            <div className="space-y-2"><Label htmlFor="nrp">NRP</Label><Input id="nrp" name="nrp" defaultValue={personil?.nrp} required /></div>
-            <div className="space-y-2"><Label htmlFor="jabatan">Jabatan / Pangkat</Label><Input id="jabatan" name="jabatan" defaultValue={personil?.jabatan} required /></div>
+            <div className="space-y-2">
+                <Label htmlFor="nama">Nama Lengkap</Label>
+                <Input id="nama" name="nama" defaultValue={personil?.nama} required />
+            </div>
+            
+            <div className="space-y-2">
+                <Label htmlFor="nrp">NRP</Label>
+                <Input id="nrp" name="nrp" defaultValue={personil?.nrp} required />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="pangkat">Pangkat</Label>
+                    <Input id="pangkat" name="pangkat" defaultValue={personil?.pangkat} placeholder="Contoh: Brigadir" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="jabatan">Jabatan</Label>
+                    <Input id="jabatan" name="jabatan" defaultValue={personil?.jabatan} placeholder="Contoh: Kapolsek" required />
+                </div>
+            </div>
+            
+            <div className="space-y-2">
+                <Label htmlFor="foto">Foto Personil (3x4)</Label>
+                <Input 
+                    id="foto" 
+                    name="foto" 
+                    type="file" 
+                    accept="image/jpeg,image/jpg,image/png"
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500">
+                    Format: JPG, JPEG, PNG. Ukuran maksimal: 1MB. Rasio 3:4 (contoh: 300x400px)
+                </p>
+                {personil?.fotoUrl && (
+                    <div className="mt-2">
+                        <p className="text-xs text-gray-600 mb-1">Foto saat ini:</p>
+                        <img 
+                            src={personil.fotoUrl} 
+                            alt="Foto saat ini" 
+                            className="w-16 h-20 object-cover rounded border"
+                        />
+                    </div>
+                )}
+            </div>
+            
             <div className="space-y-2">
                 <Label>Penempatan</Label>
                 <div className="flex items-center gap-2">
@@ -243,6 +290,51 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isPending}>{isPending ? 'Menghapus...' : 'Hapus Permanen'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Dialog */}
+      <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Foto Personil</DialogTitle>
+            <DialogDescription>
+              {selectedPersonil?.nama} - {selectedPersonil?.pangkat} {selectedPersonil?.jabatan}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-center py-4">
+            {selectedPersonil?.fotoUrl ? (
+              <div className="relative">
+                <img 
+                  src={selectedPersonil.fotoUrl} 
+                  alt={`Foto ${selectedPersonil.nama}`}
+                  className="max-w-full max-h-96 object-contain rounded-lg border shadow-lg"
+                />
+                <div className="mt-2 text-center text-sm text-gray-600">
+                  <p><strong>NRP:</strong> {selectedPersonil.nrp}</p>
+                  <p><strong>Pangkat:</strong> {selectedPersonil.pangkat}</p>
+                  <p><strong>Jabatan:</strong> {selectedPersonil.jabatan}</p>
+                  <p><strong>Penempatan:</strong> {selectedPersonil.subSatker || selectedPersonil.satkerName}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="w-32 h-40 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-500 mb-4">
+                  <span className="text-sm">Tidak ada foto</span>
+                </div>
+                <p className="text-sm text-gray-600 text-center">
+                  Foto belum tersedia untuk personil ini
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPhotoDialogOpen(false)}>
+              Tutup
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

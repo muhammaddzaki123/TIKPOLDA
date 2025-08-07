@@ -13,14 +13,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Personil } from '@prisma/client';
+import type { Personil as PrismaPersonil } from '@prisma/client';
 
 // Tipe data ini akan membawa nama Satker utama
-export type PersonilWithSatkerName = Personil & {
+export type PersonilWithSatkerName = PrismaPersonil & {
   satkerName: string;
 };
 
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData> {
+    openPhotoDialog?: (personil: TData) => void;
+  }
+}
+
 export const columns: ColumnDef<PersonilWithSatkerName>[] = [
+  {
+    id: 'foto',
+    header: 'Foto',
+    cell: ({ row, table }) => {
+      const fotoUrl = row.original.fotoUrl;
+      return (
+        <div className="flex items-center justify-center">
+          {fotoUrl ? (
+            <img 
+              src={fotoUrl} 
+              alt={`Foto ${row.original.nama}`}
+              className="w-12 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => table.options.meta?.openPhotoDialog?.(row.original)}
+            />
+          ) : (
+            <div className="w-12 h-16 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
+              No Photo
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
   {
     accessorKey: 'nama',
     header: 'Nama Lengkap',
@@ -28,6 +57,14 @@ export const columns: ColumnDef<PersonilWithSatkerName>[] = [
   {
     accessorKey: 'nrp',
     header: 'NRP',
+  },
+  {
+    accessorKey: 'pangkat',
+    header: 'Pangkat',
+  },
+  {
+    accessorKey: 'jabatan',
+    header: 'Jabatan',
   },
   // --- KOLOM BARU UNTUK SATKER INDUK ---
   {
