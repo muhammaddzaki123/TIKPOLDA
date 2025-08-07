@@ -76,13 +76,28 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
     cell: ({ row, table }) => {
         const isDipinjam = row.original.peminjamanOlehSatker.length > 0;
         return (
-            <div className="text-right">
+            <div className="text-right space-x-2">
+                <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => table.options.meta?.openEditDialog?.(row.original)}
+                >
+                    Edit
+                </Button>
                 <Button 
                     size="sm" 
                     onClick={() => table.options.meta?.openPinjamkanDialog?.(row.original)}
                     disabled={isDipinjam}
                 >
                     Pinjamkan
+                </Button>
+                <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => table.options.meta?.openDeleteDialog?.(row.original)}
+                    disabled={isDipinjam}
+                >
+                    Hapus
                 </Button>
             </div>
         );

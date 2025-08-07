@@ -21,6 +21,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { HtDetails } from '@/app/dashboard/inventaris/columns';
 import { pinjamkanHtKeSatker, distributeMultipleHtToSatker } from '@/app/dashboard/inventaris/actions';
 import { Satker, HTStatus } from '@prisma/client';
+import EditHtForm from './edit-ht-form';
+import DeleteHtDialog from './delete-ht-dialog';
 import { ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -29,6 +31,8 @@ import { cn } from "@/lib/utils";
 declare module '@tanstack/react-table' {
   interface TableMeta<TData> {
     openPinjamkanDialog?: (ht: TData) => void;
+    openEditDialog?: (ht: TData) => void;
+    openDeleteDialog?: (ht: TData) => void;
   }
 }
 
@@ -49,6 +53,8 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
 }: InventarisDataTableProps<TData, TValue>) {
   const [isPinjamkanOpen, setIsPinjamkanOpen] = useState(false);
   const [isDistribusiOpen, setIsDistribusiOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedHt, setSelectedHt] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -69,6 +75,14 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
       openPinjamkanDialog: (ht) => {
         setSelectedHt(ht as TData);
         setIsPinjamkanOpen(true);
+      },
+      openEditDialog: (ht) => {
+        setSelectedHt(ht as TData);
+        setIsEditOpen(true);
+      },
+      openDeleteDialog: (ht) => {
+        setSelectedHt(ht as TData);
+        setIsDeleteOpen(true);
       },
     },
     state: {
@@ -325,6 +339,41 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit HT Dialog */}
+      {selectedHt && (
+        <EditHtForm
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          htData={{
+            id: selectedHt.id,
+            serialNumber: selectedHt.serialNumber,
+            kodeHT: selectedHt.kodeHT,
+            merk: selectedHt.merk,
+            jenis: selectedHt.jenis,
+            tahunBuat: selectedHt.tahunBuat,
+            tahunPeroleh: selectedHt.tahunPeroleh,
+            status: selectedHt.status,
+            catatanKondisi: selectedHt.catatanKondisi,
+            satkerId: selectedHt.satkerId,
+          }}
+          satkerOptions={satkerList}
+        />
+      )}
+
+      {/* Delete HT Dialog */}
+      {selectedHt && (
+        <DeleteHtDialog
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          htData={{
+            id: selectedHt.id,
+            kodeHT: selectedHt.kodeHT,
+            merk: selectedHt.merk,
+            serialNumber: selectedHt.serialNumber,
+          }}
+        />
+      )}
     </div>
   );
 }

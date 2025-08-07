@@ -6,26 +6,26 @@ import PersetujuanClient from './PersetujuanClient';
 const prisma = new PrismaClient();
 
 async function getPengajuanData() {
-  // Ambil semua pengajuan peminjaman (tidak hanya PENDING)
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
+    where: { status: 'PENDING' },
     include: {
       satkerPengaju: { select: { nama: true } },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
   });
 
-  // Ambil semua pengajuan mutasi (tidak hanya PENDING)
   const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
+    where: { status: 'PENDING' },
     include: {
       personil: { select: { nama: true, nrp: true } },
       satkerAsal: { select: { nama: true } },
       satkerTujuan: { select: { nama: true } },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
   });
 
-  // Ambil semua pengajuan pengembalian (tidak hanya PENDING)
   const pengajuanPengembalian = await prisma.pengajuanPengembalian.findMany({
+    where: { status: 'PENDING' },
     include: {
       satkerPengaju: { select: { nama: true } },
       pengembalianDetails: {
@@ -34,15 +34,7 @@ async function getPengajuanData() {
         }
       }
     },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  // Ambil data peminjaman satker untuk tracking
-  const peminjamanSatker = await prisma.peminjamanSatker.findMany({
-    include: { 
-      ht: { select: { kodeHT: true, merk: true } },
-      satker: { select: { nama: true } }
-    }
+    orderBy: { createdAt: 'asc' },
   });
 
   const htDiGudang = await prisma.hT.findMany({
@@ -53,30 +45,17 @@ async function getPengajuanData() {
     orderBy: { kodeHT: 'asc' }
   });
 
-  return { 
-    pengajuanPeminjaman, 
-    pengajuanMutasi, 
-    pengajuanPengembalian, 
-    peminjamanSatker,
-    htDiGudang 
-  };
+  return { pengajuanPeminjaman, pengajuanMutasi, pengajuanPengembalian, htDiGudang };
 }
 
 export default async function PersetujuanPage() {
-  const { 
-    pengajuanPeminjaman, 
-    pengajuanMutasi, 
-    pengajuanPengembalian, 
-    peminjamanSatker,
-    htDiGudang 
-  } = await getPengajuanData();
+  const { pengajuanPeminjaman, pengajuanMutasi, pengajuanPengembalian, htDiGudang } = await getPengajuanData();
 
   return (
     <PersetujuanClient
       pengajuanPeminjaman={pengajuanPeminjaman}
       pengajuanMutasi={pengajuanMutasi}
       pengajuanPengembalian={pengajuanPengembalian}
-      peminjamanSatker={peminjamanSatker}
       htDiGudang={htDiGudang}
     />
   );

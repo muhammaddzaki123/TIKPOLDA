@@ -134,6 +134,116 @@ export async function distributeMultipleHtToSatker(htIds: string[], satkerId: st
   revalidatePath('/dashboard/satker');
 }
 
+export async function updateHtBySuperAdmin(formData: FormData) {
+  const htId = formData.get('htId') as string;
+  const serialNumber = formData.get('serialNumber') as string;
+  const kodeHT = formData.get('kodeHT') as string;
+  const merk = formData.get('merk') as string;
+  const jenis = formData.get('jenis') as string;
+  const tahunBuat = parseInt(formData.get('tahunBuat') as string);
+  const tahunPeroleh = parseInt(formData.get('tahunPeroleh') as string);
+  const status = formData.get('status') as HTStatus;
+  const catatanKondisi = formData.get('catatanKondisi') as string;
+  const satkerIdInput = formData.get('satkerId') as string | null;
+
+  if (!htId || !serialNumber || !kodeHT || !merk || !jenis || !tahunBuat || !tahunPeroleh || !status) {
+    throw new Error('Semua kolom wajib diisi kecuali catatan kondisi dan penempatan satker.');
+  }
+
+  const satkerId = satkerIdInput === 'gudang' ? null : satkerIdInput;
+
+  try {
+    // Cek apakah HT sedang dipinjam
+    const htWithLoans = await prisma.hT.findUnique({
+      where: { id: htId },
+      include: {
+        peminjaman: { where: { tanggalKembali: null } },
+        peminjamanOlehSatker: { where: { tanggalKembali: null } }
+      }
+    });
+
+    if (!htWithLoans) {
+      throw new Error('HT tidak ditemukan.');
+    }
+
+    // Jika HT sedang dipinjam, tidak boleh mengubah penempatan satker
+    const isCurrentlyLoaned = htWithLoans.peminjaman.length > 0 || htWithLoans.peminjamanOlehSatker.length > 0;
+    
+    if (isCurrentlyLoaned && htWithLoans.satkerId !== satkerId) {
+      throw new Error('Tidak dapat mengubah penempatan HT yang sedang dipinjam.');
+    }
+
+    await prisma.hT.update({
+      where: { id: htId },
+      data: {
+        serialNumber,
+        kodeHT,
+        merk,
+        jenis,
+        tahunBuat,
+        tahunPeroleh,
+        status,
+        catatanKondisi: catatanKondisi || null,
+        satkerId: satkerId,
+      },
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      const target = error.meta?.target as string[];
+      if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
+      if (target?.includes('kodeHT')) throw new Error('Gagal: Kode HT sudah terdaftar.');
+    }
+    if (error instanceof Error) {
+      throw error;
+    }
+    console.error('Gagal mengupdate HT:', error);
+    throw new Error('Terjadi kesalahan saat mengupdate data HT.');
+  }
+
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
+}
+
+export async function deleteHtBySuperAdmin(htId: string) {
+  if (!htId) {
+    throw new Error('ID HT tidak valid.');
+  }
+
+  try {
+    // Cek apakah HT sedang dipinjam
+    const htWithLoans = await prisma.hT.findUnique({
+      where: { id: htId },
+      include: {
+        peminjaman: { where: { tanggalKembali: null } },
+        peminjamanOlehSatker: { where: { tanggalKembali: null } }
+      }
+    });
+
+    if (!htWithLoans) {
+      throw new Error('HT tidak ditemukan.');
+    }
+
+    const isCurrentlyLoaned = htWithLoans.peminjaman.length > 0 || htWithLoans.peminjamanOlehSatker.length > 0;
+    
+    if (isCurrentlyLoaned) {
+      throw new Error('Tidak dapat menghapus HT yang sedang dipinjam.');
+    }
+
+    await prisma.hT.delete({
+      where: { id: htId },
+    });
+  } catch (error: any) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    console.error('Gagal menghapus HT:', error);
+    throw new Error('Terjadi kesalahan saat menghapus data HT.');
+  }
+
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
+}
+
 export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' | 'all') {
   try {
     // Ambil data HT berdasarkan tipe
