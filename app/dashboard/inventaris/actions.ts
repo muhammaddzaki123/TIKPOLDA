@@ -204,6 +204,126 @@ export async function updateHtBySuperAdmin(formData: FormData) {
   revalidatePath('/dashboard/satker');
 }
 
+export async function tarikHtKeGudangPusat(htId: string) {
+  if (!htId) {
+    throw new Error('ID HT tidak valid.');
+  }
+
+  try {
+    // Cek apakah HT sedang dipinjam oleh personil
+    const htWithLoans = await prisma.hT.findUnique({
+      where: { id: htId },
+      include: {
+        peminjaman: { where: { tanggalKembali: null } },
+        peminjamanOlehSatker: { where: { tanggalKembali: null } },
+        satker: true
+      }
+    });
+
+    if (!htWithLoans) {
+      throw new Error('HT tidak ditemukan.');
+    }
+
+    if (!htWithLoans.satkerId) {
+      throw new Error('HT sudah berada di gudang pusat.');
+    }
+
+    // Cek apakah HT sedang dipinjam oleh personil
+    const isDipinjamPersonil = htWithLoans.peminjaman.length > 0;
+    
+    if (isDipinjamPersonil) {
+      throw new Error(`HT tidak dapat ditarik karena sedang dipinjam oleh personil: ${htWithLoans.peminjaman[0].personil?.nama || 'Unknown'}`);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Tutup peminjaman satker yang aktif jika ada
+      const peminjamanAktif = htWithLoans.peminjamanOlehSatker[0];
+      if (peminjamanAktif) {
+        await tx.peminjamanSatker.update({
+          where: { id: peminjamanAktif.id },
+          data: { tanggalKembali: new Date() }
+        });
+      }
+
+      // Pindahkan HT ke gudang pusat (set satkerId ke null)
+      await tx.hT.update({
+        where: { id: htId },
+        data: { satkerId: null }
+      });
+    });
+
+  } catch (error: any) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    console.error('Gagal menarik HT ke gudang pusat:', error);
+    throw new Error('Terjadi kesalahan saat menarik HT ke gudang pusat.');
+  }
+
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
+}
+
+export async function tarikMultipleHtKeGudangPusat(htIds: string[]) {
+  if (!htIds || htIds.length === 0) {
+    throw new Error('Tidak ada HT yang dipilih untuk ditarik.');
+  }
+
+  try {
+    // Validasi semua HT
+    const htList = await prisma.hT.findMany({
+      where: { id: { in: htIds } },
+      include: {
+        peminjaman: { where: { tanggalKembali: null } },
+        peminjamanOlehSatker: { where: { tanggalKembali: null } },
+        satker: true
+      }
+    });
+
+    // Cek HT yang tidak bisa ditarik
+    const htTidakBisaDitarik = htList.filter(ht => 
+      !ht.satkerId || ht.peminjaman.length > 0
+    );
+
+    if (htTidakBisaDitarik.length > 0) {
+      const pesanError = htTidakBisaDitarik.map(ht => {
+        if (!ht.satkerId) return `${ht.kodeHT}: Sudah di gudang pusat`;
+        if (ht.peminjaman.length > 0) return `${ht.kodeHT}: Sedang dipinjam personil`;
+        return `${ht.kodeHT}: Tidak dapat ditarik`;
+      }).join(', ');
+      
+      throw new Error(`Beberapa HT tidak dapat ditarik: ${pesanError}`);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Tutup semua peminjaman satker yang aktif
+      await tx.peminjamanSatker.updateMany({
+        where: {
+          htId: { in: htIds },
+          tanggalKembali: null
+        },
+        data: { tanggalKembali: new Date() }
+      });
+
+      // Pindahkan semua HT ke gudang pusat
+      await tx.hT.updateMany({
+        where: { id: { in: htIds } },
+        data: { satkerId: null }
+      });
+    });
+
+  } catch (error: any) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    console.error('Gagal menarik multiple HT ke gudang pusat:', error);
+    throw new Error('Terjadi kesalahan saat menarik HT ke gudang pusat.');
+  }
+
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
+}
+
 export async function deleteHtBySuperAdmin(htId: string) {
   if (!htId) {
     throw new Error('ID HT tidak valid.');

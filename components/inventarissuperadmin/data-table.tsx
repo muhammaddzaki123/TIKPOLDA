@@ -19,10 +19,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { HtDetails } from '@/app/dashboard/inventaris/columns';
-import { pinjamkanHtKeSatker, distributeMultipleHtToSatker } from '@/app/dashboard/inventaris/actions';
+import { pinjamkanHtKeSatker, distributeMultipleHtToSatker, tarikMultipleHtKeGudangPusat } from '@/app/dashboard/inventaris/actions';
 import { Satker, HTStatus } from '@prisma/client';
 import EditHtForm from './edit-ht-form';
 import DeleteHtDialog from './delete-ht-dialog';
+import TarikHtDialog from './tarik-ht-dialog';
 import { ChevronsUpDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -33,6 +34,7 @@ declare module '@tanstack/react-table' {
     openPinjamkanDialog?: (ht: TData) => void;
     openEditDialog?: (ht: TData) => void;
     openDeleteDialog?: (ht: TData) => void;
+    openTarikDialog?: (ht: TData) => void;
   }
 }
 
@@ -55,6 +57,7 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
   const [isDistribusiOpen, setIsDistribusiOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isTarikOpen, setIsTarikOpen] = useState(false);
   const [selectedHt, setSelectedHt] = useState<TData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -84,6 +87,10 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
         setSelectedHt(ht as TData);
         setIsDeleteOpen(true);
       },
+      openTarikDialog: (ht) => {
+        setSelectedHt(ht as TData);
+        setIsTarikOpen(true);
+      },
     },
     state: {
       columnFilters,
@@ -107,6 +114,20 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
         await distributeMultipleHtToSatker(selectedIds, satkerTujuanId);
         alert(`${selectedIds.length} unit HT berhasil didistribusikan.`);
         setIsDistribusiOpen(false);
+        table.resetRowSelection();
+      } catch (error: any) {
+        alert(`Error: ${error.message}`);
+      }
+    });
+  };
+
+  const handleTarikMultiple = () => {
+    const selectedIds = table.getFilteredSelectedRowModel().rows.map(row => row.original.id);
+
+    startTransition(async () => {
+      try {
+        await tarikMultipleHtKeGudangPusat(selectedIds);
+        alert(`${selectedIds.length} unit HT berhasil ditarik ke gudang pusat.`);
         table.resetRowSelection();
       } catch (error: any) {
         alert(`Error: ${error.message}`);
@@ -237,6 +258,16 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
             variant="outline"
           >
             Distribusikan Terpilih ({selectedRowCount})
+          </Button>
+        )}
+        
+        {!isGudangTable && (
+          <Button
+            onClick={handleTarikMultiple}
+            disabled={selectedRowCount === 0}
+            variant="secondary"
+          >
+            Tarik ke Gudang ({selectedRowCount})
           </Button>
         )}
       </div>
@@ -371,6 +402,21 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
             kodeHT: selectedHt.kodeHT,
             merk: selectedHt.merk,
             serialNumber: selectedHt.serialNumber,
+          }}
+        />
+      )}
+
+      {/* Tarik HT Dialog */}
+      {selectedHt && (
+        <TarikHtDialog
+          isOpen={isTarikOpen}
+          onClose={() => setIsTarikOpen(false)}
+          htData={{
+            id: selectedHt.id,
+            kodeHT: selectedHt.kodeHT,
+            merk: selectedHt.merk,
+            serialNumber: selectedHt.serialNumber,
+            satker: selectedHt.satker,
           }}
         />
       )}

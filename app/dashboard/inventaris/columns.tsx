@@ -105,8 +105,32 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
   },
 ];
 
-// Kolom untuk tabel Inventaris Terdistribusi (tidak ada perubahan)
+// Kolom untuk tabel Inventaris Terdistribusi
 export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   { accessorKey: 'kodeHT', header: 'Kode HT' },
   { accessorKey: 'merk', header: 'Merk' },
   {
@@ -143,5 +167,39 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
     id: 'pemegang',
     header: 'Pemegang Akhir',
     cell: ({ row }) => row.original.peminjaman[0]?.personil?.nama || '-',
+  },
+  {
+    id: 'actions',
+    header: () => <div className="text-right">Aksi</div>,
+    cell: ({ row, table }) => {
+        const isDipinjamPersonil = row.original.peminjaman.length > 0;
+        return (
+            <div className="text-right space-x-2">
+                <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => table.options.meta?.openEditDialog?.(row.original)}
+                >
+                    Edit
+                </Button>
+                <Button 
+                    size="sm" 
+                    variant="secondary"
+                    onClick={() => table.options.meta?.openTarikDialog?.(row.original)}
+                    disabled={isDipinjamPersonil}
+                >
+                    Tarik ke Gudang
+                </Button>
+                <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => table.options.meta?.openDeleteDialog?.(row.original)}
+                    disabled={isDipinjamPersonil}
+                >
+                    Hapus
+                </Button>
+            </div>
+        );
+    },
   },
 ];
