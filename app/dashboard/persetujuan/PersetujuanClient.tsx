@@ -47,6 +47,7 @@ interface PengajuanPengembalian {
   alasan: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   catatanAdmin?: string | null;
+  pengajuanPeminjamanId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   satkerPengaju: { nama: string };
@@ -55,10 +56,22 @@ interface PengajuanPengembalian {
   }[];
 }
 
+interface PeminjamanSatker {
+  id: string;
+  tanggalPinjam: Date;
+  tanggalKembali: Date | null;
+  catatan: string | null;
+  htId: string;
+  satkerId: string;
+  ht: { kodeHT: string; merk: string };
+  satker: { nama: string };
+}
+
 interface PersetujuanClientProps {
   pengajuanPeminjaman: PengajuanPeminjaman[];
   pengajuanMutasi: PengajuanMutasi[];
   pengajuanPengembalian: PengajuanPengembalian[];
+  peminjamanSatker: PeminjamanSatker[];
   htDiGudang: HtOption[];
 }
 
@@ -66,28 +79,62 @@ export default function PersetujuanClient({
   pengajuanPeminjaman,
   pengajuanMutasi,
   pengajuanPengembalian,
+  peminjamanSatker,
   htDiGudang
 }: PersetujuanClientProps) {
 
-  // Transform data untuk peminjaman
-  const peminjamanData = pengajuanPeminjaman.map(p => ({
-    ...p,
-    tipe: 'peminjaman' as const,
-    trackingStatus: p.status === 'APPROVED' ? 'APPROVED' as TrackingStatus : 'SUBMITTED' as TrackingStatus
-  }));
+  // Transform data untuk peminjaman dengan tracking status yang akurat
+  const peminjamanData = pengajuanPeminjaman.map(p => {
+    let trackingStatus: TrackingStatus = 'SUBMITTED';
+    
+    if (p.status === 'APPROVED') {
+      // Cek apakah ada pengajuan pengembalian untuk paket ini
+      const hasReturnRequest = pengajuanPengembalian.some(r => 
+        r.pengajuanPeminjamanId === p.id && r.status === 'PENDING'
+      );
+      
+      // Cek apakah sudah ada pengembalian yang disetujui
+      const hasApprovedReturn = pengajuanPengembalian.some(r => 
+        r.pengajuanPeminjamanId === p.id && r.status === 'APPROVED'
+      );
+      
+      // Cek apakah semua HT sudah dikembalikan
+      const allHtsReturned = peminjamanSatker
+        .filter(ps => ps.catatan?.includes(p.id.substring(0, 8)))
+        .every(ps => ps.tanggalKembali !== null);
+      
+      if (hasApprovedReturn || allHtsReturned) {
+        trackingStatus = 'RETURNED';
+      } else if (hasReturnRequest) {
+        trackingStatus = 'RETURN_REQUESTED';
+      } else {
+        trackingStatus = 'IN_USE';
+      }
+    } else if (p.status === 'REJECTED') {
+      trackingStatus = 'REJECTED';
+    }
+
+    return {
+      ...p,
+      tipe: 'peminjaman' as const,
+      trackingStatus
+    };
+  });
 
   // Transform data untuk mutasi
   const mutasiData = pengajuanMutasi.map(m => ({
     ...m,
     tipe: 'mutasi' as const,
-    trackingStatus: 'SUBMITTED' as TrackingStatus
+    trackingStatus: m.status === 'APPROVED' ? 'APPROVED' as TrackingStatus : 
+                   m.status === 'REJECTED' ? 'REJECTED' as TrackingStatus : 'SUBMITTED' as TrackingStatus
   }));
 
   // Transform data untuk pengembalian
   const pengembalianData = pengajuanPengembalian.map(p => ({
     ...p,
     tipe: 'pengembalian' as const,
-    trackingStatus: 'SUBMITTED' as TrackingStatus
+    trackingStatus: p.status === 'APPROVED' ? 'APPROVED' as TrackingStatus : 
+                   p.status === 'REJECTED' ? 'REJECTED' as TrackingStatus : 'SUBMITTED' as TrackingStatus
   }));
 
   const handleApprovePeminjaman = async (pengajuanId: string, selectedHtIds?: string[], trackingStatus?: TrackingStatus) => {
@@ -177,13 +224,22 @@ export default function PersetujuanClient({
       <Tabs defaultValue="peminjaman" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="peminjaman">
-            Peminjaman HT ({pengajuanPeminjaman.length})
+            Peminjaman HT ({pengajuanPeminjaman.length}) 
+            <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+              {pengajuanPeminjaman.filter(p => p.status === 'PENDING').length} Pending
+            </span>
           </TabsTrigger>
           <TabsTrigger value="pengembalian">
             Pengembalian HT ({pengajuanPengembalian.length})
+            <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+              {pengajuanPengembalian.filter(p => p.status === 'PENDING').length} Pending
+            </span>
           </TabsTrigger>
           <TabsTrigger value="mutasi">
             Mutasi Personil ({pengajuanMutasi.length})
+            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+              {pengajuanMutasi.filter(m => m.status === 'PENDING').length} Pending
+            </span>
           </TabsTrigger>
         </TabsList>
 
