@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Bell, UserCircle, LogOut } from 'lucide-react';
+import { UserCircle, LogOut } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
+import NotificationBell from './notifications/NotificationBell';
 
 export default function HeaderDashboard() {
   const { data: session } = useSession();
@@ -33,12 +34,15 @@ export default function HeaderDashboard() {
         <h1 className="text-xl font-bold text-slate-800">
           Dashboard {session?.user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin Satker'}
         </h1>
+        {session?.user?.role === 'ADMIN_SATKER' && session?.user?.satker && (
+          <p className="text-sm text-slate-600 mt-1">
+            {session.user.satker.nama}
+          </p>
+        )}
       </div>
       <div className="flex items-center space-x-4">
-        <button className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100">
-          <Bell className="h-6 w-6" />
-          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
+        {/* Komponen Notifikasi */}
+        <NotificationBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
