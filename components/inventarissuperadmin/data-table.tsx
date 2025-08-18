@@ -316,7 +316,7 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
               <form action={handlePinjamkanSubmit}>
                   <input type="hidden" name="htId" value={selectedHt?.id ?? ''} />
                   <div className="py-4 space-y-4">
-                      <div className="space-y-2"><Label>Kode HT</Label><Input value={selectedHt?.kodeHT} disabled /></div>
+                      <div className="space-y-2"><Label>Serial Number</Label><Input value={selectedHt?.serialNumber} disabled /></div>
                       <div className="space-y-2">
                           <Label htmlFor="satkerId">Pinjamkan Ke Satker</Label>
                           <Select name="satkerId" required><SelectTrigger><SelectValue placeholder="Pilih Satker tujuan..." /></SelectTrigger>
@@ -379,7 +379,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           htData={{
             id: selectedHt.id,
             serialNumber: selectedHt.serialNumber,
-            kodeHT: selectedHt.kodeHT,
             merk: selectedHt.merk,
             jenis: selectedHt.jenis,
             tahunBuat: selectedHt.tahunBuat,
@@ -399,7 +398,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           onClose={() => setIsDeleteOpen(false)}
           htData={{
             id: selectedHt.id,
-            kodeHT: selectedHt.kodeHT,
             merk: selectedHt.merk,
             serialNumber: selectedHt.serialNumber,
           }}
@@ -413,7 +411,6 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
           onClose={() => setIsTarikOpen(false)}
           htData={{
             id: selectedHt.id,
-            kodeHT: selectedHt.kodeHT,
             merk: selectedHt.merk,
             serialNumber: selectedHt.serialNumber,
             satker: selectedHt.satker,

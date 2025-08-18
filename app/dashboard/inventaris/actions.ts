@@ -10,14 +10,13 @@ const prisma = new PrismaClient();
 
 export async function addHtBySuperAdmin(formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;
-  const kodeHT = formData.get('kodeHT') as string;
   const merk = formData.get('merk') as string;
   const jenis = formData.get('jenis') as string;
   const tahunBuat = parseInt(formData.get('tahunBuat') as string);
   const tahunPeroleh = parseInt(formData.get('tahunPeroleh') as string);
   const satkerIdInput = formData.get('satkerId') as string | null;
 
-  if (!serialNumber || !kodeHT || !merk || !jenis || !tahunBuat || !tahunPeroleh) {
+  if (!serialNumber || !merk || !jenis || !tahunBuat || !tahunPeroleh) {
     throw new Error('Semua kolom wajib diisi, kecuali penempatan Satker.');
   }
 
@@ -27,7 +26,6 @@ export async function addHtBySuperAdmin(formData: FormData) {
     await prisma.hT.create({
       data: {
         serialNumber,
-        kodeHT,
         merk,
         jenis,
         tahunBuat,
@@ -40,7 +38,6 @@ export async function addHtBySuperAdmin(formData: FormData) {
     if (error.code === 'P2002') {
       const target = error.meta?.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
-      if (target?.includes('kodeHT')) throw new Error('Gagal: Kode HT sudah terdaftar.');
     }
     console.error('Gagal membuat HT:', error);
     throw new Error('Terjadi kesalahan saat menyimpan data HT.');
@@ -137,7 +134,6 @@ export async function distributeMultipleHtToSatker(htIds: string[], satkerId: st
 export async function updateHtBySuperAdmin(formData: FormData) {
   const htId = formData.get('htId') as string;
   const serialNumber = formData.get('serialNumber') as string;
-  const kodeHT = formData.get('kodeHT') as string;
   const merk = formData.get('merk') as string;
   const jenis = formData.get('jenis') as string;
   const tahunBuat = parseInt(formData.get('tahunBuat') as string);
@@ -146,7 +142,7 @@ export async function updateHtBySuperAdmin(formData: FormData) {
   const catatanKondisi = formData.get('catatanKondisi') as string;
   const satkerIdInput = formData.get('satkerId') as string | null;
 
-  if (!htId || !serialNumber || !kodeHT || !merk || !jenis || !tahunBuat || !tahunPeroleh || !status) {
+  if (!htId || !serialNumber || !merk || !jenis || !tahunBuat || !tahunPeroleh || !status) {
     throw new Error('Semua kolom wajib diisi kecuali catatan kondisi dan penempatan satker.');
   }
 
@@ -177,7 +173,6 @@ export async function updateHtBySuperAdmin(formData: FormData) {
       where: { id: htId },
       data: {
         serialNumber,
-        kodeHT,
         merk,
         jenis,
         tahunBuat,
@@ -191,7 +186,6 @@ export async function updateHtBySuperAdmin(formData: FormData) {
     if (error.code === 'P2002') {
       const target = error.meta?.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
-      if (target?.includes('kodeHT')) throw new Error('Gagal: Kode HT sudah terdaftar.');
     }
     if (error instanceof Error) {
       throw error;
@@ -293,9 +287,9 @@ export async function tarikMultipleHtKeGudangPusat(htIds: string[]) {
 
     if (htTidakBisaDitarik.length > 0) {
       const pesanError = htTidakBisaDitarik.map(ht => {
-        if (!ht.satkerId) return `${ht.kodeHT}: Sudah di gudang pusat`;
-        if (ht.peminjaman.length > 0) return `${ht.kodeHT}: Sedang dipinjam personil`;
-        return `${ht.kodeHT}: Tidak dapat ditarik`;
+        if (!ht.satkerId) return `${ht.serialNumber}: Sudah di gudang pusat`;
+        if (ht.peminjaman.length > 0) return `${ht.serialNumber}: Sedang dipinjam personil`;
+        return `${ht.serialNumber}: Tidak dapat ditarik`;
       }).join(', ');
       
       throw new Error(`Beberapa HT tidak dapat ditarik: ${pesanError}`);
@@ -409,7 +403,6 @@ export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' |
     // Header kolom
     const headers = [
       'No',
-      'Kode HT',
       'Serial Number',
       'Merk',
       'Jenis',
@@ -439,7 +432,6 @@ export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' |
     // Set lebar kolom
     worksheet.columns = [
       { width: 5 },   // No
-      { width: 15 },  // Kode HT
       { width: 20 },  // Serial Number
       { width: 15 },  // Merk
       { width: 15 },  // Jenis
@@ -467,7 +459,6 @@ export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' |
 
       const row = [
         index + 1,
-        ht.kodeHT,
         ht.serialNumber,
         ht.merk,
         ht.jenis,
@@ -485,13 +476,13 @@ export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' |
       
       // Style berdasarkan status
       if (ht.status === HTStatus.RUSAK_RINGAN || ht.status === HTStatus.RUSAK_BERAT) {
-        addedRow.getCell(8).fill = {
+        addedRow.getCell(7).fill = {
           type: 'pattern',
           pattern: 'solid',
           fgColor: { argb: 'FFF2CC' }
         };
       } else if (ht.status === HTStatus.HILANG) {
-        addedRow.getCell(8).fill = {
+        addedRow.getCell(7).fill = {
           type: 'pattern',
           pattern: 'solid',
           fgColor: { argb: 'FFCCCB' }

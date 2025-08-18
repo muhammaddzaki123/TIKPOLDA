@@ -108,7 +108,7 @@ export function RiwayatPengajuanTable({ data }: { data: Riwayat[] }) {
                         <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
                           {item.approvedHts?.map(ht => (
                             <li key={ht.id}>
-                              <strong>{ht.kodeHT}</strong> (Merk: {ht.merk}, SN: {ht.serialNumber})
+                              <strong>{ht.serialNumber}</strong> (Merk: {ht.merk})
                             </li>
                           ))}
                         </ul>

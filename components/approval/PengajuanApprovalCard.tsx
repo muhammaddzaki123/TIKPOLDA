@@ -30,7 +30,6 @@ import { toast } from 'sonner';
 
 interface HtOption {
   id: string;
-  kodeHT: string;
   merk: string;
   serialNumber: string;
 }
@@ -59,9 +58,9 @@ interface PengajuanData {
   satkerTujuan?: { nama: string };
   
   // Pengembalian specific
-  ht?: { kodeHT: string; merk: string; serialNumber: string };
+  ht?: { merk: string; serialNumber: string };
   pengembalianDetails?: {
-    ht: { kodeHT: string; merk: string; serialNumber: string };
+    ht: { merk: string; serialNumber: string };
   }[];
 }
 
@@ -297,13 +296,13 @@ export function PengajuanApprovalCard({
                       <div className="flex flex-wrap gap-1">
                         {pengajuan.pengembalianDetails.map((detail, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
-                            {detail.ht.kodeHT} ({detail.ht.merk})
+                            {detail.ht.serialNumber} ({detail.ht.merk})
                           </Badge>
                         ))}
                       </div>
                     </div>
                   ) : pengajuan.ht ? (
-                    <p className="text-sm">{pengajuan.ht.kodeHT} ({pengajuan.ht.merk})</p>
+                    <p className="text-sm">{pengajuan.ht.serialNumber} ({pengajuan.ht.merk})</p>
                   ) : (
                     <p className="text-sm text-gray-500">Tidak ada data HT</p>
                   )}
@@ -377,7 +376,7 @@ export function PengajuanApprovalCard({
                               }}
                             />
                             <label htmlFor={ht.id} className="text-sm cursor-pointer">
-                              {ht.kodeHT} - {ht.merk} (SN: {ht.serialNumber})
+                              {ht.serialNumber} - {ht.merk}
                             </label>
                           </div>
                         ))}

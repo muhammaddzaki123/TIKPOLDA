@@ -62,18 +62,19 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
                 
-                {/* Combobox untuk Kode HT */}
+                {/* Combobox untuk Serial Number HT */}
                 <Popover open={openHt} onOpenChange={setOpenHt}>
                     <PopoverTrigger asChild>
                         <Button variant="outline" role="combobox" aria-expanded={openHt} className="w-full sm:w-[220px] justify-between">
-                        {htFilter ? htList.find((ht) => ht.id === htFilter)?.kodeHT : "Pilih Kode HT..."}
+                        {htFilter ? htList.find((ht) => ht.id === htFilter)?.serialNumber : "Pilih Serial Number..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[220px] p-0">
                         <Command>
-                            <CommandInput placeholder="Cari Kode HT..." />
-                            <CommandList><CommandEmpty>Kode HT tidak ditemukan.</CommandEmpty>
+                            <CommandInput placeholder="Cari Serial Number..." />
+                            <CommandList>
+                                <CommandEmpty>Serial Number tidak ditemukan.</CommandEmpty>
                                 <CommandGroup>
                                     <CommandItem value="all" onSelect={() => { setHtFilter(""); setOpenHt(false); }}>
                                         <Check className={cn("mr-2 h-4 w-4", !htFilter ? "opacity-100" : "opacity-0")}/>
@@ -82,7 +83,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                                     {htList.map((ht) => (
                                         <CommandItem key={ht.id} value={ht.id} onSelect={(val) => { setHtFilter(val === htFilter ? "" : val); setOpenHt(false); }}>
                                             <Check className={cn("mr-2 h-4 w-4", htFilter === ht.id ? "opacity-100" : "opacity-0")}/>
-                                            {ht.kodeHT}
+                                            {ht.serialNumber}
                                         </CommandItem>
                                     ))}
                                 </CommandGroup>
@@ -102,7 +103,8 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                     <PopoverContent className="w-[220px] p-0">
                         <Command>
                             <CommandInput placeholder="Cari Nama Peminjam..." />
-                            <CommandList><CommandEmpty>Peminjam tidak ditemukan.</CommandEmpty>
+                            <CommandList>
+                                <CommandEmpty>Peminjam tidak ditemukan.</CommandEmpty>
                                 <CommandGroup>
                                     <CommandItem value="all" onSelect={() => { setPeminjamFilter(""); setOpenPeminjam(false); }}>
                                         <Check className={cn("mr-2 h-4 w-4", !peminjamFilter ? "opacity-100" : "opacity-0")}/>
@@ -129,8 +131,10 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[220px] p-0">
-                        <Command><CommandInput placeholder="Cari Satker..." />
-                            <CommandList><CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
+                        <Command>
+                            <CommandInput placeholder="Cari Satker..." />
+                            <CommandList>
+                                <CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
                                 <CommandGroup>
                                     <CommandItem value="all" onSelect={() => { setSatkerFilter(""); setOpenSatker(false); }}>
                                         <Check className={cn("mr-2 h-4 w-4", !satkerFilter ? "opacity-100" : "opacity-0")}/>

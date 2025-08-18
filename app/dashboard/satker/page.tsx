@@ -14,7 +14,7 @@ async function getSatkerMonitoringData() {
       },
       // Sertakan semua HT yang terhubung dengan satker ini
       ht: {
-        orderBy: { kodeHT: 'asc' },
+        orderBy: { serialNumber: 'asc' },
         include: {
           // Untuk setiap HT, cari tahu peminjaman yang sedang aktif
           peminjaman: {

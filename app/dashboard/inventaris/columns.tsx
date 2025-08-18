@@ -41,7 +41,7 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  { accessorKey: 'kodeHT', header: 'Kode HT' },
+  { accessorKey: 'serialNumber', header: 'Serial Number' },
   { accessorKey: 'merk', header: 'Merk' },
   {
     id: 'statusPeminjaman',
@@ -131,7 +131,7 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  { accessorKey: 'kodeHT', header: 'Kode HT' },
+  { accessorKey: 'serialNumber', header: 'Serial Number' },
   { accessorKey: 'merk', header: 'Merk' },
   {
     accessorKey: 'satker.nama',

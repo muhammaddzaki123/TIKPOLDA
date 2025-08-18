@@ -18,8 +18,8 @@ import { HtWithPeminjaman } from '@/types/custom';
 
 export const columns: ColumnDef<HtWithPeminjaman>[] = [
   {
-    accessorKey: 'kodeHT',
-    header: 'Kode HT',
+    accessorKey: 'serialNumber',
+    header: 'Serial Number',
   },
   {
     accessorKey: 'merk',

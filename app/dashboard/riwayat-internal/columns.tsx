@@ -16,8 +16,8 @@ export type PeminjamanWithDetails = Peminjaman & {
 
 export const columns: ColumnDef<PeminjamanWithDetails>[] = [
   {
-    accessorKey: 'ht.kodeHT',
-    header: 'Kode HT',
+    accessorKey: 'ht.serialNumber',
+    header: 'Serial Number',
   },
   {
     accessorKey: 'personil.nama',

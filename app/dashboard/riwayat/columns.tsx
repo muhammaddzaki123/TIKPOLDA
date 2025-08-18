@@ -14,8 +14,8 @@ export type RiwayatPeminjamanSatker = PeminjamanSatker & {
 
 export const columns: ColumnDef<RiwayatPeminjamanSatker>[] = [
   {
-    accessorKey: 'ht.kodeHT',
-    header: 'Kode HT',
+    accessorKey: 'ht.serialNumber',
+    header: 'Serial Number',
   },
   {
     accessorKey: 'ht.merk',

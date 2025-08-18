@@ -110,8 +110,8 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
             {/* Kolom Kanan */}
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">KODE HT</p>
-                <p className="font-bold text-lg leading-tight">{ht.kodeHT}</p>
+                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">SERIAL NUMBER</p>
+                <p className="font-bold text-lg leading-tight">{ht.serialNumber}</p>
               </div>
               <div>
                 <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">MERK / JENIS</p>

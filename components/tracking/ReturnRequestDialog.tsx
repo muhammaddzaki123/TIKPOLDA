@@ -11,7 +11,7 @@ import { ArrowLeft, Package, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface HtDetail {
-  kodeHT: string;
+  serialNumber: string;
   merk: string;
 }
 
@@ -83,7 +83,7 @@ export function ReturnRequestDialog({
                 <ul className="space-y-1">
                   {htDetails.map((ht, index) => (
                     <li key={index} className="text-sm text-blue-800">
-                      • {ht.kodeHT} ({ht.merk})
+                      • {ht.serialNumber} ({ht.merk})
                     </li>
                   ))}
                 </ul>

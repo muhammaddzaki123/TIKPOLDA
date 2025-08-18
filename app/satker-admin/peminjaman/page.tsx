@@ -35,7 +35,7 @@ async function getData(satkerId: string) {
       id: { notIn: idHtDipinjam },
     },
     orderBy: {
-        kodeHT: 'asc'
+        serialNumber: 'asc'
     }
   });
 

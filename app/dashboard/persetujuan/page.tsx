@@ -30,7 +30,7 @@ async function getPengajuanData() {
       satkerPengaju: { select: { nama: true } },
       pengembalianDetails: {
         include: {
-          ht: { select: { kodeHT: true, merk: true, serialNumber: true } }
+          ht: { select: { merk: true, serialNumber: true } }
         }
       }
     },
@@ -42,7 +42,7 @@ async function getPengajuanData() {
       satkerId: null,
       status: 'BAIK'
     },
-    orderBy: { kodeHT: 'asc' }
+    orderBy: { serialNumber: 'asc' }
   });
 
   return { pengajuanPeminjaman, pengajuanMutasi, pengajuanPengembalian, htDiGudang };

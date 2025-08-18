@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 
 interface HtOption {
   id: string;
-  kodeHT: string;
   merk: string;
   serialNumber: string;
 }
@@ -51,7 +50,7 @@ interface PengajuanPengembalian {
   updatedAt: Date;
   satkerPengaju: { nama: string };
   pengembalianDetails: {
-    ht: { kodeHT: string; merk: string; serialNumber: string };
+    ht: { merk: string; serialNumber: string };
   }[];
 }
 

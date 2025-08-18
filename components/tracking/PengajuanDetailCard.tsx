@@ -14,7 +14,6 @@ import { id } from 'date-fns/locale';
 
 interface HtDetail {
   id: string;
-  kodeHT: string;
   merk: string;
   serialNumber: string;
 }
@@ -198,7 +197,7 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
               {pengajuan.approvedHts.map((ht) => (
                 <div key={ht.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
                   <Package className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium">{ht.kodeHT}</span>
+                  <span className="font-medium">{ht.serialNumber}</span>
                   <span className="text-gray-500">({ht.merk})</span>
                 </div>
               ))}

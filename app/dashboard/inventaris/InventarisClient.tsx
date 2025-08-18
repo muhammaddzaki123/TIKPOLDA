@@ -60,10 +60,6 @@ export default function InventarisClient({
                     <Input id="serialNumber" name="serialNumber" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="kodeHT">Kode HT</Label>
-                    <Input id="kodeHT" name="kodeHT" required />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="merk">Merk HT</Label>
                     <Input id="merk" name="merk" required />
                   </div>
@@ -119,8 +115,8 @@ export default function InventarisClient({
           <InventarisDataTable
             columns={gudangColumns}
             data={gudangData}
-            filterColumn="kodeHT"
-            filterPlaceholder="Cari Kode HT di Gudang..."
+            filterColumn="serialNumber"
+            filterPlaceholder="Cari Serial Number di Gudang..."
             satkerList={satkerList}
           />
         </TabsContent>
@@ -129,8 +125,8 @@ export default function InventarisClient({
           <InventarisDataTable
             columns={terdistribusiColumns}
             data={terdistribusiData}
-            filterColumn="kodeHT"
-            filterPlaceholder="Cari Kode HT Terdistribusi..."
+            filterColumn="serialNumber"
+            filterPlaceholder="Cari Serial Number Terdistribusi..."
             satkerList={satkerList}
           />
         </TabsContent>

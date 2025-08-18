@@ -11,7 +11,6 @@ interface TarikHtDialogProps {
   onClose: () => void;
   htData: {
     id: string;
-    kodeHT: string;
     merk: string;
     serialNumber: string;
     satker?: {
@@ -46,9 +45,6 @@ export default function TarikHtDialog({ isOpen, onClose, htData }: TarikHtDialog
         </DialogHeader>
         
         <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-          <div className="text-sm">
-            <span className="font-medium">Kode HT:</span> {htData.kodeHT}
-          </div>
           <div className="text-sm">
             <span className="font-medium">Merk:</span> {htData.merk}
           </div>

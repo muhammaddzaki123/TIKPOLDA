@@ -58,7 +58,6 @@ export default async function InventarisSatkerPage() {
             <form action={addHtBySatker}>
               <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
                 <div className="space-y-2"><Label htmlFor="serialNumber">Serial Number</Label><Input id="serialNumber" name="serialNumber" required /></div>
-                <div className="space-y-2"><Label htmlFor="kodeHT">Kode HT</Label><Input id="kodeHT" name="kodeHT" required /></div>
                 <div className="space-y-2"><Label htmlFor="merk">Merk HT</Label><Input id="merk" name="merk" required /></div>
                 <div className="space-y-2"><Label htmlFor="jenis">Jenis HT</Label><Input id="jenis" name="jenis" required /></div>
                 <div className="space-y-2"><Label htmlFor="tahunBuat">Tahun Buat</Label><Input id="tahunBuat" name="tahunBuat" type="number" required /></div>

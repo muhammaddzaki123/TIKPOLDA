@@ -114,7 +114,7 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kode HT</TableHead>
+                  <TableHead>Serial Number</TableHead>
                   <TableHead>Merek</TableHead>
                   <TableHead>Penempatan</TableHead>
                   <TableHead>Status</TableHead>
@@ -124,7 +124,7 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
               <TableBody>
                 {dialogData.length > 0 ? dialogData.map(ht => (
                   <TableRow key={ht.id}>
-                    <TableCell className="font-mono">{ht.kodeHT}</TableCell>
+                    <TableCell className="font-mono">{ht.serialNumber}</TableCell>
                     <TableCell>{ht.merk}</TableCell>
                     <TableCell>{ht.satker?.nama || 'Gudang Pusat'}</TableCell>
                     <TableCell><Badge variant={ht.status !== 'BAIK' ? 'destructive' : 'outline'}>{ht.status.replace('_', ' ')}</Badge></TableCell>

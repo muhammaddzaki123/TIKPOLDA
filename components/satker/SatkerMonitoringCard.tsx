@@ -200,7 +200,7 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
                             return (
                             <div key={h.id} className="grid grid-cols-4 gap-4 items-center text-sm p-3 border rounded-lg hover:bg-slate-50 transition-colors">
                                 <div className="col-span-2">
-                                    <p className="font-semibold">{h.kodeHT} <span className="font-normal text-slate-600">({h.merk})</span></p>
+                                    <p className="font-semibold">{h.serialNumber} <span className="font-normal text-slate-600">({h.merk})</span></p>
                                     <p className="text-xs text-slate-500">Penempatan: {penempatan}</p>
                                 </div>
                                 <div className="col-span-2 flex justify-end items-center gap-2">

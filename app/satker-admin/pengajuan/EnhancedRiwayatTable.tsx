@@ -12,7 +12,6 @@ import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
 
 interface HtDetail {
   id: string;
-  kodeHT: string;
   merk: string;
   serialNumber: string;
 }
