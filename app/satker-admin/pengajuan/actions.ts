@@ -199,7 +199,7 @@ export async function createPackagePengembalian(formData: FormData) {
         ht: {
           select: {
             id: true,
-            kodeHT: true,
+            serialNumber: true,
             merk: true
           }
         }

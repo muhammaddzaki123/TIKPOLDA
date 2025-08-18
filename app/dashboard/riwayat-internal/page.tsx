@@ -66,7 +66,7 @@ async function getPersonilList() {
 
 // Fungsi baru untuk mengambil semua HT
 async function getHtList() {
-    return await prisma.hT.findMany({ orderBy: { kodeHT: 'asc' }});
+    return await prisma.hT.findMany({ orderBy: { serialNumber: 'asc' }});
 }
 
 export default async function RiwayatInternalPage(props: RiwayatInternalPageProps) {

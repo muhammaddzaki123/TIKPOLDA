@@ -35,7 +35,7 @@ export function KartuPeminjamanModal({ isOpen, onClose, data }: KartuPeminjamanM
 
       // Buat link download
       const link = document.createElement('a');
-      link.download = `kartu-peminjaman-${data.personil.nama}-${data.ht.kodeHT}.png`;
+      link.download = `kartu-peminjaman-${data.personil.nama}-${data.ht.serialNumber}.png`;
       link.href = dataUrl;
       link.click();
 

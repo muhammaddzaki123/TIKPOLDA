@@ -98,17 +98,17 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Kode HT</TableHead>
-                              <TableHead>Merk</TableHead>
                               <TableHead>Serial Number</TableHead>
+                              <TableHead>Merk</TableHead>
+                              <TableHead>Jenis</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {item.approvedHts.map(ht => (
                               <TableRow key={ht.id}>
-                                <TableCell className="font-mono">{ht.kodeHT}</TableCell>
+                                <TableCell className="font-mono">{ht.serialNumber}</TableCell>
                                 <TableCell>{ht.merk}</TableCell>
-                                <TableCell>{ht.serialNumber}</TableCell>
+                                <TableCell>{ht.jenis}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>

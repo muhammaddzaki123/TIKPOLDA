@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Clock, AlertCircle, CheckCircle, Info, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NotificationItem } from '@/lib/notifications';
+import { NotificationItem } from '@/lib/supabase/notifications';
 
 interface NotificationListProps {
   notifications: NotificationItem[];

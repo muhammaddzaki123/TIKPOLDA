@@ -124,7 +124,7 @@ async function getData(satkerId: string) {
     .map(p => {
       const htDetails = peminjamanSatker
         .filter(ps => ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null)
-        .map(ps => ({ kodeHT: ps.ht.kodeHT, merk: ps.ht.merk }));
+        .map(ps => ({ serialNumber: ps.ht.serialNumber, merk: ps.ht.merk }));
       return { ...p, htDetails };
     })
     .filter(p => p.htDetails.length > 0);

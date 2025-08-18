@@ -17,7 +17,6 @@ interface EditHtFormProps {
   htData: {
     id: string;
     serialNumber: string;
-    kodeHT: string;
     merk: string;
     jenis: string;
     tahunBuat: number;
@@ -33,7 +32,6 @@ export default function EditHtForm({ isOpen, onClose, htData, satkerOptions }: E
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
     serialNumber: htData.serialNumber,
-    kodeHT: htData.kodeHT,
     merk: htData.merk,
     jenis: htData.jenis,
     tahunBuat: htData.tahunBuat.toString(),
@@ -49,7 +47,6 @@ export default function EditHtForm({ isOpen, onClose, htData, satkerOptions }: E
     const form = new FormData();
     form.append('htId', htData.id);
     form.append('serialNumber', formData.serialNumber);
-    form.append('kodeHT', formData.kodeHT);
     form.append('merk', formData.merk);
     form.append('jenis', formData.jenis);
     form.append('tahunBuat', formData.tahunBuat);
@@ -89,17 +86,6 @@ export default function EditHtForm({ isOpen, onClose, htData, satkerOptions }: E
                 value={formData.serialNumber}
                 onChange={(e) => handleInputChange('serialNumber', e.target.value)}
                 placeholder="Masukkan serial number"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="kodeHT">Kode HT *</Label>
-              <Input
-                id="kodeHT"
-                value={formData.kodeHT}
-                onChange={(e) => handleInputChange('kodeHT', e.target.value)}
-                placeholder="Masukkan kode HT"
                 required
               />
             </div>

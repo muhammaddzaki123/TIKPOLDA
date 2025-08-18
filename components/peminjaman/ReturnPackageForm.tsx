@@ -16,7 +16,7 @@ import type { PengajuanPeminjaman } from '@prisma/client';
 
 // Tipe data baru untuk menyertakan detail HT dalam paket
 export type ApprovedLoanPackage = PengajuanPeminjaman & {
-  htDetails: { kodeHT: string; merk: string }[];
+  htDetails: { serialNumber: string; merk: string }[];
 };
 
 interface ReturnPackageFormProps {
@@ -114,8 +114,8 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
                   <div className="flex flex-wrap gap-2">
                     {loan.htDetails.length > 0 ? (
                       loan.htDetails.map(ht => (
-                        <Badge key={ht.kodeHT} variant="secondary" className="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200">
-                          {ht.kodeHT} - {ht.merk}
+                        <Badge key={ht.serialNumber} variant="secondary" className="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200">
+                          {ht.serialNumber} - {ht.merk}
                         </Badge>
                       ))
                     ) : (

@@ -32,7 +32,7 @@ export function RiwayatPeminjamanTable({ data }: RiwayatPeminjamanTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Kode HT</TableHead>
+            <TableHead>Serial Number</TableHead>
             <TableHead>Personil Peminjam</TableHead>
             <TableHead>Tgl Pinjam</TableHead>
             <TableHead>Tgl Kembali</TableHead>
@@ -45,7 +45,7 @@ export function RiwayatPeminjamanTable({ data }: RiwayatPeminjamanTableProps) {
             data.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">
-                    {item.ht.kodeHT}
+                    {item.ht.serialNumber}
                     <div className="text-xs text-muted-foreground">{item.ht.merk}</div>
                 </TableCell>
                 <TableCell>

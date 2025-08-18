@@ -66,9 +66,9 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
     <>
       <div className="flex items-center py-4">
         <Input
-          placeholder="Cari berdasarkan Kode HT..."
-          value={(table.getColumn('kodeHT')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('kodeHT')?.setFilterValue(event.target.value)}
+          placeholder="Cari berdasarkan Serial Number..."
+          value={(table.getColumn('serialNumber')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('serialNumber')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
       </div>
@@ -101,7 +101,7 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
 
       <Dialog open={isUpdateStatusOpen} onOpenChange={setIsUpdateStatusOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Update Kondisi HT: {selectedHt?.kodeHT}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Update Kondisi HT: {selectedHt?.serialNumber}</DialogTitle></DialogHeader>
           <form action={handleUpdateStatusSubmit}>
             <input type="hidden" name="htId" value={selectedHt?.id ?? ''} />
             <div className="py-4 space-y-4">
@@ -134,7 +134,7 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
           <DialogHeader>
             <DialogTitle>Anda yakin ingin menghapus HT ini?</DialogTitle>
             <DialogDescription>
-              Tindakan ini akan menghapus data HT <strong>{selectedHt?.kodeHT}</strong> secara permanen. Tindakan ini tidak dapat dibatalkan.
+              Tindakan ini akan menghapus data HT <strong>{selectedHt?.serialNumber}</strong> secara permanen. Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -12,7 +12,6 @@ import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
 
 interface HtOption {
   id: string;
-  kodeHT: string;
   merk: string;
   serialNumber: string;
 }
@@ -35,9 +34,9 @@ interface EnhancedPengajuan {
   personil?: { nama: string; nrp: string };
   satkerAsal?: { nama: string };
   satkerTujuan?: { nama: string };
-  ht?: { kodeHT: string; merk: string; serialNumber: string };
+  ht?: { merk: string; serialNumber: string };
   pengembalianDetails?: {
-    ht: { kodeHT: string; merk: string; serialNumber: string };
+    ht: { merk: string; serialNumber: string };
   }[];
 }
 

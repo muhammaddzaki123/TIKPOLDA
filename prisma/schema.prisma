@@ -59,7 +59,6 @@ model Personil {
 model HT {
   id                   String                  @id @default(cuid())
   serialNumber         String                  @unique
-  kodeHT               String                  @unique
   merk                 String
   jenis                String
   tahunBuat            Int

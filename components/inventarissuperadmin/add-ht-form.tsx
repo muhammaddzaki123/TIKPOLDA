@@ -27,10 +27,6 @@ export function AddHtForm({ satkerList }: AddHtFormProps) {
             <Input id="serialNumber" name="serialNumber" required placeholder="Contoh: SN-ABC-123" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="kodeHT">Kode HT</Label>
-            <Input id="kodeHT" name="kodeHT" required placeholder="Contoh: HT-LTS-001" />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="merk">Merk HT</Label>
             <Input id="merk" name="merk" required placeholder="Contoh: Motorola" />
           </div>

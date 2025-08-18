@@ -66,7 +66,7 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
         setIsSelectHtDialogOpen(true);
         break;
       case 'pengembalian':
-        if (confirm(`Konfirmasi penerimaan HT ${pengajuan.ht.kodeHT} dari ${pengajuan.satkerPengaju.nama}?`)) {
+        if (confirm(`Konfirmasi penerimaan HT ${pengajuan.ht.serialNumber} dari ${pengajuan.satkerPengaju.nama}?`)) {
           startTransition(async () => {
             try {
               await approvePengembalian(pengajuan.id);
@@ -252,7 +252,7 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
                 />
                 <Label htmlFor={ht.id} className="flex-1 cursor-pointer grid grid-cols-3 gap-4">
                   <div>
-                    <p className="font-semibold">{ht.kodeHT}</p>
+                    <p className="font-semibold">{ht.serialNumber}</p>
                     <p className="text-sm text-muted-foreground">{ht.merk}</p>
                   </div>
                   <p className="text-sm">{ht.serialNumber}</p>

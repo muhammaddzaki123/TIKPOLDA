@@ -22,13 +22,12 @@ export async function addHtBySatker(formData: FormData) {
   }
 
   const serialNumber = formData.get('serialNumber') as string;
-  const kodeHT = formData.get('kodeHT') as string;
   const merk = formData.get('merk') as string;
   const jenis = formData.get('jenis') as string;
   const tahunBuat = parseInt(formData.get('tahunBuat') as string);
   const tahunPeroleh = parseInt(formData.get('tahunPeroleh') as string);
 
-  if (!serialNumber || !kodeHT || !merk || !jenis || !tahunBuat || !tahunPeroleh) {
+  if (!serialNumber || !merk || !jenis || !tahunBuat || !tahunPeroleh) {
     throw new Error('Semua kolom wajib diisi.');
   }
 
@@ -36,7 +35,6 @@ export async function addHtBySatker(formData: FormData) {
     await prisma.hT.create({
       data: {
         serialNumber,
-        kodeHT,
         merk,
         jenis,
         tahunBuat,
@@ -49,7 +47,6 @@ export async function addHtBySatker(formData: FormData) {
     if (error.code === 'P2002') {
       const target = error.meta?.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
-      if (target?.includes('kodeHT')) throw new Error('Gagal: Kode HT sudah terdaftar.');
     }
     console.error(error);
     throw new Error('Terjadi kesalahan saat menyimpan data HT.');

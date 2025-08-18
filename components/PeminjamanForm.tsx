@@ -82,7 +82,7 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
               <SelectContent>
                 {htTersedia.length > 0 ? (
                   htTersedia.map((ht) => (
-                    <SelectItem key={ht.id} value={ht.id}>{ht.kodeHT} - {ht.merk}</SelectItem>
+                    <SelectItem key={ht.id} value={ht.id}>{ht.serialNumber} - {ht.merk}</SelectItem>
                   ))
                 ) : (
                   <SelectItem value="disabled" disabled>Tidak ada HT yang tersedia</SelectItem>

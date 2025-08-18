@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { NotificationItem } from '@/lib/notifications';
+import { NotificationItem } from '@/lib/supabase/notifications';
 import NotificationList from './NotificationList';
 
 export default function NotificationBell() {

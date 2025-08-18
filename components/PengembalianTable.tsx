@@ -70,7 +70,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Kode HT</TableHead>
+              <TableHead>Serial Number</TableHead>
               <TableHead>Peminjam</TableHead>
               <TableHead>Tgl Pinjam</TableHead>
               <TableHead>Batas Kembali</TableHead>
@@ -90,7 +90,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
 
                 return (
                   <TableRow key={peminjaman.id} className={cn(isOverdue && "bg-red-50 text-red-900")}>
-                    <TableCell className="font-medium">{peminjaman.ht.kodeHT}</TableCell>
+                    <TableCell className="font-medium">{peminjaman.ht.serialNumber}</TableCell>
                     <TableCell>
                       <div>{peminjaman.personil.nama}</div>
                       <div className="text-xs text-muted-foreground">{peminjaman.personil.nrp}</div>
@@ -152,7 +152,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
           <DialogHeader>
             <DialogTitle>Formulir Pengembalian HT</DialogTitle>
             <DialogDescription>
-              Anda akan mencatat pengembalian untuk HT <strong>{selectedPeminjaman?.ht.kodeHT}</strong> oleh <strong>{selectedPeminjaman?.personil.nama}</strong>.
+              Anda akan mencatat pengembalian untuk HT <strong>{selectedPeminjaman?.ht.serialNumber}</strong> oleh <strong>{selectedPeminjaman?.personil.nama}</strong>.
             </DialogDescription>
           </DialogHeader>
           <form action={handleSubmit}>

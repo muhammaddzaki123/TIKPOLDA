@@ -11,7 +11,6 @@ interface DeleteHtDialogProps {
   onClose: () => void;
   htData: {
     id: string;
-    kodeHT: string;
     merk: string;
     serialNumber: string;
   };
@@ -43,9 +42,6 @@ export default function DeleteHtDialog({ isOpen, onClose, htData }: DeleteHtDial
         </DialogHeader>
         
         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-          <div className="text-sm">
-            <span className="font-medium">Kode HT:</span> {htData.kodeHT}
-          </div>
           <div className="text-sm">
             <span className="font-medium">Merk:</span> {htData.merk}
           </div>
