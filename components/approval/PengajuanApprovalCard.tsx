@@ -84,7 +84,7 @@ export function PengajuanApprovalCard({
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [selectedHtIds, setSelectedHtIds] = useState<string[]>([]);
-  const [newTrackingStatus, setNewTrackingStatus] = useState<TrackingStatus>('UNDER_REVIEW');
+  const [newTrackingStatus, setNewTrackingStatus] = useState<TrackingStatus>('SEDANG_DIPROSES');
   const [trackingNotes, setTrackingNotes] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -96,10 +96,13 @@ export function PengajuanApprovalCard({
 
     startTransition(async () => {
       try {
-        await onApprove(pengajuan.id, selectedHtIds, 'APPROVED');
+        await onApprove(pengajuan.id, selectedHtIds);
         toast.success('Pengajuan berhasil disetujui.');
         setShowApproveDialog(false);
+        // Reset form
+        setSelectedHtIds([]);
       } catch (error: any) {
+        console.error('Error approving:', error);
         toast.error(`Error: ${error.message}`);
       }
     });
@@ -205,10 +208,10 @@ export function PengajuanApprovalCard({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="PROCESSING">Sedang Diproses</SelectItem>
-                              <SelectItem value="READY_PICKUP">Siap Diambil</SelectItem>
-                              <SelectItem value="IN_USE">Sedang Digunakan</SelectItem>
-                              <SelectItem value="RETURNED">Sudah Dikembalikan</SelectItem>
+                              <SelectItem value="SEDANG_DIPROSES">Sedang Diproses</SelectItem>
+                              <SelectItem value="SIAP_DIAMBIL">Siap Diambil</SelectItem>
+                              <SelectItem value="SEDANG_DIGUNAKAN">Sedang Digunakan</SelectItem>
+                              <SelectItem value="SUDAH_DIKEMBALIKAN">Sudah Dikembalikan</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -342,21 +345,31 @@ export function PengajuanApprovalCard({
           </div>
         </div>
 
-        {pengajuan.status === 'PENDING' && (
+        {(pengajuan.status === 'PENDING' || pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') && (
           <div className="border-t pt-4 flex gap-3">
             <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
               <DialogTrigger asChild>
                 <Button className="flex-1">
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Setujui
+                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian' : 'Setujui'}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Setujui Pengajuan</DialogTitle>
+                  <DialogTitle>
+                    {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian HT' : 'Setujui Pengajuan'}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  {pengajuan.tipe === 'peminjaman' && htOptions.length > 0 && (
+                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <strong>Konfirmasi Pengembalian:</strong> Apakah Anda yakin ingin menerima pengembalian HT ini? 
+                        HT akan dikembalikan ke gudang pusat dan status akan diubah menjadi "Sudah Dikembalikan".
+                      </p>
+                    </div>
+                  )}
+                  {pengajuan.tipe === 'peminjaman' && htOptions.length > 0 && pengajuan.status === 'PENDING' && (
                     <div>
                       <Label>Pilih HT yang akan dipinjamkan ({selectedHtIds.length}/{pengajuan.jumlah})</Label>
                       <div className="max-h-60 overflow-y-auto border rounded p-3 space-y-2">
@@ -388,7 +401,7 @@ export function PengajuanApprovalCard({
                       Batal
                     </Button>
                     <Button onClick={handleApprove} disabled={isPending} className="flex-1">
-                      {isPending ? 'Memproses...' : 'Setujui'}
+                      {isPending ? 'Memproses...' : (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima' : 'Setujui')}
                     </Button>
                   </div>
                 </div>
@@ -399,20 +412,28 @@ export function PengajuanApprovalCard({
               <DialogTrigger asChild>
                 <Button variant="destructive" className="flex-1">
                   <XCircle className="h-4 w-4 mr-2" />
-                  Tolak
+                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian' : 'Tolak'}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Tolak Pengajuan</DialogTitle>
+                  <DialogTitle>
+                    {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian HT' : 'Tolak Pengajuan'}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Alasan Penolakan *</Label>
+                    <Label>
+                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Alasan Penolakan Pengembalian *' : 'Alasan Penolakan *'}
+                    </Label>
                     <Textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Jelaskan alasan penolakan..."
+                      placeholder={
+                        pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' 
+                          ? 'Jelaskan alasan penolakan pengembalian...' 
+                          : 'Jelaskan alasan penolakan...'
+                      }
                       rows={4}
                     />
                   </div>

@@ -225,7 +225,7 @@ export async function createPackagePengembalian(formData: FormData) {
     }
 
     // Create package return request in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Create the main return request
       const returnRequest = await tx.pengajuanPengembalian.create({
         data: {
@@ -238,10 +238,20 @@ export async function createPackagePengembalian(formData: FormData) {
 
       // Create detail records for each HT in the package
       await tx.pengembalianDetail.createMany({
-        data: htIdsToReturn.map(htId => ({
+        data: htIdsToReturn.map((htId: string) => ({
           pengajuanPengembalianId: returnRequest.id,
           htId: htId,
         })),
+      });
+
+      // Update tracking status of the original loan to PERMINTAAN_PENGEMBALIAN
+      await tx.pengajuanPeminjaman.update({
+        where: { id: pengajuanPeminjamanId },
+        data: {
+          trackingStatus: 'PERMINTAAN_PENGEMBALIAN',
+          catatanAdmin: `Permintaan pengembalian diajukan: ${alasan.trim()}`,
+          updatedAt: new Date()
+        }
       });
     });
 

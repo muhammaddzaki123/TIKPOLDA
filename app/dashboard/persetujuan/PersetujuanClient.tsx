@@ -5,7 +5,7 @@
 import { EnhancedPersetujuanTable } from './EnhancedPersetujuanTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
-import { approvePeminjaman, approveMutasi, approvePengembalian, rejectPengajuan, updateTrackingStatus } from './actions';
+import { approvePeminjaman, approveMutasi, rejectPengajuan, updateTrackingStatus } from './actions';
 import { toast } from 'sonner';
 
 interface HtOption {
@@ -22,6 +22,7 @@ interface PengajuanPeminjaman {
   tanggalSelesai?: Date | null;
   fileUrl?: string | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  trackingStatus?: TrackingStatus;
   catatanAdmin?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -54,49 +55,80 @@ interface PengajuanPengembalian {
   }[];
 }
 
+interface PeminjamanSatker {
+  id: string;
+  tanggalPinjam: Date;
+  tanggalKembali?: Date | null;
+  catatan?: string | null;
+  ht: { id: string; merk: string; serialNumber: string };
+  satker: { nama: string };
+}
+
 interface PersetujuanClientProps {
   pengajuanPeminjaman: PengajuanPeminjaman[];
   pengajuanMutasi: PengajuanMutasi[];
-  pengajuanPengembalian: PengajuanPengembalian[];
+  peminjamanSatker: PeminjamanSatker[];
   htDiGudang: HtOption[];
 }
 
 export default function PersetujuanClient({
   pengajuanPeminjaman,
   pengajuanMutasi,
-  pengajuanPengembalian,
+  peminjamanSatker,
   htDiGudang
 }: PersetujuanClientProps) {
 
-  // Transform data untuk peminjaman
-  const peminjamanData = pengajuanPeminjaman.map(p => ({
-    ...p,
-    tipe: 'peminjaman' as const,
-    trackingStatus: p.status === 'APPROVED' ? 'APPROVED' as TrackingStatus : 'SUBMITTED' as TrackingStatus
-  }));
+  // Transform data untuk peminjaman dengan tracking status yang lebih detail
+  const peminjamanData = pengajuanPeminjaman.map(p => {
+    // Gunakan trackingStatus dari database atau tentukan berdasarkan kondisi
+    let trackingStatus: TrackingStatus = p.trackingStatus || 'PENGAJUAN_DIKIRIM';
+    
+    // Jika belum ada trackingStatus di database, tentukan berdasarkan kondisi
+    if (!p.trackingStatus) {
+      if (p.status === 'APPROVED') {
+        // Cek apakah HT sudah diambil (ada di peminjamanSatker)
+        const htDipinjam = peminjamanSatker.filter(ps => 
+          ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null
+        );
+        
+        if (htDipinjam.length > 0) {
+          trackingStatus = 'SEDANG_DIGUNAKAN';
+        } else {
+          trackingStatus = 'SIAP_DIAMBIL';
+        }
+      } else if (p.status === 'REJECTED') {
+        trackingStatus = 'DITOLAK';
+      }
+    }
+
+    return {
+      ...p,
+      tipe: 'peminjaman' as const,
+      trackingStatus,
+      htDipinjam: peminjamanSatker.filter(ps => 
+        ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null
+      )
+    };
+  });
 
   // Transform data untuk mutasi
   const mutasiData = pengajuanMutasi.map(m => ({
     ...m,
     tipe: 'mutasi' as const,
-    trackingStatus: 'SUBMITTED' as TrackingStatus
+    trackingStatus: m.status === 'APPROVED' ? 'DISETUJUI' as TrackingStatus : 
+                   m.status === 'REJECTED' ? 'DITOLAK' as TrackingStatus : 'PENGAJUAN_DIKIRIM' as TrackingStatus
   }));
 
-  // Transform data untuk pengembalian
-  const pengembalianData = pengajuanPengembalian.map(p => ({
-    ...p,
-    tipe: 'pengembalian' as const,
-    trackingStatus: 'SUBMITTED' as TrackingStatus
-  }));
-
-  const handleApprovePeminjaman = async (pengajuanId: string, selectedHtIds?: string[], trackingStatus?: TrackingStatus) => {
+  const handleApprovePeminjaman = async (pengajuanId: string, selectedHtIds: string[]) => {
     try {
       if (!selectedHtIds || selectedHtIds.length === 0) {
         throw new Error('Pilih HT yang akan dipinjamkan.');
       }
+      console.log('Approving peminjaman:', { pengajuanId, selectedHtIds });
       await approvePeminjaman(pengajuanId, selectedHtIds);
       toast.success('Pengajuan peminjaman berhasil disetujui.');
     } catch (error: any) {
+      console.error('Error in handleApprovePeminjaman:', error);
       throw error;
     }
   };
@@ -110,46 +142,78 @@ export default function PersetujuanClient({
     }
   };
 
-  const handleApprovePengembalian = async (pengajuanId: string) => {
+  const handleApprove = async (pengajuanId: string, selectedHtIds?: string[], trackingStatus?: TrackingStatus) => {
     try {
-      await approvePengembalian(pengajuanId);
-      toast.success('Pengajuan pengembalian berhasil disetujui.');
+      console.log('handleApprove called with:', { pengajuanId, selectedHtIds, trackingStatus });
+      
+      // Tentukan tipe pengajuan berdasarkan ID
+      const isPeminjaman = peminjamanData.find(p => p.id === pengajuanId);
+      const isMutasi = mutasiData.find(m => m.id === pengajuanId);
+
+      console.log('Found pengajuan:', { isPeminjaman: !!isPeminjaman, isMutasi: !!isMutasi });
+      
+      if (isPeminjaman) {
+        console.log('Peminjaman trackingStatus:', isPeminjaman.trackingStatus);
+      }
+
+      // Cek apakah ini adalah permintaan pengembalian
+      if (isPeminjaman && isPeminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
+        console.log('Processing return request for:', pengajuanId);
+        // Handle pengembalian - update status ke SUDAH_DIKEMBALIKAN
+        await handleUpdateTracking(pengajuanId, 'SUDAH_DIKEMBALIKAN', 'Pengembalian HT diterima oleh Super Admin');
+        toast.success('Pengembalian HT berhasil diterima.');
+      } else if (isPeminjaman) {
+        console.log('Processing normal peminjaman approval for:', pengajuanId);
+        await handleApprovePeminjaman(pengajuanId, selectedHtIds || []);
+      } else if (isMutasi) {
+        console.log('Processing mutasi approval for:', pengajuanId);
+        await handleApproveMutasi(pengajuanId);
+      } else {
+        console.error('No matching pengajuan found for ID:', pengajuanId);
+        throw new Error('Pengajuan tidak ditemukan.');
+      }
     } catch (error: any) {
+      console.error('Error in handleApprove:', error);
+      toast.error(`Error: ${error.message}`);
       throw error;
     }
   };
 
-  const handleApprove = async (pengajuanId: string, selectedHtIds?: string[], trackingStatus?: TrackingStatus) => {
-    // Tentukan tipe pengajuan berdasarkan ID
-    const isPeminjaman = peminjamanData.find(p => p.id === pengajuanId);
-    const isMutasi = mutasiData.find(m => m.id === pengajuanId);
-    const isPengembalian = pengembalianData.find(p => p.id === pengajuanId);
-
-    if (isPeminjaman) {
-      await handleApprovePeminjaman(pengajuanId, selectedHtIds, trackingStatus);
-    } else if (isMutasi) {
-      await handleApproveMutasi(pengajuanId);
-    } else if (isPengembalian) {
-      await handleApprovePengembalian(pengajuanId);
+  const handleReturnHT = async (pengajuanId: string) => {
+    try {
+      // Update tracking status ke SUDAH_DIKEMBALIKAN dan kembalikan HT ke gudang
+      await handleUpdateTracking(pengajuanId, 'SUDAH_DIKEMBALIKAN', 'HT dikembalikan ke gudang pusat');
+      toast.success('HT berhasil dikembalikan ke gudang pusat.');
+    } catch (error: any) {
+      toast.error(`Error: ${error.message}`);
     }
   };
 
   const handleReject = async (pengajuanId: string, reason: string) => {
     try {
-      const formData = new FormData();
-      formData.append('pengajuanId', pengajuanId);
-      formData.append('catatanAdmin', reason);
+      // Tentukan apakah ini penolakan pengembalian
+      const isPeminjaman = peminjamanData.find(p => p.id === pengajuanId);
       
-      // Tentukan tipe pengajuan
-      let tipe = '';
-      if (peminjamanData.find(p => p.id === pengajuanId)) tipe = 'peminjaman';
-      else if (mutasiData.find(m => m.id === pengajuanId)) tipe = 'mutasi';
-      else if (pengembalianData.find(p => p.id === pengajuanId)) tipe = 'pengembalian';
-      
-      formData.append('tipe', tipe);
-      
-      await rejectPengajuan(formData);
-      toast.success('Pengajuan berhasil ditolak.');
+      if (isPeminjaman && isPeminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
+        // Handle penolakan pengembalian - kembalikan status ke SEDANG_DIGUNAKAN
+        await handleUpdateTracking(pengajuanId, 'SEDANG_DIGUNAKAN', `Pengembalian ditolak: ${reason}`);
+        toast.success('Pengembalian HT berhasil ditolak.');
+      } else {
+        // Handle penolakan pengajuan normal
+        const formData = new FormData();
+        formData.append('pengajuanId', pengajuanId);
+        formData.append('catatanAdmin', reason);
+        
+        // Tentukan tipe pengajuan
+        let tipe = '';
+        if (peminjamanData.find(p => p.id === pengajuanId)) tipe = 'peminjaman';
+        else if (mutasiData.find(m => m.id === pengajuanId)) tipe = 'mutasi';
+        
+        formData.append('tipe', tipe);
+        
+        await rejectPengajuan(formData);
+        toast.success('Pengajuan berhasil ditolak.');
+      }
     } catch (error: any) {
       throw error;
     }
@@ -157,9 +221,13 @@ export default function PersetujuanClient({
 
   const handleUpdateTracking = async (pengajuanId: string, trackingStatus: TrackingStatus, notes?: string) => {
     try {
+      console.log('handleUpdateTracking called with:', { pengajuanId, trackingStatus, notes });
       await updateTrackingStatus(pengajuanId, trackingStatus, notes);
+      console.log('updateTrackingStatus completed successfully');
       toast.success('Status tracking berhasil diperbarui.');
     } catch (error: any) {
+      console.error('Error in handleUpdateTracking:', error);
+      toast.error(`Error: ${error.message}`);
       throw error;
     }
   };
@@ -174,12 +242,9 @@ export default function PersetujuanClient({
       </div>
 
       <Tabs defaultValue="peminjaman" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="peminjaman">
             Peminjaman HT ({pengajuanPeminjaman.filter(p => p.status === 'PENDING').length}/{pengajuanPeminjaman.length})
-          </TabsTrigger>
-          <TabsTrigger value="pengembalian">
-            Pengembalian HT ({pengajuanPengembalian.filter(p => p.status === 'PENDING').length}/{pengajuanPengembalian.length})
           </TabsTrigger>
           <TabsTrigger value="mutasi">
             Mutasi Personil ({pengajuanMutasi.filter(m => m.status === 'PENDING').length}/{pengajuanMutasi.length})
@@ -189,31 +254,14 @@ export default function PersetujuanClient({
         <TabsContent value="peminjaman" className="space-y-6">
           <div className="rounded-lg border bg-white p-6 shadow-sm">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">Pengajuan Peminjaman HT</h3>
+              <h3 className="text-lg font-semibold">Peminjaman & Pengembalian HT</h3>
               <p className="text-sm text-gray-600">
-                Kelola pengajuan peminjaman HT dari berbagai satker dengan sistem tracking yang detail.
+                Kelola pengajuan peminjaman dan pengembalian HT dari berbagai satker dengan sistem tracking yang terintegrasi.
               </p>
             </div>
             <EnhancedPersetujuanTable
               data={peminjamanData}
               htOptions={htDiGudang}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onUpdateTracking={handleUpdateTracking}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="pengembalian" className="space-y-6">
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">Pengajuan Pengembalian HT</h3>
-              <p className="text-sm text-gray-600">
-                Proses pengajuan pengembalian HT dari satker ke gudang pusat.
-              </p>
-            </div>
-            <EnhancedPersetujuanTable
-              data={pengembalianData}
               onApprove={handleApprove}
               onReject={handleReject}
               onUpdateTracking={handleUpdateTracking}

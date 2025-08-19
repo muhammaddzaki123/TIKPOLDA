@@ -8,15 +8,16 @@ const prisma = new PrismaClient();
 async function getPengajuanData() {
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
     where: { 
-      status: { 
-        in: ['PENDING', 'APPROVED'] 
-      } 
+      OR: [
+        { status: { in: ['PENDING', 'APPROVED'] } },
+        { trackingStatus: 'PERMINTAAN_PENGEMBALIAN' }
+      ]
     },
     include: {
       satkerPengaju: { select: { nama: true } },
     },
     orderBy: { createdAt: 'desc' },
-  });
+  }) as any[];
 
   const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
     where: { 
@@ -32,21 +33,12 @@ async function getPengajuanData() {
     orderBy: { createdAt: 'desc' },
   });
 
-  const pengajuanPengembalian = await prisma.pengajuanPengembalian.findMany({
-    where: { 
-      status: { 
-        in: ['PENDING', 'APPROVED'] 
-      } 
-    },
+  // Ambil data peminjaman satker untuk tracking HT yang sedang dipinjam
+  const peminjamanSatker = await prisma.peminjamanSatker.findMany({
     include: {
-      satkerPengaju: { select: { nama: true } },
-      pengembalianDetails: {
-        include: {
-          ht: { select: { merk: true, serialNumber: true } }
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' },
+      ht: { select: { id: true, merk: true, serialNumber: true } },
+      satker: { select: { nama: true } }
+    }
   });
 
   const htDiGudang = await prisma.hT.findMany({
@@ -57,17 +49,17 @@ async function getPengajuanData() {
     orderBy: { serialNumber: 'asc' }
   });
 
-  return { pengajuanPeminjaman, pengajuanMutasi, pengajuanPengembalian, htDiGudang };
+  return { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang };
 }
 
 export default async function PersetujuanPage() {
-  const { pengajuanPeminjaman, pengajuanMutasi, pengajuanPengembalian, htDiGudang } = await getPengajuanData();
+  const { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang } = await getPengajuanData();
 
   return (
     <PersetujuanClient
       pengajuanPeminjaman={pengajuanPeminjaman}
       pengajuanMutasi={pengajuanMutasi}
-      pengajuanPengembalian={pengajuanPengembalian}
+      peminjamanSatker={peminjamanSatker}
       htDiGudang={htDiGudang}
     />
   );

@@ -63,25 +63,30 @@ export default function PengajuanClient({
       </div>
 
       <Tabs defaultValue="peminjaman" className="w-full space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="peminjaman"><Radio className="mr-2 h-4 w-4" />Peminjaman HT</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="peminjaman"><Radio className="mr-2 h-4 w-4" />Peminjaman & Pengembalian HT</TabsTrigger>
           <TabsTrigger value="mutasi"><ArrowRightLeft className="mr-2 h-4 w-4" />Mutasi Personil</TabsTrigger>
-          <TabsTrigger value="pengembalian"><Undo2 className="mr-2 h-4 w-4" />Pengembalian HT</TabsTrigger>
         </TabsList>
 
         <TabsContent value="peminjaman" className="space-y-6">
           <div className="space-y-6">
             <FormPeminjaman />
+            
+            {/* Paket Peminjaman Aktif untuk Pengembalian */}
+            {approvedLoans.length > 0 && (
+              <ReturnPackageForm approvedLoans={approvedLoans} />
+            )}
+            
             <Card>
               <CardHeader>
-                <CardTitle>Riwayat Pengajuan Peminjaman HT</CardTitle>
+                <CardTitle>Riwayat Pengajuan Peminjaman & Pengembalian HT</CardTitle>
                 <CardDescription>
-                  Pantau status pengajuan Anda dengan sistem tracking yang detail seperti paket pengiriman.
+                  Pantau status pengajuan Anda dengan sistem tracking yang detail. Ajukan pengembalian langsung dari tracking atau gunakan form paket di atas.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <EnhancedRiwayatTable 
-                  data={riwayatGabungan.filter(r => r.tipe === 'Peminjaman HT')} 
+                  data={riwayatGabungan.filter(r => r.tipe === 'Peminjaman HT' || r.tipe === 'Pengembalian HT')} 
                   onReturnRequest={handleReturnRequest}
                 />
               </CardContent>
@@ -100,23 +105,6 @@ export default function PengajuanClient({
               <CardContent>
                 <EnhancedRiwayatTable 
                   data={riwayatGabungan.filter(r => r.tipe === 'Mutasi Personil')} 
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="pengembalian" className="space-y-6">
-          <div className="space-y-6">
-            <ReturnPackageForm approvedLoans={approvedLoans} />
-            <Card>
-              <CardHeader>
-                <CardTitle>Riwayat Pengajuan Pengembalian HT</CardTitle>
-                <CardDescription>Jejak audit untuk semua permintaan pengembalian aset HT Anda ke pusat.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <EnhancedRiwayatTable 
-                  data={riwayatGabungan.filter(r => r.tipe === 'Pengembalian HT')} 
                 />
               </CardContent>
             </Card>

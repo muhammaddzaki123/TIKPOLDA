@@ -2,7 +2,7 @@
 
 'use server';
 
-import { PrismaClient, PengajuanStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -20,7 +20,7 @@ export async function approveMutasi(pengajuanId: string) {
   await getSuperAdminIdOrThrow();
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const pengajuan = await tx.pengajuanMutasi.findUnique({
         where: { id: pengajuanId },
         include: { personil: true }
@@ -45,7 +45,7 @@ export async function approveMutasi(pengajuanId: string) {
 
       await tx.pengajuanMutasi.update({
         where: { id: pengajuanId },
-        data: { status: PengajuanStatus.APPROVED },
+        data: { status: 'APPROVED' },
       });
     });
   } catch (error: any) {
@@ -78,10 +78,16 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
             throw new Error('Tidak ada HT yang dipilih untuk dipinjamkan.');
         }
 
-        await prisma.$transaction(async (tx) => {
+        const currentTime = new Date();
+
+        await prisma.$transaction(async (tx: any) => {
             await tx.pengajuanPeminjaman.update({
                 where: { id: pengajuanId },
-                data: { status: PengajuanStatus.APPROVED }
+                data: { 
+                    status: 'APPROVED',
+                    trackingStatus: 'DISETUJUI',
+                    tanggalDisetujui: currentTime
+                }
             });
 
             for (const htId of selectedHtIds) {
@@ -107,6 +113,7 @@ export async function approvePeminjaman(pengajuanId: string, selectedHtIds: stri
         });
 
     } catch (error: any) {
+        console.error('Error approving peminjaman:', error);
         throw error;
     }
     
@@ -141,12 +148,12 @@ export async function approvePengembalian(pengajuanId: string) {
       throw new Error('Tidak ada HT yang terdaftar dalam pengajuan pengembalian ini.');
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Update the main return request status to APPROVED
       await tx.pengajuanPengembalian.update({
         where: { id: pengajuanId },
         data: { 
-          status: PengajuanStatus.APPROVED,
+          status: 'APPROVED',
           updatedAt: new Date()
         },
       });
@@ -223,7 +230,7 @@ export async function rejectPengajuan(formData: FormData) {
   await model.update({
     where: { id: pengajuanId },
     data: {
-      status: PengajuanStatus.REJECTED,
+      status: 'REJECTED',
       catatanAdmin: catatanAdmin,
     },
   });
@@ -233,34 +240,76 @@ export async function rejectPengajuan(formData: FormData) {
 }
 
 export async function updateTrackingStatus(pengajuanId: string, trackingStatus: string, notes?: string) {
-  await getSuperAdminIdOrThrow();
-
+  console.log('updateTrackingStatus called with:', { pengajuanId, trackingStatus, notes });
+  
   try {
-    // Update catatan admin untuk tracking
-    await prisma.pengajuanPeminjaman.update({
+    await getSuperAdminIdOrThrow();
+    console.log('Super admin authentication passed');
+
+    const currentTime = new Date();
+    let updateData: any = {
+      trackingStatus: trackingStatus,
+      catatanAdmin: notes ? `[${trackingStatus}] ${notes}` : `Status: ${trackingStatus}`,
+      updatedAt: currentTime
+    };
+
+    // Update timestamp berdasarkan status
+    switch (trackingStatus) {
+      case 'PENGAJUAN_DIKIRIM':
+        updateData.tanggalDikirim = currentTime;
+        break;
+      case 'SEDANG_DIPROSES':
+        updateData.tanggalSedangProses = currentTime;
+        break;
+      case 'DISETUJUI':
+        updateData.tanggalDisetujui = currentTime;
+        break;
+      case 'SIAP_DIAMBIL':
+        updateData.tanggalSiapDiambil = currentTime;
+        break;
+      case 'SEDANG_DIGUNAKAN':
+        updateData.tanggalSedangDigunakan = currentTime;
+        break;
+      case 'PERMINTAAN_PENGEMBALIAN':
+        updateData.tanggalPermintaanKembali = currentTime;
+        break;
+      case 'SUDAH_DIKEMBALIKAN':
+        updateData.tanggalSudahDikembalikan = currentTime;
+        break;
+    }
+
+    console.log('Updating pengajuan with data:', updateData);
+
+    // Update pengajuan peminjaman
+    const updatedPengajuan = await prisma.pengajuanPeminjaman.update({
       where: { id: pengajuanId },
-      data: {
-        catatanAdmin: notes ? `[${trackingStatus}] ${notes}` : `Status: ${trackingStatus}`,
-        updatedAt: new Date()
-      }
+      data: updateData
     });
 
-    // Jika status adalah RETURNED, kembalikan HT ke gudang
-    if (trackingStatus === 'RETURNED') {
+    console.log('Pengajuan updated successfully:', updatedPengajuan.id);
+
+    // Jika status adalah SUDAH_DIKEMBALIKAN, kembalikan HT ke gudang
+    if (trackingStatus === 'SUDAH_DIKEMBALIKAN') {
+      console.log('Processing HT return to warehouse...');
+      
       const pengajuan = await prisma.pengajuanPeminjaman.findUnique({
         where: { id: pengajuanId }
       });
 
       if (pengajuan) {
+        console.log('Found pengajuan for HT return:', pengajuan.id);
+        
         // Update semua peminjaman satker yang terkait
-        await prisma.peminjamanSatker.updateMany({
+        const updatedLoans = await prisma.peminjamanSatker.updateMany({
           where: {
             satkerId: pengajuan.satkerId,
             catatan: { contains: pengajuan.id.substring(0, 8) },
             tanggalKembali: null
           },
-          data: { tanggalKembali: new Date() }
+          data: { tanggalKembali: currentTime }
         });
+
+        console.log('Updated loan records:', updatedLoans.count);
 
         // Kembalikan HT ke gudang pusat
         const peminjamanSatker = await prisma.peminjamanSatker.findMany({
@@ -270,21 +319,27 @@ export async function updateTrackingStatus(pengajuanId: string, trackingStatus: 
           }
         });
 
+        console.log('Found peminjaman satker records:', peminjamanSatker.length);
+
         for (const peminjaman of peminjamanSatker) {
           await prisma.hT.update({
             where: { id: peminjaman.htId },
             data: { satkerId: null }
           });
+          console.log('Returned HT to warehouse:', peminjaman.htId);
         }
       }
     }
 
+    console.log('updateTrackingStatus completed successfully');
+
   } catch (error: any) {
     console.error('Error updating tracking status:', error);
-    throw new Error('Gagal mengupdate status tracking.');
+    throw new Error(`Gagal mengupdate status tracking: ${error.message}`);
   }
 
   revalidatePath('/dashboard/persetujuan');
   revalidatePath('/satker-admin/pengajuan');
   revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
 }

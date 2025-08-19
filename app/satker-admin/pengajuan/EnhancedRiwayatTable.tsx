@@ -74,7 +74,7 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
       tanggalMulai: pengajuan.tanggalMulai,
       tanggalSelesai: pengajuan.tanggalSelesai,
       status: pengajuan.status,
-      trackingStatus: pengajuan.trackingStatus || 'SUBMITTED',
+      trackingStatus: pengajuan.trackingStatus || 'PENGAJUAN_DIKIRIM',
       fileUrl: pengajuan.fileUrl,
       catatanAdmin: pengajuan.catatanAdmin,
       estimasiSelesai: pengajuan.estimasiSelesai,
@@ -170,14 +170,13 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Tracking</SelectItem>
-            <SelectItem value="SUBMITTED">Pengajuan Dikirim</SelectItem>
-            <SelectItem value="UNDER_REVIEW">Sedang Ditinjau</SelectItem>
-            <SelectItem value="APPROVED">Disetujui</SelectItem>
-            <SelectItem value="PROCESSING">Sedang Diproses</SelectItem>
-            <SelectItem value="READY_PICKUP">Siap Diambil</SelectItem>
-            <SelectItem value="IN_USE">Sedang Digunakan</SelectItem>
-            <SelectItem value="RETURN_REQUESTED">Permintaan Pengembalian</SelectItem>
-            <SelectItem value="RETURNED">Sudah Dikembalikan</SelectItem>
+            <SelectItem value="PENGAJUAN_DIKIRIM">Pengajuan Dikirim</SelectItem>
+            <SelectItem value="SEDANG_DIPROSES">Sedang Diproses</SelectItem>
+            <SelectItem value="DISETUJUI">Disetujui</SelectItem>
+            <SelectItem value="SIAP_DIAMBIL">Siap Diambil</SelectItem>
+            <SelectItem value="SEDANG_DIGUNAKAN">Sedang Digunakan</SelectItem>
+            <SelectItem value="PERMINTAAN_PENGEMBALIAN">Permintaan Pengembalian</SelectItem>
+            <SelectItem value="SUDAH_DIKEMBALIKAN">Sudah Dikembalikan</SelectItem>
           </SelectContent>
         </Select>
       </div>

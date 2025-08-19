@@ -55,35 +55,33 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
 
   const getTrackingStatusColor = (trackingStatus: TrackingStatus) => {
     switch (trackingStatus) {
-      case 'SUBMITTED': return 'bg-blue-100 text-blue-800';
-      case 'UNDER_REVIEW': return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED': return 'bg-green-100 text-green-800';
-      case 'PROCESSING': return 'bg-indigo-100 text-indigo-800';
-      case 'READY_PICKUP': return 'bg-purple-100 text-purple-800';
-      case 'IN_USE': return 'bg-green-100 text-green-800';
-      case 'RETURN_REQUESTED': return 'bg-orange-100 text-orange-800';
-      case 'RETURNED': return 'bg-gray-100 text-gray-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'PENGAJUAN_DIKIRIM': return 'bg-blue-100 text-blue-800';
+      case 'SEDANG_DIPROSES': return 'bg-yellow-100 text-yellow-800';
+      case 'DISETUJUI': return 'bg-green-100 text-green-800';
+      case 'SIAP_DIAMBIL': return 'bg-purple-100 text-purple-800';
+      case 'SEDANG_DIGUNAKAN': return 'bg-green-100 text-green-800';
+      case 'PERMINTAAN_PENGEMBALIAN': return 'bg-orange-100 text-orange-800';
+      case 'SUDAH_DIKEMBALIKAN': return 'bg-gray-100 text-gray-800';
+      case 'DITOLAK': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTrackingStatusLabel = (trackingStatus: TrackingStatus) => {
     const labels = {
-      'SUBMITTED': 'Pengajuan Dikirim',
-      'UNDER_REVIEW': 'Sedang Ditinjau',
-      'APPROVED': 'Disetujui',
-      'PROCESSING': 'Sedang Diproses',
-      'READY_PICKUP': 'Siap Diambil',
-      'IN_USE': 'Sedang Digunakan',
-      'RETURN_REQUESTED': 'Permintaan Pengembalian',
-      'RETURNED': 'Sudah Dikembalikan',
-      'REJECTED': 'Ditolak'
+      'PENGAJUAN_DIKIRIM': 'Pengajuan Dikirim',
+      'SEDANG_DIPROSES': 'Sedang Diproses',
+      'DISETUJUI': 'Disetujui',
+      'SIAP_DIAMBIL': 'Siap Diambil',
+      'SEDANG_DIGUNAKAN': 'Sedang Digunakan',
+      'PERMINTAAN_PENGEMBALIAN': 'Permintaan Pengembalian',
+      'SUDAH_DIKEMBALIKAN': 'Sudah Dikembalikan',
+      'DITOLAK': 'Ditolak'
     };
     return labels[trackingStatus] || trackingStatus;
   };
 
-  const canRequestReturn = pengajuan.trackingStatus === 'IN_USE' && pengajuan.approvedHts && pengajuan.approvedHts.length > 0;
+  const canRequestReturn = pengajuan.trackingStatus === 'SEDANG_DIGUNAKAN' && pengajuan.approvedHts && pengajuan.approvedHts.length > 0;
 
   return (
     <Card className="w-full">

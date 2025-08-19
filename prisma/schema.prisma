@@ -115,11 +115,21 @@ model PengajuanPeminjaman {
   jumlah        Int
   fileUrl       String?
   status        PengajuanStatus @default(PENDING)
-  trackingStatus TrackingStatus @default(SUBMITTED)
+  trackingStatus TrackingStatus @default(PENGAJUAN_DIKIRIM)
   catatanAdmin  String?
   estimasiSelesai DateTime?
   tanggalPickup DateTime?
   tanggalReturn DateTime?
+  
+  // Timestamp untuk setiap tahap proses
+  tanggalDikirim      DateTime?  @default(now())
+  tanggalSedangProses DateTime?
+  tanggalDisetujui    DateTime?
+  tanggalSiapDiambil  DateTime?
+  tanggalSedangDigunakan DateTime?
+  tanggalPermintaanKembali DateTime?
+  tanggalSudahDikembalikan DateTime?
+  
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   satkerPengaju Satker          @relation(fields: [satkerId], references: [id], onDelete: Cascade)
@@ -196,13 +206,12 @@ enum PengajuanStatus {
 }
 
 enum TrackingStatus {
-  SUBMITTED      // Pengajuan dikirim
-  UNDER_REVIEW   // Sedang ditinjau
-  APPROVED       // Disetujui
-  PROCESSING     // Sedang diproses (HT sedang disiapkan)
-  READY_PICKUP   // Siap diambil
-  IN_USE         // Sedang digunakan
-  RETURN_REQUESTED // Permintaan pengembalian
-  RETURNED       // Sudah dikembalikan
-  REJECTED       // Ditolak
+  PENGAJUAN_DIKIRIM      // Pengajuan dikirim
+  SEDANG_DIPROSES        // Sedang diproses
+  DISETUJUI              // Disetujui
+  SIAP_DIAMBIL           // Siap diambil
+  SEDANG_DIGUNAKAN       // Sedang digunakan
+  PERMINTAAN_PENGEMBALIAN // Permintaan pengembalian
+  SUDAH_DIKEMBALIKAN     // Sudah dikembalikan
+  DITOLAK                // Ditolak
 }

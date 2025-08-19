@@ -9,15 +9,14 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 export type TrackingStatus = 
-  | 'SUBMITTED'
-  | 'UNDER_REVIEW'
-  | 'APPROVED'
-  | 'PROCESSING'
-  | 'READY_PICKUP'
-  | 'IN_USE'
-  | 'RETURN_REQUESTED'
-  | 'RETURNED'
-  | 'REJECTED';
+  | 'PENGAJUAN_DIKIRIM'
+  | 'SEDANG_DIPROSES'
+  | 'DISETUJUI'
+  | 'SIAP_DIAMBIL'
+  | 'SEDANG_DIGUNAKAN'
+  | 'PERMINTAAN_PENGEMBALIAN'
+  | 'SUDAH_DIKEMBALIKAN'
+  | 'DITOLAK';
 
 interface TrackingStep {
   status: TrackingStatus;
@@ -29,56 +28,49 @@ interface TrackingStep {
 
 const trackingSteps: TrackingStep[] = [
   {
-    status: 'SUBMITTED',
+    status: 'PENGAJUAN_DIKIRIM',
     label: 'Pengajuan Dikirim',
     description: 'Pengajuan peminjaman telah dikirim dan menunggu review',
     icon: Package,
     color: 'bg-blue-500'
   },
   {
-    status: 'UNDER_REVIEW',
-    label: 'Sedang Ditinjau',
+    status: 'SEDANG_DIPROSES',
+    label: 'Sedang Diproses',
     description: 'Super Admin sedang meninjau pengajuan Anda',
     icon: Clock,
     color: 'bg-yellow-500'
   },
   {
-    status: 'APPROVED',
+    status: 'DISETUJUI',
     label: 'Disetujui',
     description: 'Pengajuan telah disetujui oleh Super Admin',
     icon: CheckCircle,
     color: 'bg-green-500'
   },
   {
-    status: 'PROCESSING',
-    label: 'Sedang Diproses',
-    description: 'HT sedang disiapkan untuk pengiriman',
-    icon: Package,
-    color: 'bg-indigo-500'
-  },
-  {
-    status: 'READY_PICKUP',
+    status: 'SIAP_DIAMBIL',
     label: 'Siap Diambil',
     description: 'HT sudah siap untuk diambil atau dikirim',
     icon: Truck,
     color: 'bg-purple-500'
   },
   {
-    status: 'IN_USE',
+    status: 'SEDANG_DIGUNAKAN',
     label: 'Sedang Digunakan',
     description: 'HT sedang digunakan oleh satker',
     icon: CheckCircle,
     color: 'bg-green-600'
   },
   {
-    status: 'RETURN_REQUESTED',
+    status: 'PERMINTAAN_PENGEMBALIAN',
     label: 'Permintaan Pengembalian',
     description: 'Permintaan pengembalian telah diajukan',
     icon: AlertCircle,
     color: 'bg-orange-500'
   },
   {
-    status: 'RETURNED',
+    status: 'SUDAH_DIKEMBALIKAN',
     label: 'Sudah Dikembalikan',
     description: 'HT telah dikembalikan ke gudang pusat',
     icon: CheckCircle,
@@ -104,20 +96,20 @@ export function TrackingTimeline({
   catatanAdmin 
 }: TrackingTimelineProps) {
   const getCurrentStepIndex = () => {
-    if (currentStatus === 'REJECTED') return -1;
+    if (currentStatus === 'DITOLAK') return -1;
     return trackingSteps.findIndex(step => step.status === currentStatus);
   };
 
   const currentStepIndex = getCurrentStepIndex();
-  const isRejected = currentStatus === 'REJECTED';
+  const isRejected = currentStatus === 'DITOLAK';
 
   const getStepDate = (status: TrackingStatus) => {
     switch (status) {
-      case 'SUBMITTED':
+      case 'PENGAJUAN_DIKIRIM':
         return createdAt;
-      case 'READY_PICKUP':
+      case 'SIAP_DIAMBIL':
         return tanggalPickup;
-      case 'RETURNED':
+      case 'SUDAH_DIKEMBALIKAN':
         return tanggalReturn;
       default:
         return null;
