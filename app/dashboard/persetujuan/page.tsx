@@ -7,25 +7,37 @@ const prisma = new PrismaClient();
 
 async function getPengajuanData() {
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
-    where: { status: 'PENDING' },
+    where: { 
+      status: { 
+        in: ['PENDING', 'APPROVED'] 
+      } 
+    },
     include: {
       satkerPengaju: { select: { nama: true } },
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
-    where: { status: 'PENDING' },
+    where: { 
+      status: { 
+        in: ['PENDING', 'APPROVED'] 
+      } 
+    },
     include: {
       personil: { select: { nama: true, nrp: true } },
       satkerAsal: { select: { nama: true } },
       satkerTujuan: { select: { nama: true } },
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   const pengajuanPengembalian = await prisma.pengajuanPengembalian.findMany({
-    where: { status: 'PENDING' },
+    where: { 
+      status: { 
+        in: ['PENDING', 'APPROVED'] 
+      } 
+    },
     include: {
       satkerPengaju: { select: { nama: true } },
       pengembalianDetails: {
@@ -34,7 +46,7 @@ async function getPengajuanData() {
         }
       }
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   const htDiGudang = await prisma.hT.findMany({

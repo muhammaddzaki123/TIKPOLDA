@@ -176,13 +176,13 @@ export default function PersetujuanClient({
       <Tabs defaultValue="peminjaman" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="peminjaman">
-            Peminjaman HT ({pengajuanPeminjaman.length})
+            Peminjaman HT ({pengajuanPeminjaman.filter(p => p.status === 'PENDING').length}/{pengajuanPeminjaman.length})
           </TabsTrigger>
           <TabsTrigger value="pengembalian">
-            Pengembalian HT ({pengajuanPengembalian.length})
+            Pengembalian HT ({pengajuanPengembalian.filter(p => p.status === 'PENDING').length}/{pengajuanPengembalian.length})
           </TabsTrigger>
           <TabsTrigger value="mutasi">
-            Mutasi Personil ({pengajuanMutasi.length})
+            Mutasi Personil ({pengajuanMutasi.filter(m => m.status === 'PENDING').length}/{pengajuanMutasi.length})
           </TabsTrigger>
         </TabsList>
 
