@@ -88,21 +88,31 @@ export function PengajuanApprovalCard({
   const [trackingNotes, setTrackingNotes] = useState('');
   const [isPending, startTransition] = useTransition();
 
+  // ===== FUNGSI YANG DIPERBAIKI ADA DI SINI =====
   const handleApprove = () => {
-    if (pengajuan.tipe === 'peminjaman' && selectedHtIds.length !== pengajuan.jumlah) {
+    // Validasi hanya untuk pengajuan peminjaman baru
+    if (pengajuan.tipe === 'peminjaman' && pengajuan.status === 'PENDING' && selectedHtIds.length !== pengajuan.jumlah) {
       toast.error(`Pilih ${pengajuan.jumlah} unit HT untuk disetujui.`);
       return;
     }
 
     startTransition(async () => {
       try {
-        await onApprove(pengajuan.id, selectedHtIds);
-        toast.success('Pengajuan berhasil disetujui.');
+        // [FIX] Tambahkan kondisi untuk membedakan aksi
+        // Jika ini adalah permintaan pengembalian dari tracking, panggil onUpdateTracking
+        if (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' && onUpdateTracking) {
+          await onUpdateTracking(pengajuan.id, 'SUDAH_DIKEMBALIKAN');
+          toast.success('Pengembalian HT berhasil diterima.');
+        } else {
+          // Untuk semua kasus persetujuan lainnya (peminjaman, mutasi, atau pengembalian tipe baru)
+          await onApprove(pengajuan.id, selectedHtIds);
+          toast.success('Pengajuan berhasil disetujui.');
+        }
+
         setShowApproveDialog(false);
-        // Reset form
-        setSelectedHtIds([]);
+        setSelectedHtIds([]); // Reset state setelah berhasil
       } catch (error: any) {
-        console.error('Error approving:', error);
+        console.error('Error in approval process:', error);
         toast.error(`Error: ${error.message}`);
       }
     });
