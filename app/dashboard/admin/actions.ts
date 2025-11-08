@@ -2,11 +2,10 @@
 
 'use server';
 
-import { PrismaClient, Role } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { Role } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 /**
  * Aksi untuk menambah Admin Satker baru beserta entitas Satker-nya.

@@ -4,10 +4,8 @@ import StatCard from '@/components/stat-card';
 import { RadioTower, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-
-const prisma = new PrismaClient();
 
 async function getSatkerStats(satkerId: string) {
   if (!satkerId) {

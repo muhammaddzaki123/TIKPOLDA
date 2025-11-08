@@ -2,11 +2,10 @@
 
 'use server';
 
-import { PrismaClient, HTStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { HTStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import ExcelJS from 'exceljs';
-
-const prisma = new PrismaClient();
 
 export async function addHtBySuperAdmin(formData: FormData) {
   const serialNumber = formData.get('serialNumber') as string;

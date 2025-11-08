@@ -2,10 +2,8 @@
 
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-
-const prisma = new PrismaClient();
 
 // Aksi untuk menambah Satker baru
 export async function addSatker(formData: FormData) {

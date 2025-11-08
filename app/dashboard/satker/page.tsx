@@ -1,8 +1,7 @@
 // app/dashboard/satker/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { SatkerMonitoringCard } from '@/components/satker/SatkerMonitoringCard';
-const prisma = new PrismaClient();
 
 // Fungsi untuk mengambil data satker beserta semua detail relasinya
 async function getSatkerMonitoringData() {

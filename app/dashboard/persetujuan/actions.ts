@@ -2,12 +2,10 @@
 
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-const prisma = new PrismaClient();
 
 async function getSuperAdminIdOrThrow() {
   const session = await getServerSession(authOptions);

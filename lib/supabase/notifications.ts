@@ -1,9 +1,8 @@
 // lib/notifications.ts
 'use server';
 
-import { PrismaClient, PengajuanPeminjaman, PengajuanMutasi, PengajuanPengembalian, PeminjamanSatker, Peminjaman, Satker, Personil, HT, PengembalianDetail } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import type { PengajuanPeminjaman, PengajuanMutasi, PengajuanPengembalian, PeminjamanSatker, Peminjaman, Satker, Personil, HT, PengembalianDetail } from '@prisma/client';
 
 // Types untuk data dengan relasi
 type PengajuanPeminjamanWithSatker = PengajuanPeminjaman & {

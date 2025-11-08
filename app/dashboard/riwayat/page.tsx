@@ -1,9 +1,7 @@
 // app/dashboard/riwayat/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { RiwayatPusatClient } from './RiwayatPusatClient'; // <-- Impor komponen client baru
-
-const prisma = new PrismaClient();
 
 // Definisikan tipe untuk searchParams agar lebih aman
 interface RiwayatPusatPageProps {
@@ -16,7 +14,7 @@ interface RiwayatPusatPageProps {
 }
 
 async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
-  const { q, satker, from, to } = props.searchParams;
+  const { q, satker, from, to } = await props.searchParams;
 
   // Bangun kondisi filter dinamis untuk Prisma
   const whereCondition: any = {

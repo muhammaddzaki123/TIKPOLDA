@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
@@ -13,8 +13,6 @@ import { addHtBySatker } from './actions';
 import { columns } from './columns';
 import { InventarisDataTable } from './data-table';
 import { HtWithPeminjaman } from '@/types/custom';
-
-const prisma = new PrismaClient();
 
 async function getInventarisSatker(satkerId: string): Promise<HtWithPeminjaman[]> {
   const data = await prisma.hT.findMany({

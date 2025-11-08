@@ -1,9 +1,7 @@
 // app/dashboard/riwayat-mutasi/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { RiwayatMutasiClient } from './RiwayatMutasiClient';
-
-const prisma = new PrismaClient();
 
 interface RiwayatMutasiPageProps {
   searchParams: {
@@ -14,7 +12,7 @@ interface RiwayatMutasiPageProps {
 }
 
 async function getRiwayatMutasi(props: RiwayatMutasiPageProps) {
-  const { q, asal, tujuan } = props.searchParams;
+  const { q, asal, tujuan } = await props.searchParams;
 
   const whereCondition: any = {
     status: { in: ['APPROVED', 'REJECTED'] },

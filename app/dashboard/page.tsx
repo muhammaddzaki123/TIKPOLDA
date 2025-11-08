@@ -1,9 +1,8 @@
 // app/dashboard/page.tsx
 
-import { PrismaClient, HTStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { HTStatus } from '@prisma/client';
 import { DashboardClient } from '@/components/dashboard/DashboardClient'; // <-- Impor komponen client
-
-const prisma = new PrismaClient();
 
 // Fungsi untuk mengambil semua data yang dibutuhkan
 async function getDashboardData() {

@@ -3,11 +3,9 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm';
 import PengajuanClient from './PengajuanClient';
-
-const prisma = new PrismaClient();
 
 async function getData(satkerId: string) {
   const [

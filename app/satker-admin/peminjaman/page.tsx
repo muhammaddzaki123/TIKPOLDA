@@ -3,12 +3,10 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { PeminjamanForm } from '@/components/PeminjamanForm';
 import { PengembalianTable } from '@/components/PengembalianTable';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-const prisma = new PrismaClient();
 
 async function getData(satkerId: string) {
   // Ambil daftar HT yang sedang dipinjam di satker ini

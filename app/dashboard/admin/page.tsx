@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PrismaClient, Role } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { Role } from '@prisma/client';
 import { addAdminSatker } from './actions';
 import { AdminDataTable } from './data-table';
 import { columns } from './columns';
-
-const prisma = new PrismaClient();
 
 async function getAdminData() {
   return await prisma.user.findMany({

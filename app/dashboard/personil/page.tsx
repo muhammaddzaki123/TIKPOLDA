@@ -1,11 +1,9 @@
 // app/dashboard/personil/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { columns } from './columns';
 import { PersonilDataTable } from './data-table';
 import { PersonilWithSatker } from '@/types/custom';
-
-const prisma = new PrismaClient();
 
 async function getPersonilData(): Promise<PersonilWithSatker[]> {
   const data = await prisma.personil.findMany({

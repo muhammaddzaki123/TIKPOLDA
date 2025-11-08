@@ -2,14 +2,12 @@
 
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
-
-const prisma = new PrismaClient();
 
 async function getSessionOrThrow() {
   const session = await getServerSession(authOptions);

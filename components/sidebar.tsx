@@ -48,7 +48,7 @@ export default function Sidebar() {
               <Link
                 href={item.href}
                 className={`flex items-center space-x-3 rounded-md p-3 text-sm font-medium transition-colors ${
-                  pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === item.href
+                  pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`))
                     ? 'bg-slate-700 text-white'
                     : 'text-gray-300 hover:bg-slate-700 hover:text-white'
                 }`}

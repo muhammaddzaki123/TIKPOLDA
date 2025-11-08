@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import { columns, PersonilWithSatkerName } from './columns';
 import { PersonilDataTable } from './data-table';
 
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 async function getPersonilSatker(satkerId: string) {
   const personil = await prisma.personil.findMany({

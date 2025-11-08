@@ -1,9 +1,7 @@
 // app/dashboard/riwayat-internal/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { RiwayatInternalClient } from './RiwayatInternalClient';
-
-const prisma = new PrismaClient();
 
 interface RiwayatInternalPageProps {
   searchParams: {
@@ -14,7 +12,8 @@ interface RiwayatInternalPageProps {
 }
 
 async function getRiwayatInternal(props: RiwayatInternalPageProps) {
-  const { q_ht, q_peminjam, satker } = props.searchParams;
+  // In Next.js 15+, searchParams is a promise-like object that needs to be awaited.
+  const { q_ht, q_peminjam, satker } = await props.searchParams;
 
   const whereCondition: any = {
     AND: [],

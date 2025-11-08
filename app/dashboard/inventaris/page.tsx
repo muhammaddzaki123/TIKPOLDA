@@ -1,9 +1,7 @@
 // app/dashboard/inventaris/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import InventarisClient from './InventarisClient';
-
-const prisma = new PrismaClient();
 
 async function getInventarisData() {
   const allHt = await prisma.hT.findMany({

@@ -1,10 +1,9 @@
 // app/api/register/route.ts
 
-import { PrismaClient, Role } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { Role } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {

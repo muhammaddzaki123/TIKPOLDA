@@ -1,9 +1,7 @@
 // app/dashboard/persetujuan/page.tsx
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import PersetujuanClient from './PersetujuanClient';
-
-const prisma = new PrismaClient();
 
 async function getPengajuanData() {
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
