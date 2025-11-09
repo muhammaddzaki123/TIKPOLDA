@@ -47,11 +47,20 @@ async function getPengajuanData() {
     orderBy: { serialNumber: 'asc' }
   });
 
-  return { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang };
+  const pengajuanPengembalian = await prisma.pengajuanPengembalian.findMany({
+    where: { status: 'PENDING' },
+    include: {
+      satkerPengaju: { select: { nama: true } },
+      pengembalianDetails: { include: { ht: true } }
+    },
+    orderBy: { createdAt: 'desc' },
+  }) as any[];
+
+  return { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang, pengajuanPengembalian };
 }
 
 export default async function PersetujuanPage() {
-  const { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang } = await getPengajuanData();
+  const { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang, pengajuanPengembalian } = await getPengajuanData();
 
   return (
     <PersetujuanClient
@@ -59,6 +68,7 @@ export default async function PersetujuanPage() {
       pengajuanMutasi={pengajuanMutasi}
       peminjamanSatker={peminjamanSatker}
       htDiGudang={htDiGudang}
+      pengajuanPengembalian={pengajuanPengembalian}
     />
   );
 }

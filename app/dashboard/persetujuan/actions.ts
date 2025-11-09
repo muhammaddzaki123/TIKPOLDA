@@ -210,28 +210,49 @@ export async function rejectPengajuan(formData: FormData) {
     throw new Error('Alasan penolakan wajib diisi.');
   }
   
-  let model: any;
-  switch (tipe) {
-    case 'mutasi':
-      model = prisma.pengajuanMutasi;
-      break;
-    case 'peminjaman':
-      model = prisma.pengajuanPeminjaman;
-      break;
-    case 'pengembalian':
-      model = prisma.pengajuanPengembalian;
-      break;
-    default:
-      throw new Error('Tipe pengajuan tidak valid.');
-  }
+  if (tipe === 'pengembalian') {
+    const pengajuanPengembalian = await prisma.pengajuanPengembalian.findUnique({
+      where: { id: pengajuanId },
+    });
+    if (!pengajuanPengembalian) throw new Error('Pengajuan pengembalian tidak ditemukan.');
 
-  await model.update({
-    where: { id: pengajuanId },
-    data: {
-      status: 'REJECTED',
-      catatanAdmin: catatanAdmin,
-    },
-  });
+    await prisma.$transaction([
+      prisma.pengajuanPengembalian.update({
+        where: { id: pengajuanId },
+        data: {
+          status: 'REJECTED',
+          catatanAdmin: catatanAdmin,
+        },
+      }),
+      prisma.pengajuanPeminjaman.update({
+        where: { id: pengajuanPengembalian.pengajuanPeminjamanId! },
+        data: {
+          trackingStatus: 'SEDANG_DIGUNAKAN',
+          catatanAdmin: `Pengajuan pengembalian ditolak: ${catatanAdmin}`,
+        },
+      })
+    ]);
+  } else {
+    let model: any;
+    switch (tipe) {
+      case 'mutasi':
+        model = prisma.pengajuanMutasi;
+        break;
+      case 'peminjaman':
+        model = prisma.pengajuanPeminjaman;
+        break;
+      default:
+        throw new Error('Tipe pengajuan tidak valid.');
+    }
+
+    await model.update({
+      where: { id: pengajuanId },
+      data: {
+        status: 'REJECTED',
+        catatanAdmin: catatanAdmin,
+      },
+    });
+  }
 
   revalidatePath('/dashboard/persetujuan');
   revalidatePath('/satker-admin/pengajuan');

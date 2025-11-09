@@ -128,20 +128,18 @@ async function getData(satkerId: string) {
         .filter((ps: any) => ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null)
         .map((ps: any) => ({ serialNumber: ps.ht.serialNumber, merk: ps.ht.merk }));
       
-      // Cek apakah sudah ada pengajuan pengembalian yang pending untuk paket ini
-      const hasPendingReturn = riwayatPengembalian.some((r: any) => 
-        r.pengajuanPeminjamanId === p.id && r.status === 'PENDING'
-      );
+      // Find the most recent return request for this loan package
+      const lastReturnRequest = riwayatPengembalian
+        .filter((r: any) => r.pengajuanPeminjamanId === p.id)
+        .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+      const returnStatus = lastReturnRequest ? lastReturnRequest.status : null;
       
-      // Cek apakah sudah ada pengembalian yang disetujui
-      const hasApprovedReturn = riwayatPengembalian.some((r: any) => 
-        r.pengajuanPeminjamanId === p.id && r.status === 'APPROVED'
-      );
+      // The button should only be shown if there are active HTs AND
+      // there is either no return request, or the last one was rejected.
+      const shouldShow = htDetails.length > 0 && (!returnStatus || returnStatus === 'REJECTED');
       
-      // Hanya tampilkan jika ada HT aktif dan belum ada pengajuan pengembalian
-      const shouldShow = htDetails.length > 0 && !hasPendingReturn && !hasApprovedReturn;
-      
-      return { ...p, htDetails, shouldShow };
+      return { ...p, htDetails, shouldShow, returnStatus };
     })
     .filter((p: any) => p.shouldShow);
 

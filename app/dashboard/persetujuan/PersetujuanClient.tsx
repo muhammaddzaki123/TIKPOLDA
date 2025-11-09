@@ -5,7 +5,7 @@
 import { EnhancedPersetujuanTable } from './EnhancedPersetujuanTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
-import { approvePeminjaman, approveMutasi, rejectPengajuan, updateTrackingStatus } from './actions';
+import { approvePeminjaman, approveMutasi, rejectPengajuan, updateTrackingStatus, approvePengembalian } from './actions';
 import { toast } from 'sonner';
 
 interface HtOption {
@@ -50,6 +50,7 @@ interface PengajuanPengembalian {
   createdAt: Date;
   updatedAt: Date;
   satkerPengaju: { nama: string };
+  pengajuanPeminjamanId: string;
   pengembalianDetails: {
     ht: { merk: string; serialNumber: string };
   }[];
@@ -69,17 +70,23 @@ interface PersetujuanClientProps {
   pengajuanMutasi: PengajuanMutasi[];
   peminjamanSatker: PeminjamanSatker[];
   htDiGudang: HtOption[];
+  pengajuanPengembalian: PengajuanPengembalian[]; // New prop
 }
 
 export default function PersetujuanClient({
   pengajuanPeminjaman,
   pengajuanMutasi,
   peminjamanSatker,
-  htDiGudang
+  htDiGudang,
+  pengajuanPengembalian
 }: PersetujuanClientProps) {
 
   // Transform data untuk peminjaman dengan tracking status yang lebih detail
   const peminjamanData = pengajuanPeminjaman.map(p => {
+    let returnRequest = null;
+    if (p.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
+      returnRequest = pengajuanPengembalian.find(r => r.pengajuanPeminjamanId === p.id);
+    }
     // Gunakan trackingStatus dari database atau tentukan berdasarkan kondisi
     let trackingStatus: TrackingStatus = p.trackingStatus || 'PENGAJUAN_DIKIRIM';
     
@@ -107,7 +114,9 @@ export default function PersetujuanClient({
       trackingStatus,
       htDipinjam: peminjamanSatker.filter(ps => 
         ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null
-      )
+      ),
+      returnRequestId: returnRequest ? returnRequest.id : null,
+      pengembalianDetails: returnRequest ? returnRequest.pengembalianDetails : [],
     };
   });
 
@@ -158,10 +167,9 @@ export default function PersetujuanClient({
 
       // Cek apakah ini adalah permintaan pengembalian
       if (isPeminjaman && isPeminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
-        console.log('Processing return request for:', pengajuanId);
-        // Handle pengembalian - update status ke SUDAH_DIKEMBALIKAN
-        await handleUpdateTracking(pengajuanId, 'SUDAH_DIKEMBALIKAN', 'Pengembalian HT diterima oleh Super Admin');
-        toast.success('Pengembalian HT berhasil diterima.');
+        if (!isPeminjaman.returnRequestId) throw new Error('Return request ID not found.');
+        await approvePengembalian(isPeminjaman.returnRequestId);
+        toast.success('Pengembalian HT berhasil disetujui.');
       } else if (isPeminjaman) {
         console.log('Processing normal peminjaman approval for:', pengajuanId);
         await handleApprovePeminjaman(pengajuanId, selectedHtIds || []);
@@ -191,29 +199,30 @@ export default function PersetujuanClient({
 
   const handleReject = async (pengajuanId: string, reason: string) => {
     try {
-      // Tentukan apakah ini penolakan pengembalian
-      const isPeminjaman = peminjamanData.find(p => p.id === pengajuanId);
-      
-      if (isPeminjaman && isPeminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
-        // Handle penolakan pengembalian - kembalikan status ke SEDANG_DIGUNAKAN
-        await handleUpdateTracking(pengajuanId, 'SEDANG_DIGUNAKAN', `Pengembalian ditolak: ${reason}`);
-        toast.success('Pengembalian HT berhasil ditolak.');
-      } else {
-        // Handle penolakan pengajuan normal
-        const formData = new FormData();
+      const formData = new FormData();
+      formData.append('catatanAdmin', reason);
+  
+      // Determine the type of request and the correct ID to send
+      const peminjaman = peminjamanData.find(p => p.id === pengajuanId);
+      if (peminjaman) {
+        if (peminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
+          if (!peminjaman.returnRequestId) throw new Error('Return request ID not found for rejection.');
+          formData.append('pengajuanId', peminjaman.returnRequestId);
+          formData.append('tipe', 'pengembalian');
+        } else {
+          formData.append('pengajuanId', pengajuanId);
+          formData.append('tipe', 'peminjaman');
+        }
+      } else if (mutasiData.find(m => m.id === pengajuanId)) {
         formData.append('pengajuanId', pengajuanId);
-        formData.append('catatanAdmin', reason);
-        
-        // Tentukan tipe pengajuan
-        let tipe = '';
-        if (peminjamanData.find(p => p.id === pengajuanId)) tipe = 'peminjaman';
-        else if (mutasiData.find(m => m.id === pengajuanId)) tipe = 'mutasi';
-        
-        formData.append('tipe', tipe);
-        
-        await rejectPengajuan(formData);
-        toast.success('Pengajuan berhasil ditolak.');
+        formData.append('tipe', 'mutasi');
+      } else {
+        throw new Error('Jenis pengajuan tidak dapat diidentifikasi.');
       }
+  
+      await rejectPengajuan(formData);
+      toast.success('Pengajuan berhasil ditolak.');
+      
     } catch (error: any) {
       throw error;
     }
