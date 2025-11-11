@@ -14,6 +14,15 @@ export async function addSatker(formData: FormData) {
     throw new Error('Kode dan Nama Satker wajib diisi.');
   }
 
+  // Pre-validation: Cek apakah kode satker sudah ada
+  const existingSatker = await prisma.satker.findUnique({ 
+    where: { kode } 
+  });
+
+  if (existingSatker) {
+    throw new Error('Kode Satker sudah ada. Gunakan kode unik.');
+  }
+
   try {
     await prisma.satker.create({
       data: {

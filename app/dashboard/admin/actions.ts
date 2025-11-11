@@ -21,6 +21,20 @@ export async function addAdminSatker(formData: FormData) {
     throw new Error('Semua kolom wajib diisi.');
   }
 
+  // Pre-validation: Cek apakah kode satker atau email sudah ada
+  const [existingSatker, existingUser] = await Promise.all([
+    prisma.satker.findUnique({ where: { kode: kodeSatker } }),
+    prisma.user.findUnique({ where: { email } }),
+  ]);
+
+  if (existingSatker) {
+    throw new Error('Gagal: Kode Satker sudah terdaftar.');
+  }
+
+  if (existingUser) {
+    throw new Error('Gagal: Email sudah terdaftar.');
+  }
+
   const hashedPassword = await hash(password, 10);
 
   try {
@@ -75,6 +89,30 @@ export async function updateAdminAndSatker(formData: FormData) {
 
   if (!userId || !satkerId || !namaAdmin || !email || !kodeSatker || !namaSatker) {
     throw new Error('Semua kolom wajib diisi.');
+  }
+
+  // Pre-validation: Cek apakah kode satker atau email sudah digunakan oleh record lain
+  const [existingSatker, existingUser] = await Promise.all([
+    prisma.satker.findFirst({ 
+      where: { 
+        kode: kodeSatker,
+        NOT: { id: satkerId } // Exclude current satker
+      } 
+    }),
+    prisma.user.findFirst({ 
+      where: { 
+        email,
+        NOT: { id: userId } // Exclude current user
+      } 
+    }),
+  ]);
+
+  if (existingSatker) {
+    throw new Error('Gagal: Kode Satker sudah digunakan oleh unit lain.');
+  }
+
+  if (existingUser) {
+    throw new Error('Gagal: Email sudah digunakan oleh akun lain.');
   }
 
   try {

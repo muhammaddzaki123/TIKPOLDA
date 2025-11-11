@@ -80,6 +80,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
                   width={112}
                   height={144}
                   className="w-full h-full object-cover rounded-md"
+                  unoptimized
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">

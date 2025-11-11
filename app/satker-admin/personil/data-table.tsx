@@ -319,6 +319,7 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
                   width={300}
                   height={400}
                   className="max-w-full max-h-96 object-contain rounded-lg border shadow-lg"
+                  unoptimized
                 />
                 <div className="mt-2 text-center text-sm text-gray-600">
                   <p><strong>NRP:</strong> {selectedPersonil.nrp}</p>

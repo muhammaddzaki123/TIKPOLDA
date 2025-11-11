@@ -43,6 +43,7 @@ export const columns: ColumnDef<PersonilWithSatkerName>[] = [
               height={64}
               className="object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => table.options.meta?.openPhotoDialog?.(row.original)}
+              unoptimized
             />
           ) : (
             <div className="w-12 h-16 bg-gray-200 rounded border flex items-center justify-center text-xs text-gray-500">
