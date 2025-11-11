@@ -33,9 +33,18 @@ export async function addHtBySuperAdmin(formData: FormData) {
         status: HTStatus.BAIK,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      const target = error.meta?.target as string[];
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta
+    ) {
+      const target = error.meta.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
     }
     console.error('Gagal membuat HT:', error);
@@ -75,7 +84,7 @@ export async function pinjamkanHtKeSatker(formData: FormData) {
             }
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof Error) {
             throw error;
         }
@@ -120,7 +129,7 @@ export async function distributeMultipleHtToSatker(htIds: string[], satkerId: st
     await prisma.peminjamanSatker.createMany({ data: logEntries });
 
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gagal mendistribusikan HT massal:', error);
     throw new Error('Terjadi kesalahan pada server saat proses distribusi.');
   }
@@ -181,9 +190,18 @@ export async function updateHtBySuperAdmin(formData: FormData) {
         satkerId: satkerId,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      const target = error.meta?.target as string[];
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta
+    ) {
+      const target = error.meta.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
     }
     if (error instanceof Error) {
@@ -248,7 +266,7 @@ export async function tarikHtKeGudangPusat(htId: string) {
       });
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       throw error;
     }
@@ -311,7 +329,7 @@ export async function tarikMultipleHtKeGudangPusat(htIds: string[]) {
       });
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       throw error;
     }
@@ -351,7 +369,7 @@ export async function deleteHtBySuperAdmin(htId: string) {
     await prisma.hT.delete({
       where: { id: htId },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       throw error;
     }
@@ -493,7 +511,7 @@ export async function exportInventarisToExcel(type: 'gudang' | 'terdistribusi' |
     });
 
     // Tambahkan border ke semua cell
-    worksheet.eachRow((row, rowNumber) => {
+    worksheet.eachRow((row) => {
       row.eachCell((cell) => {
         cell.border = {
           top: { style: 'thin' },

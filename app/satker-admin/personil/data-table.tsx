@@ -2,20 +2,20 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable, getFilteredRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Personil } from '@prisma/client';
 import { addPersonil, updatePersonil, deletePersonil } from './actions';
 import { PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { PersonilWithSatkerName } from './columns';
+import Image from 'next/image';
 
 interface PersonilDataTableProps<TData extends PersonilWithSatkerName, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,8 +79,12 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
         setIsEditDialogOpen(false);
         setIsAddDialogOpen(false);
         setSelectedPersonil(null);
-      } catch (error: any) {
-        alert(`Gagal: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Gagal: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };
@@ -153,10 +157,12 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
                 {personil?.fotoUrl && (
                     <div className="mt-2">
                         <p className="text-xs text-gray-600 mb-1">Foto saat ini:</p>
-                        <img 
-                            src={personil.fotoUrl} 
-                            alt="Foto saat ini" 
-                            className="w-16 h-20 object-cover rounded border"
+                        <Image
+                            src={personil.fotoUrl}
+                            alt="Foto saat ini"
+                            width={64}
+                            height={80}
+                            className="object-cover rounded border"
                         />
                     </div>
                 )}
@@ -307,9 +313,11 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
           <div className="flex justify-center py-4">
             {selectedPersonil?.fotoUrl ? (
               <div className="relative">
-                <img 
-                  src={selectedPersonil.fotoUrl} 
+                <Image
+                  src={selectedPersonil.fotoUrl}
                   alt={`Foto ${selectedPersonil.nama}`}
+                  width={300}
+                  height={400}
                   className="max-w-full max-h-96 object-contain rounded-lg border shadow-lg"
                 />
                 <div className="mt-2 text-center text-sm text-gray-600">

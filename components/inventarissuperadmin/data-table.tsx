@@ -115,8 +115,12 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
         alert(`${selectedIds.length} unit HT berhasil didistribusikan.`);
         setIsDistribusiOpen(false);
         table.resetRowSelection();
-      } catch (error: any) {
-        alert(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Error: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };
@@ -129,8 +133,12 @@ export function InventarisDataTable<TData extends HtDetails, TValue>({
         await tarikMultipleHtKeGudangPusat(selectedIds);
         alert(`${selectedIds.length} unit HT berhasil ditarik ke gudang pusat.`);
         table.resetRowSelection();
-      } catch (error: any) {
-        alert(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Error: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

@@ -8,14 +8,34 @@ import { ReturnPackageForm, ApprovedLoanPackage } from '@/components/peminjaman/
 import { EnhancedRiwayatTable } from './EnhancedRiwayatTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowRightLeft, Radio, Undo2 } from 'lucide-react';
+import { ArrowRightLeft, Radio } from 'lucide-react';
 import { createPackagePengembalian } from './actions';
 import { toast } from 'sonner';
+import { Personil, Satker } from '@prisma/client';
+
+interface RiwayatGabunganItem {
+    id: string;
+    tipe: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    trackingStatus: string;
+    createdAt: Date;
+    updatedAt: Date;
+    alasan?: string;
+    catatanAdmin?: string | null;
+    approvedHts?: unknown[];
+    keperluan?: string;
+    jumlah?: number;
+    tanggalMulai?: Date | null;
+    tanggalSelesai?: Date | null;
+    fileUrl?: string | null;
+    personil?: { nama: string };
+    satkerTujuan?: { nama: string };
+  }
 
 interface PengajuanClientProps {
-  personilList: any[];
-  satkerList: any[];
-  riwayatGabungan: any[];
+  personilList: Personil[];
+  satkerList: Satker[];
+  riwayatGabungan: RiwayatGabunganItem[];
   approvedLoans: ApprovedLoanPackage[];
 }
 
@@ -47,9 +67,14 @@ export default function PengajuanClient({
       
       await createPackagePengembalian(formData);
       toast.success('Permintaan pengembalian berhasil dikirim dan sedang menunggu persetujuan.');
-    } catch (error: any) {
-      console.error('Error creating return request:', error);
-      toast.error(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error creating return request:', error.message);
+        toast.error(`Error: ${error.message}`);
+      } else {
+        console.error('An unknown error occurred:', error);
+        toast.error('Terjadi kesalahan yang tidak diketahui.');
+      }
     }
   };
 

@@ -5,20 +5,20 @@ import { RiwayatPusatClient } from './RiwayatPusatClient'; // <-- Impor komponen
 
 // Definisikan tipe untuk searchParams agar lebih aman
 interface RiwayatPusatPageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string;
     satker?: string;
     from?: string;
     to?: string;
-  };
+  }>;
 }
 
-async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
-  const { q, satker, from, to } = await props.searchParams;
+async function getGroupedRiwayatPusat(searchParams: Awaited<RiwayatPusatPageProps['searchParams']>) {
+  const { q, satker, from, to } = searchParams;
 
   // Bangun kondisi filter dinamis untuk Prisma
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const whereCondition: any = {
-    // HAPUS filter status agar semua data (approved & rejected) terambil
     status: {
       in: ['APPROVED', 'REJECTED'],
     },
@@ -54,9 +54,9 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
   
   const allPeminjamanSatker = await prisma.peminjamanSatker.findMany({
     where: {
-        satkerId: {
-            in: allPeminjaman.map(p => p.satkerId)
-        }
+      satkerId: {
+        in: allPeminjaman.map(p => p.satkerId)
+      }
     },
     include: {
       ht: true,
@@ -64,7 +64,6 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
   });
 
   const groupedData = allPeminjaman.map((pengajuan) => {
-    // Hanya cari HT jika statusnya APPROVED
     const htsForThisRequest = pengajuan.status === 'APPROVED' 
       ? allPeminjamanSatker
           .filter(p => p.catatan?.includes(pengajuan.id.substring(0, 8)))
@@ -76,16 +75,20 @@ async function getGroupedRiwayatPusat(props: RiwayatPusatPageProps) {
   return groupedData;
 }
 
-// Ambil daftar Satker untuk filter dropdown
 async function getSatkerList() {
-    return await prisma.satker.findMany({
-        orderBy: { nama: 'asc' }
-    });
+  return await prisma.satker.findMany({
+    orderBy: { nama: 'asc' }
+  });
 }
 
 export default async function RiwayatPusatPage(props: RiwayatPusatPageProps) {
-  const riwayatData = await getGroupedRiwayatPusat(props);
+  const searchParams = await props.searchParams;
+  const riwayatData = await getGroupedRiwayatPusat(searchParams);
   const satkerList = await getSatkerList();
+
+  // Serialize data untuk menghindari masalah dengan Date objects
+  const serializedRiwayatData = JSON.parse(JSON.stringify(riwayatData));
+  const serializedSatkerList = JSON.parse(JSON.stringify(satkerList));
 
   return (
     <div className="w-full space-y-4">
@@ -98,10 +101,9 @@ export default async function RiwayatPusatPage(props: RiwayatPusatPageProps) {
         </div>
       </div>
       
-      {/* Gunakan komponen client untuk menampung filter dan tabel */}
       <RiwayatPusatClient 
-        riwayatData={riwayatData}
-        satkerList={satkerList}
+        riwayatData={serializedRiwayatData}
+        satkerList={serializedSatkerList}
       />
     </div>
   );

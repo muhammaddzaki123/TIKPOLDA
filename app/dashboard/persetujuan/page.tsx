@@ -15,7 +15,7 @@ async function getPengajuanData() {
       satkerPengaju: { select: { nama: true } },
     },
     orderBy: { createdAt: 'desc' },
-  }) as any[];
+  });
 
   const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
     where: { 
@@ -31,7 +31,6 @@ async function getPengajuanData() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Ambil data peminjaman satker untuk tracking HT yang sedang dipinjam
   const peminjamanSatker = await prisma.peminjamanSatker.findMany({
     include: {
       ht: { select: { id: true, merk: true, serialNumber: true } },
@@ -54,13 +53,25 @@ async function getPengajuanData() {
       pengembalianDetails: { include: { ht: true } }
     },
     orderBy: { createdAt: 'desc' },
-  }) as any[];
+  });
 
-  return { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang, pengajuanPengembalian };
+  return { 
+    pengajuanPeminjaman: JSON.parse(JSON.stringify(pengajuanPeminjaman)), 
+    pengajuanMutasi: JSON.parse(JSON.stringify(pengajuanMutasi)), 
+    peminjamanSatker: JSON.parse(JSON.stringify(peminjamanSatker)), 
+    htDiGudang: JSON.parse(JSON.stringify(htDiGudang)), 
+    pengajuanPengembalian: JSON.parse(JSON.stringify(pengajuanPengembalian))
+  };
 }
 
 export default async function PersetujuanPage() {
-  const { pengajuanPeminjaman, pengajuanMutasi, peminjamanSatker, htDiGudang, pengajuanPengembalian } = await getPengajuanData();
+  const { 
+    pengajuanPeminjaman, 
+    pengajuanMutasi, 
+    peminjamanSatker, 
+    htDiGudang, 
+    pengajuanPengembalian 
+  } = await getPengajuanData();
 
   return (
     <PersetujuanClient

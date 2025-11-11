@@ -39,9 +39,18 @@ export async function addAdminSatker(formData: FormData) {
         },
       });
     });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      const target = error.meta?.target as string[];
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta
+    ) {
+      const target = error.meta.target as string[];
       if (target?.includes('email')) throw new Error('Gagal: Email sudah terdaftar.');
       if (target?.includes('kode')) throw new Error('Gagal: Kode Satker sudah terdaftar.');
     }
@@ -89,10 +98,19 @@ export async function updateAdminAndSatker(formData: FormData) {
         },
       });
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Tangani kemungkinan error karena email atau kode satker duplikat
-    if (error.code === 'P2002') {
-      const target = error.meta?.target as string[];
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta
+    ) {
+      const target = error.meta.target as string[];
       if (target?.includes('email')) throw new Error('Gagal: Email sudah digunakan oleh akun lain.');
       if (target?.includes('kode')) throw new Error('Gagal: Kode Satker sudah digunakan oleh unit lain.');
     }
@@ -122,7 +140,7 @@ export async function resetPassword(formData: FormData) {
       where: { id: userId },
       data: { password: hashedPassword },
     });
-  } catch (error) {
+  } catch {
     throw new Error('Gagal mereset password.');
   }
 

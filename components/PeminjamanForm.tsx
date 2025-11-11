@@ -62,8 +62,12 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
         const form = document.getElementById('form-peminjaman-internal') as HTMLFormElement;
         form.reset();
         setEstimasiKembali(undefined);
-      } catch (error: any) {
-        toast.error(error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

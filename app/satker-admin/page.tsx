@@ -3,7 +3,7 @@
 import StatCard from '@/components/stat-card';
 import { RadioTower, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 

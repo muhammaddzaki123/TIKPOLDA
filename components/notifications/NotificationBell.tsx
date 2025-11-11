@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import {
@@ -20,7 +20,7 @@ export default function NotificationBell() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fungsi untuk mengambil notifikasi
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!session?.user) return;
 
     setIsLoading(true);
@@ -42,7 +42,7 @@ export default function NotificationBell() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
 
   // Ambil notifikasi saat komponen dimount dan setiap 30 detik
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function NotificationBell() {
       
       return () => clearInterval(interval);
     }
-  }, [session]);
+  }, [session, fetchNotifications]);
 
   // Fungsi untuk menandai notifikasi sebagai dibaca
   const markAsRead = async (notificationId: string) => {

@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -82,8 +82,11 @@ export async function addPersonil(formData: FormData) {
   let fotoUrl: string | null = null;
   try {
     fotoUrl = await handleFileUpload(foto);
-  } catch (error: any) {
-    throw new Error(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Terjadi kesalahan saat mengupload foto.');
   }
 
   try {
@@ -98,8 +101,18 @@ export async function addPersonil(formData: FormData) {
         satkerId: satkerId,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002' && error.meta?.target?.includes('nrp')) {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta &&
+      (error.meta.target as string[])?.includes('nrp')
+    ) {
       throw new Error('Gagal: NRP sudah terdaftar.');
     }
     console.error(error);
@@ -134,13 +147,26 @@ export async function updatePersonil(formData: FormData) {
   let fotoUrl: string | null = null;
   try {
     fotoUrl = await handleFileUpload(foto);
-  } catch (error: any) {
-    throw new Error(error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error('Terjadi kesalahan saat mengupload foto.');
   }
 
   try {
+    
+    type UpdateDataType = {
+      nama: string;
+      nrp: string;
+      jabatan: string;
+      pangkat: string;
+      subSatker: string | null;
+      fotoUrl?: string;
+    };
+    
     // Prepare data untuk update
-    const updateData: any = {
+    const updateData: UpdateDataType = {
       nama, 
       nrp, 
       jabatan,
@@ -157,8 +183,18 @@ export async function updatePersonil(formData: FormData) {
       where: { id: personilId },
       data: updateData,
     });
-  } catch (error: any) {
-    if (error.code === 'P2002' && error.meta?.target?.includes('nrp')) {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta &&
+      (error.meta.target as string[])?.includes('nrp')
+    ) {
       throw new Error('Gagal: NRP sudah digunakan oleh personil lain.');
     }
     console.error(error);
@@ -184,7 +220,7 @@ export async function deletePersonil(personilId: string) {
 
     await prisma.peminjaman.deleteMany({ where: { personilId } });
     await prisma.personil.delete({ where: { id: personilId } });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Error) throw error;
     console.error('Gagal menghapus personil:', error);
     throw new Error('Gagal menghapus data personil.');

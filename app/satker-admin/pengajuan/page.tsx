@@ -1,7 +1,7 @@
 // app/satker-admin/pengajuan/page.tsx
 
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm';
@@ -34,9 +34,21 @@ async function getData(satkerId: string) {
     prisma.peminjamanSatker.findMany({ where: { satkerId }, include: { ht: true } }),
   ]);
 
+  interface GroupedReturn {
+    id: string;
+    tipe: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    trackingStatus: string;
+    createdAt: Date;
+    updatedAt: Date;
+    alasan: string;
+    catatanAdmin: string | null;
+    approvedHts: unknown[];
+  }
+
   // --- PERUBAHAN LOGIKA PENGELOMPOKAN PENGEMBALIAN DIMULAI DI SINI ---
-  const groupedReturns: { [key: string]: any } = {};
-  riwayatPengembalian.forEach((p: any) => {
+  const groupedReturns: { [key: string]: GroupedReturn } = {};
+  riwayatPengembalian.forEach((p) => {
     // Membuat kunci unik berdasarkan alasan dan waktu pembuatan (dibulatkan ke menit terdekat)
     const groupKey = `${p.alasan}-${new Date(p.createdAt).setSeconds(0, 0)}`;
 
@@ -55,7 +67,7 @@ async function getData(satkerId: string) {
     }
     // Tambahkan HT ke dalam paket dari pengembalianDetails
     if (p.pengembalianDetails && p.pengembalianDetails.length > 0) {
-      p.pengembalianDetails.forEach((detail: any) => {
+      p.pengembalianDetails.forEach((detail) => {
         if (detail.ht) {
           groupedReturns[groupKey].approvedHts?.push(detail.ht);
         }
@@ -66,9 +78,28 @@ async function getData(satkerId: string) {
   const riwayatPengembalianGrouped = Object.values(groupedReturns);
   // --- AKHIR DARI PERUBAHAN LOGIKA ---
 
-  const riwayatGabungan: any[] = [
-    ...riwayatPeminjaman.map((p: any) => {
-      const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter((ps: any) => ps.catatan?.includes(p.id.substring(0, 8))).map((ps: any) => ps.ht) : [];
+  interface RiwayatGabunganItem {
+    id: string;
+    tipe: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    trackingStatus: string;
+    createdAt: Date;
+    updatedAt: Date;
+    alasan?: string;
+    catatanAdmin?: string | null;
+    approvedHts?: unknown[];
+    keperluan?: string;
+    jumlah?: number;
+    tanggalMulai?: Date | null;
+    tanggalSelesai?: Date | null;
+    fileUrl?: string | null;
+    personil?: { nama: string };
+    satkerTujuan?: { nama: string };
+  }
+
+  const riwayatGabungan: RiwayatGabunganItem[] = [
+    ...riwayatPeminjaman.map((p) => {
+      const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter((ps) => ps.catatan?.includes(p.id.substring(0, 8))).map((ps) => ps.ht) : [];
       
       // Tentukan tracking status berdasarkan kondisi peminjaman dan pengembalian
       let trackingStatus = p.trackingStatus || 'PENGAJUAN_DIKIRIM';
@@ -77,19 +108,19 @@ async function getData(satkerId: string) {
       if (!p.trackingStatus) {
         if (p.status === 'APPROVED') {
           // Cek apakah ada pengajuan pengembalian untuk paket ini
-          const hasReturnRequest = riwayatPengembalian.some((r: any) => 
+          const hasReturnRequest = riwayatPengembalian.some((r) => 
             r.pengajuanPeminjamanId === p.id && r.status === 'PENDING'
           );
           
           // Cek apakah sudah ada pengembalian yang disetujui
-          const hasApprovedReturn = riwayatPengembalian.some((r: any) => 
+          const hasApprovedReturn = riwayatPengembalian.some((r) => 
             r.pengajuanPeminjamanId === p.id && r.status === 'APPROVED'
           );
           
           // Cek apakah semua HT sudah dikembalikan (tanggalKembali tidak null)
           const allHtsReturned = peminjamanSatker
-            .filter((ps: any) => ps.catatan?.includes(p.id.substring(0, 8)))
-            .every((ps: any) => ps.tanggalKembali !== null);
+            .filter((ps) => ps.catatan?.includes(p.id.substring(0, 8)))
+            .every((ps) => ps.tanggalKembali !== null);
           
           if (hasApprovedReturn || allHtsReturned) {
             trackingStatus = 'SUDAH_DIKEMBALIKAN';
@@ -110,28 +141,28 @@ async function getData(satkerId: string) {
         approvedHts 
       };
     }),
-    ...riwayatMutasi.map((m: any) => ({ 
+    ...riwayatMutasi.map((m) => ({ 
       ...m, 
       tipe: 'Mutasi Personil', 
       trackingStatus: m.status === 'APPROVED' ? 'DISETUJUI' : m.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM' 
     })),
-    ...riwayatPengembalianGrouped.map((r: any) => ({
+    ...riwayatPengembalianGrouped.map((r) => ({
       ...r,
       trackingStatus: r.status === 'APPROVED' ? 'DISETUJUI' : r.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM'
     })), // Gunakan data yang sudah dikelompokkan
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const approvedLoans: ApprovedLoanPackage[] = riwayatPeminjaman
-    .filter((p: any) => p.status === 'APPROVED')
-    .map((p: any) => {
+    .filter((p) => p.status === 'APPROVED')
+    .map((p) => {
       const htDetails = peminjamanSatker
-        .filter((ps: any) => ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null)
-        .map((ps: any) => ({ serialNumber: ps.ht.serialNumber, merk: ps.ht.merk }));
+        .filter((ps) => ps.catatan?.includes(p.id.substring(0, 8)) && ps.tanggalKembali === null)
+        .map((ps) => ({ serialNumber: ps.ht.serialNumber, merk: ps.ht.merk }));
       
       // Find the most recent return request for this loan package
       const lastReturnRequest = riwayatPengembalian
-        .filter((r: any) => r.pengajuanPeminjamanId === p.id)
-        .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+        .filter((r) => r.pengajuanPeminjamanId === p.id)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
 
       const returnStatus = lastReturnRequest ? lastReturnRequest.status : null;
       
@@ -141,11 +172,11 @@ async function getData(satkerId: string) {
       
       return { ...p, htDetails, shouldShow, returnStatus };
     })
-    .filter((p: any) => p.shouldShow);
+    .filter((p) => p.shouldShow);
 
   console.log('Approved loans data:', {
     totalRiwayatPeminjaman: riwayatPeminjaman.length,
-    approvedCount: riwayatPeminjaman.filter((p: any) => p.status === 'APPROVED').length,
+    approvedCount: riwayatPeminjaman.filter((p) => p.status === 'APPROVED').length,
     approvedLoansCount: approvedLoans.length,
     peminjamanSatkerCount: peminjamanSatker.length,
     riwayatPengembalianCount: riwayatPengembalian.length

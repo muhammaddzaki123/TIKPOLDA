@@ -56,7 +56,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
         }, 300);
 
         return () => clearTimeout(handler);
-    }, [htFilter, peminjamFilter, satkerFilter, pathname, router]);
+    }, [htFilter, peminjamFilter, satkerFilter, pathname, router, searchParams]);
     
     return (
         <div className="space-y-4">

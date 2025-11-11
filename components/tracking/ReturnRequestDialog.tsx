@@ -46,8 +46,12 @@ export function ReturnRequestDialog({
         toast.success('Permintaan pengembalian berhasil dikirim.');
         setOpen(false);
         setAlasan('');
-      } catch (error: any) {
-        toast.error(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(`Error: ${error.message}`);
+        } else {
+          toast.error('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

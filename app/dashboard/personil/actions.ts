@@ -37,10 +37,12 @@ export async function mutasiPersonil(formData: FormData) {
         satkerId: satkerTujuanId,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Teruskan pesan error spesifik dari validasi di atas
-    if (error instanceof Error && error.message.includes('Mutasi gagal')) {
-      throw error;
+    if (error instanceof Error) {
+        if (error.message.includes('Mutasi gagal')) {
+            throw error;
+        }
     }
     // Tangani error lainnya
     console.error('Gagal melakukan mutasi:', error);

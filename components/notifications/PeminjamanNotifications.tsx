@@ -16,10 +16,22 @@ export default function PeminjamanNotifications({
   mendekatiDeadline,
   pengajuanUpdated
 }: PeminjamanNotificationsProps) {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  
+  interface Notification {
+    id: string;
+    type: string;
+    icon: React.ReactNode;
+    title: string;
+    message: string;
+    count: number;
+    priority: 'high' | 'medium' | 'low';
+    variant: 'default' | 'destructive';
+  }
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const newNotifications = [];
+    const newNotifications: Notification[] = [];
 
     if (pengajuanUpdated > 0) {
       newNotifications.push({

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { HTStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 /**
  * Aksi untuk Admin Satker menambah HT baru ke unit kerjanya.
@@ -42,9 +42,18 @@ export async function addHtBySatker(formData: FormData) {
         status: HTStatus.BAIK,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      const target = error.meta?.target as string[];
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'target' in error.meta
+    ) {
+      const target = error.meta.target as string[];
       if (target?.includes('serialNumber')) throw new Error('Gagal: Serial Number sudah terdaftar.');
     }
     console.error(error);
@@ -105,7 +114,7 @@ export async function deleteHtBySatker(htId: string) {
       await prisma.peminjaman.deleteMany({ where: { htId: htId } });
       await prisma.hT.delete({ where: { id: htId } });
   
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof Error) throw error;
       console.error('Gagal menghapus HT:', error);
       throw new Error('Gagal menghapus data HT.');

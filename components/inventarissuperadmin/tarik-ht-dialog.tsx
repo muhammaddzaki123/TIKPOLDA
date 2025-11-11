@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { tarikHtKeGudangPusat } from '@/app/dashboard/inventaris/actions';
@@ -28,8 +28,12 @@ export default function TarikHtDialog({ isOpen, onClose, htData }: TarikHtDialog
         await tarikHtKeGudangPusat(htData.id);
         toast.success('HT berhasil ditarik ke gudang pusat!');
         onClose();
-      } catch (error: any) {
-        toast.error(error.message || 'Gagal menarik HT ke gudang pusat');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message || 'Gagal menarik HT ke gudang pusat');
+        } else {
+          toast.error('Gagal menarik HT ke gudang pusat');
+        }
       }
     });
   };

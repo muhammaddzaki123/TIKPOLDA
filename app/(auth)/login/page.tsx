@@ -42,8 +42,12 @@ export default function LoginPage() {
         // pengguna berdasarkan perannya.
         router.replace('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Terjadi kesalahan yang tidak diketahui.');
+      }
     } finally {
       setIsLoading(false);
     }

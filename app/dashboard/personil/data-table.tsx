@@ -41,7 +41,7 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
 }: PersonilDataTableProps<TData, TValue>) {
   const [isMutasiDialogOpen, setIsMutasiDialogOpen] = useState(false);
   const [selectedPersonil, setSelectedPersonil] = useState<TData | null>(null);
-  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
+  const [, setIsPhotoDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   
@@ -77,8 +77,12 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
         await mutasiPersonil(formData);
         setIsMutasiDialogOpen(false);
         alert('Mutasi personil berhasil!');
-      } catch (error: any) {
-        alert(`Mutasi Gagal: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+            alert(`Mutasi Gagal: ${error.message}`);
+        } else {
+            alert('Mutasi Gagal: Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

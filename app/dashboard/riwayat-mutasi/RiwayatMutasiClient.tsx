@@ -20,8 +20,17 @@ interface RiwayatMutasiClientProps {
     satkerList: Satker[];
 }
 
+interface SatkerComboboxProps {
+    value: string;
+    setValue: (value: string) => void;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    satkerList: Satker[];
+    placeholder: string;
+}
+
 // Helper Combobox Component
-function SatkerCombobox({ value, setValue, open, setOpen, satkerList, placeholder }: any) {
+function SatkerCombobox({ value, setValue, open, setOpen, satkerList, placeholder }: SatkerComboboxProps) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -86,7 +95,7 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
         }, 500);
 
         return () => clearTimeout(handler);
-    }, [searchQuery, satkerAsalFilter, satkerTujuanFilter, pathname, router]);
+    }, [searchQuery, satkerAsalFilter, satkerTujuanFilter, pathname, router, searchParams]);
     
     return (
         <div className="space-y-4">

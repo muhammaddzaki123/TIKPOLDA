@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TrackingTimeline, TrackingStatus } from './TrackingTimeline';
-import { Eye, Download, Package, Calendar, FileText, ArrowLeft } from 'lucide-react';
+import { Eye, Download, Package, Calendar, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 

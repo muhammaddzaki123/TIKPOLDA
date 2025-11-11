@@ -1,11 +1,12 @@
 // app/dashboard/riwayat-internal/page.tsx
 
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 import { RiwayatInternalClient } from './RiwayatInternalClient';
 
 interface RiwayatInternalPageProps {
   searchParams: {
-    q_ht?: string; // Diubah untuk menerima ID HT
+    q_ht?: string;
     q_peminjam?: string;
     satker?: string;
   };
@@ -15,28 +16,26 @@ async function getRiwayatInternal(props: RiwayatInternalPageProps) {
   // In Next.js 15+, searchParams is a promise-like object that needs to be awaited.
   const { q_ht, q_peminjam, satker } = await props.searchParams;
 
-  const whereCondition: any = {
-    AND: [],
-  };
+  const conditions: Prisma.PeminjamanWhereInput[] = [];
 
   // Filter berdasarkan ID HT spesifik dari Combobox
   if (q_ht) {
-    whereCondition.AND.push({ htId: q_ht });
+    conditions.push({ htId: q_ht });
   }
 
   if (q_peminjam) {
-    whereCondition.AND.push({ personilId: q_peminjam });
+    conditions.push({ personilId: q_peminjam });
   }
   
   if (satker) {
-    whereCondition.AND.push({
+    conditions.push({
       personil: { satkerId: satker },
     });
   }
 
-  if (whereCondition.AND.length === 0) {
-    delete whereCondition.AND;
-  }
+  const whereCondition: Prisma.PeminjamanWhereInput = conditions.length > 0 
+    ? { AND: conditions } 
+    : {};
 
   const data = await prisma.peminjaman.findMany({
     where: whereCondition,

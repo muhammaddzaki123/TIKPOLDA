@@ -52,9 +52,14 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
         await createPackagePengembalian(formData);
         toast.success('Pengajuan pengembalian untuk paket ini berhasil dikirim.');
         closeDialog();
-      } catch (error: any) {
-        console.error('Error submitting return request:', error);
-        toast.error(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error('Error submitting return request:', error.message);
+          toast.error(`Error: ${error.message}`);
+        } else {
+          console.error('An unknown error occurred:', error);
+          toast.error('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };
@@ -147,7 +152,7 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
               Ajukan Pengembalian Paket
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-600">
-              Anda akan mengajukan pengembalian untuk <strong className="text-slate-800">{selectedLoan?.htDetails.length} unit HT</strong> dengan keperluan <strong className="text-slate-800">"{selectedLoan?.keperluan}"</strong>.
+              Anda akan mengajukan pengembalian untuk <strong className="text-slate-800">{selectedLoan?.htDetails.length} unit HT</strong> dengan keperluan <strong className="text-slate-800">&quot;{selectedLoan?.keperluan}&quot;</strong>.
             </DialogDescription>
           </DialogHeader>
           <form action={handleSubmit} className="space-y-4">

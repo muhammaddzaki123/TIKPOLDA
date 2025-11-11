@@ -44,8 +44,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(superAdmin, { status: 201 });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002'
+    ) {
       return NextResponse.json(
         { message: 'Email sudah digunakan.' },
         { status: 409 }

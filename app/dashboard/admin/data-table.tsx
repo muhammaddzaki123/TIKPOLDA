@@ -51,8 +51,12 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
             await updateAdminAndSatker(formData);
             setIsEditDialogOpen(false);
             alert('Data berhasil diperbarui!');
-        } catch (error: any) {
-            alert(`Gagal: ${error.message}`);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                alert(`Gagal: ${error.message}`);
+            } else {
+                alert('Gagal: Terjadi kesalahan yang tidak diketahui.');
+            }
         }
     });
   };

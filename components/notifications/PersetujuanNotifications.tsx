@@ -18,10 +18,22 @@ export default function PersetujuanNotifications({
   pendingPengembalian,
   keterlambatan
 }: PersetujuanNotificationsProps) {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  
+  interface Notification {
+    id: string;
+    type: string;
+    icon: React.ReactNode;
+    title: string;
+    message: string;
+    count: number;
+    priority: 'high' | 'medium' | 'low';
+    variant: 'default' | 'destructive';
+  }
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const newNotifications = [];
+    const newNotifications: Notification[] = [];
 
     if (pendingPeminjaman > 0) {
       newNotifications.push({

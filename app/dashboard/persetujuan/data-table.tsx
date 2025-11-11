@@ -14,7 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { approveMutasi, approvePeminjaman, rejectPengajuan, approvePengembalian } from './actions';
 import { HT, HTStatus } from '@prisma/client';
 
-type Pengajuan = { id: string; jumlah?: number; [key: string]: any };
+type Pengajuan = { 
+  id: string; 
+  jumlah?: number; 
+  personil?: { nama: string };
+  ht?: { serialNumber: string };
+  satkerPengaju?: { nama: string };
+  [key: string]: unknown;
+};
 
 interface DataTablePersetujuanProps<TData extends Pengajuan, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -47,13 +54,17 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
   const handleApproveClick = (pengajuan: TData) => {
     switch (tipe) {
       case 'mutasi':
-        if (confirm(`Anda yakin ingin menyetujui mutasi untuk ${pengajuan.personil.nama}?`)) {
+        if (confirm(`Anda yakin ingin menyetujui mutasi untuk ${pengajuan.personil?.nama || 'personil ini'}?`)) {
           startTransition(async () => {
             try {
               await approveMutasi(pengajuan.id);
               alert('Pengajuan mutasi berhasil disetujui.');
-            } catch (error: any) {
-              alert(`Error: ${error.message}`);
+            } catch (error: unknown) {
+              if (error instanceof Error) {
+                alert(`Error: ${error.message}`);
+              } else {
+                alert('Terjadi kesalahan yang tidak diketahui.');
+              }
             }
           });
         }
@@ -66,13 +77,17 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
         setIsSelectHtDialogOpen(true);
         break;
       case 'pengembalian':
-        if (confirm(`Konfirmasi penerimaan HT ${pengajuan.ht.serialNumber} dari ${pengajuan.satkerPengaju.nama}?`)) {
+        if (confirm(`Konfirmasi penerimaan HT ${pengajuan.ht?.serialNumber || 'ini'} dari ${pengajuan.satkerPengaju?.nama || 'satker ini'}?`)) {
           startTransition(async () => {
             try {
               await approvePengembalian(pengajuan.id);
               alert('Pengajuan pengembalian berhasil disetujui.');
-            } catch (error: any) {
-              alert(`Error: ${error.message}`);
+            } catch (error: unknown) {
+              if (error instanceof Error) {
+                alert(`Error: ${error.message}`);
+              } else {
+                alert('Terjadi kesalahan yang tidak diketahui.');
+              }
             }
           });
         }
@@ -87,41 +102,49 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
         await approvePeminjaman(selectedPengajuan.id, Array.from(selectedHtIds));
         alert('Pengajuan peminjaman berhasil disetujui.');
         setIsSelectHtDialogOpen(false);
-      } catch (error: any) {
-        alert(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Error: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };
   
   const handleRejectSubmit = (formData: FormData) => {
     startTransition(async () => {
-        try {
-            await rejectPengajuan(formData);
-            alert('Pengajuan berhasil ditolak.');
-            setIsRejectDialogOpen(false);
-        } catch(error: any) {
-            alert(`Error: ${error.message}`);
+      try {
+        await rejectPengajuan(formData);
+        alert('Pengajuan berhasil ditolak.');
+        setIsRejectDialogOpen(false);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Error: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
         }
+      }
     });
   };
 
   const handleHtSelectionChange = (htId: string) => {
     setSelectedHtIds(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(htId)) {
-            newSet.delete(htId);
+      const newSet = new Set(prev);
+      if (newSet.has(htId)) {
+        newSet.delete(htId);
+      } else {
+        if (newSet.size < (selectedPengajuan?.jumlah || 0)) {
+          newSet.add(htId);
         } else {
-            if (newSet.size < (selectedPengajuan?.jumlah || 0)) {
-                newSet.add(htId);
-            } else {
-                alert(`Anda hanya dapat memilih ${selectedPengajuan?.jumlah} unit HT.`);
-            }
+          alert(`Anda hanya dapat memilih ${selectedPengajuan?.jumlah} unit HT.`);
         }
-        return newSet;
+      }
+      return newSet;
     });
   };
 
-  const modifiedColumns = columns.map(col => {
+  const modifiedColumns = useMemo(() => columns.map(col => {
     if (col.id === 'actions') {
       return {
         ...col,
@@ -138,7 +161,7 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
       };
     }
     return col;
-  });
+  }), [columns]);
 
   const table = useReactTable({
     data,
@@ -154,6 +177,7 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
   });
 
   const uniqueMerks = useMemo(() => Array.from(new Set(htDiGudang.map(ht => ht.merk))), [htDiGudang]);
+  
   const filteredHtDiGudang = useMemo(() => {
     return htDiGudang.filter(ht => {
       const merkMatch = merkFilter === 'all' || ht.merk === merkFilter;
@@ -186,7 +210,9 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
               </TableRow>
             ))}
@@ -196,7 +222,9 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))
@@ -216,60 +244,79 @@ export function DataTablePersetujuan<TData extends Pengajuan, TValue>({
           <DialogHeader>
             <DialogTitle>Pilih HT untuk Dipinjamkan</DialogTitle>
             <DialogDescription>
-              Pilih <strong>{selectedPengajuan?.jumlah || 0} unit HT</strong> dari gudang pusat untuk dikirim ke <strong>{selectedPengajuan?.satkerPengaju.nama}</strong>.
+              Pilih <strong>{selectedPengajuan?.jumlah || 0} unit HT</strong> dari gudang pusat untuk dikirim ke <strong>{selectedPengajuan?.satkerPengaju?.nama || 'satker'}</strong>.
               <br />
               <span className="font-bold">Terpilih: {selectedHtIds.size} / {selectedPengajuan?.jumlah || 0}</span>
             </DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-              <Select value={merkFilter} onValueChange={setMerkFilter}>
-                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filter Merek..." /></SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="all">Semua Merek</SelectItem>
-                      {uniqueMerks.map(merk => <SelectItem key={merk} value={merk}>{merk}</SelectItem>)}
-                  </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filter Kondisi..." /></SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="all">Semua Kondisi</SelectItem>
-                      {Object.values(HTStatus).map(status => <SelectItem key={status} value={status}>{status.replace('_', ' ')}</SelectItem>)}
-                  </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={handleSelectFiltered} disabled={isPending}>
-                Pilih Semua (Hasil Filter)
-              </Button>
+            <Select value={merkFilter} onValueChange={setMerkFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter Merek..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Merek</SelectItem>
+                {uniqueMerks.map(merk => (
+                  <SelectItem key={merk} value={merk}>{merk}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter Kondisi..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Kondisi</SelectItem>
+                {Object.values(HTStatus).map(status => (
+                  <SelectItem key={status} value={status}>
+                    {status.replace('_', ' ')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={handleSelectFiltered} disabled={isPending}>
+              Pilih Semua (Hasil Filter)
+            </Button>
           </div>
 
           <div className="max-h-[50vh] overflow-y-auto p-1 space-y-2 border-t pt-4">
-            {filteredHtDiGudang.length > 0 ? filteredHtDiGudang.map(ht => (
-              <div key={ht.id} className="flex items-center space-x-3 rounded-md border p-3 transition-colors hover:bg-accent">
-                <Checkbox
-                  id={ht.id}
-                  checked={selectedHtIds.has(ht.id)}
-                  onCheckedChange={() => handleHtSelectionChange(ht.id)}
-                />
-                <Label htmlFor={ht.id} className="flex-1 cursor-pointer grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="font-semibold">{ht.serialNumber}</p>
-                    <p className="text-sm text-muted-foreground">{ht.merk}</p>
-                  </div>
-                  <p className="text-sm">{ht.serialNumber}</p>
-                  <p className={`text-sm font-medium ${ht.status === 'BAIK' ? 'text-green-600' : 'text-orange-600'}`}>
-                    {ht.status.replace('_', ' ')}
-                  </p>
-                </Label>
-              </div>
-            )) : <p className="text-center text-muted-foreground py-8">Tidak ada HT yang cocok dengan filter.</p>}
+            {filteredHtDiGudang.length > 0 ? (
+              filteredHtDiGudang.map(ht => (
+                <div key={ht.id} className="flex items-center space-x-3 rounded-md border p-3 transition-colors hover:bg-accent">
+                  <Checkbox
+                    id={ht.id}
+                    checked={selectedHtIds.has(ht.id)}
+                    onCheckedChange={() => handleHtSelectionChange(ht.id)}
+                  />
+                  <Label htmlFor={ht.id} className="flex-1 cursor-pointer grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="font-semibold">{ht.serialNumber}</p>
+                      <p className="text-sm text-muted-foreground">{ht.merk}</p>
+                    </div>
+                    <p className="text-sm">{ht.serialNumber}</p>
+                    <p className={`text-sm font-medium ${ht.status === 'BAIK' ? 'text-green-600' : 'text-orange-600'}`}>
+                      {ht.status.replace('_', ' ')}
+                    </p>
+                  </Label>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Tidak ada HT yang cocok dengan filter.
+              </p>
+            )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsSelectHtDialogOpen(false)}>Batal</Button>
+            <Button type="button" variant="outline" onClick={() => setIsSelectHtDialogOpen(false)}>
+              Batal
+            </Button>
             <Button 
               type="button" 
               disabled={isPending || selectedHtIds.size !== (selectedPengajuan?.jumlah || 0)} 
-              onClick={handleApprovePeminjamanSubmit}>
-                {isPending ? 'Memproses...' : 'Setujui & Pinjamkan Terpilih'}
+              onClick={handleApprovePeminjamanSubmit}
+            >
+              {isPending ? 'Memproses...' : 'Setujui & Pinjamkan Terpilih'}
             </Button>
           </DialogFooter>
         </DialogContent>

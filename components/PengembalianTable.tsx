@@ -58,8 +58,12 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
         await createPengembalian(formData);
         setIsDialogOpen(false);
         toast.success('Pengembalian HT berhasil dicatat.');
-      } catch (error: any) {
-        toast.error(error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        } else {
+          toast.error('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

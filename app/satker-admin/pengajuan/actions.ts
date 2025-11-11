@@ -3,9 +3,10 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -146,7 +147,7 @@ export async function createPengajuanMutasi(formData: FormData) {
                 fileUrl: fileUrl,
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof Error) throw error;
         console.error('Gagal membuat pengajuan mutasi:', error);
         throw new Error('Terjadi kesalahan saat mengirim pengajuan.');
@@ -223,7 +224,7 @@ export async function createPackagePengembalian(formData: FormData) {
     }
 
     // Create package return request in a transaction
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: PrismaClient) => {
       // Create the main return request
       const returnRequest = await tx.pengajuanPengembalian.create({
         data: {
@@ -255,7 +256,7 @@ export async function createPackagePengembalian(formData: FormData) {
 
     console.log(`Package return request created successfully for loan ${pengajuanPeminjamanId} with ${htIdsToReturn.length} HT units`);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating package return request:', error);
     
     // Re-throw with user-friendly message

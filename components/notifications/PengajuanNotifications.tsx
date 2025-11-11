@@ -16,10 +16,23 @@ export default function PengajuanNotifications({
   rejectedCount,
   pendingCount
 }: PengajuanNotificationsProps) {
-  const [notifications, setNotifications] = useState<any[]>([]);
+
+  interface Notification {
+    id: string;
+    type: string;
+    icon: React.ReactNode;
+    title: string;
+    message: string;
+    count: number;
+    priority: 'high' | 'medium' | 'low';
+    variant: 'default' | 'destructive';
+    borderColor: string;
+  }
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const newNotifications = [];
+    const newNotifications: Notification[] = [];
 
     if (approvedCount > 0) {
       newNotifications.push({

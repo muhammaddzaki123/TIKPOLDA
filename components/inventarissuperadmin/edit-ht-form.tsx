@@ -60,8 +60,12 @@ export default function EditHtForm({ isOpen, onClose, htData, satkerOptions }: E
         await updateHtBySuperAdmin(form);
         toast.success('Data HT berhasil diperbarui!');
         onClose();
-      } catch (error: any) {
-        toast.error(error.message || 'Gagal memperbarui data HT');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message || 'Gagal memperbarui data HT');
+        } else {
+          toast.error('Gagal memperbarui data HT');
+        }
       }
     });
   };

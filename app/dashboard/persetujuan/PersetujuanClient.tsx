@@ -136,9 +136,13 @@ export default function PersetujuanClient({
       console.log('Approving peminjaman:', { pengajuanId, selectedHtIds });
       await approvePeminjaman(pengajuanId, selectedHtIds);
       toast.success('Pengajuan peminjaman berhasil disetujui.');
-    } catch (error: any) {
-      console.error('Error in handleApprovePeminjaman:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error in handleApprovePeminjaman:', error.message);
+        throw error;
+      }
+      console.error('An unknown error occurred in handleApprovePeminjaman');
+      throw new Error('Terjadi kesalahan yang tidak diketahui.');
     }
   };
 
@@ -146,8 +150,11 @@ export default function PersetujuanClient({
     try {
       await approveMutasi(pengajuanId);
       toast.success('Pengajuan mutasi berhasil disetujui.');
-    } catch (error: any) {
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Terjadi kesalahan yang tidak diketahui saat menyetujui mutasi.');
     }
   };
 
@@ -180,20 +187,15 @@ export default function PersetujuanClient({
         console.error('No matching pengajuan found for ID:', pengajuanId);
         throw new Error('Pengajuan tidak ditemukan.');
       }
-    } catch (error: any) {
-      console.error('Error in handleApprove:', error);
-      toast.error(`Error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  const handleReturnHT = async (pengajuanId: string) => {
-    try {
-      // Update tracking status ke SUDAH_DIKEMBALIKAN dan kembalikan HT ke gudang
-      await handleUpdateTracking(pengajuanId, 'SUDAH_DIKEMBALIKAN', 'HT dikembalikan ke gudang pusat');
-      toast.success('HT berhasil dikembalikan ke gudang pusat.');
-    } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error in handleApprove:', error.message);
+        toast.error(`Error: ${error.message}`);
+        throw error;
+      }
+      console.error('An unknown error occurred in handleApprove');
+      toast.error('Terjadi kesalahan yang tidak diketahui.');
+      throw new Error('Terjadi kesalahan yang tidak diketahui.');
     }
   };
 
@@ -223,8 +225,11 @@ export default function PersetujuanClient({
       await rejectPengajuan(formData);
       toast.success('Pengajuan berhasil ditolak.');
       
-    } catch (error: any) {
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Terjadi kesalahan yang tidak diketahui saat menolak pengajuan.');
     }
   };
 
@@ -234,10 +239,15 @@ export default function PersetujuanClient({
       await updateTrackingStatus(pengajuanId, trackingStatus, notes);
       console.log('updateTrackingStatus completed successfully');
       toast.success('Status tracking berhasil diperbarui.');
-    } catch (error: any) {
-      console.error('Error in handleUpdateTracking:', error);
-      toast.error(`Error: ${error.message}`);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error in handleUpdateTracking:', error.message);
+        toast.error(`Error: ${error.message}`);
+        throw error;
+      }
+      console.error('An unknown error occurred in handleUpdateTracking');
+      toast.error('Terjadi kesalahan yang tidak diketahui.');
+      throw new Error('Terjadi kesalahan yang tidak diketahui.');
     }
   };
 

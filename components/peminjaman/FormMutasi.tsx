@@ -38,8 +38,12 @@ export function FormMutasi({ personilList, satkerList }: FormMutasiProps) {
         alert('Pengajuan mutasi personil berhasil dikirim.');
         const form = document.getElementById('form-mutasi') as HTMLFormElement;
         form.reset();
-      } catch (error: any) {
-        alert(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(`Error: ${error.message}`);
+        } else {
+          alert('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

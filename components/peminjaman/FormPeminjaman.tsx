@@ -50,8 +50,12 @@ export function FormPeminjaman() {
         const form = document.getElementById('form-peminjaman') as HTMLFormElement;
         form.reset();
         setDateRange(undefined); // Reset state tanggal
-      } catch (error: any) {
-        toast.error(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(`Error: ${error.message}`);
+        } else {
+          toast.error('Terjadi kesalahan yang tidak diketahui.');
+        }
       }
     });
   };

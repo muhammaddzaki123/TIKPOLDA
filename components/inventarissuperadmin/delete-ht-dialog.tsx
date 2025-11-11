@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { deleteHtBySuperAdmin } from '@/app/dashboard/inventaris/actions';
@@ -25,8 +25,12 @@ export default function DeleteHtDialog({ isOpen, onClose, htData }: DeleteHtDial
         await deleteHtBySuperAdmin(htData.id);
         toast.success('Data HT berhasil dihapus!');
         onClose();
-      } catch (error: any) {
-        toast.error(error.message || 'Gagal menghapus data HT');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          toast.error(error.message || 'Gagal menghapus data HT');
+        } else {
+          toast.error('Gagal menghapus data HT');
+        }
       }
     });
   };

@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -83,7 +83,7 @@ export async function createPeminjaman(formData: FormData) {
         },
       });
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error(error.message);
     }

@@ -21,8 +21,13 @@ export async function addSatker(formData: FormData) {
         nama,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002'
+    ) {
       throw new Error('Kode Satker sudah ada. Gunakan kode unik.');
     }
     throw new Error('Gagal menyimpan Satker baru.');
@@ -53,7 +58,7 @@ export async function deleteSatker(formData: FormData) {
     await prisma.satker.delete({
       where: { id: satkerId },
     });
-  } catch (error) {
+  } catch {
     throw new Error('Gagal menghapus Satker.');
   }
 

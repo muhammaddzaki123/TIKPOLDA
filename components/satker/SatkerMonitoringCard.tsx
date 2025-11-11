@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, RadioTower, Search, BarChart3, Tag, ShieldCheck, ShieldAlert, Package, PackageOpen } from 'lucide-react';
+import { Users, RadioTower, Search, Tag, ShieldCheck, ShieldAlert, Package, PackageOpen } from 'lucide-react';
 import { Prisma, HTStatus } from '@prisma/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -287,12 +287,21 @@ export function SatkerMonitoringCard({ satker }: SatkerCardProps) {
   );
 }
 
-function Combobox({ aptions, value, setValue, open, setOpen, placeholder }: any) {
+interface ComboboxProps {
+    aptions: { value: string; label: string }[];
+    value: string;
+    setValue: (value: string) => void;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    placeholder: string;
+}
+
+function Combobox({ aptions, value, setValue, open, setOpen, placeholder }: ComboboxProps) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" className="w-full sm:w-[200px] justify-between">
-                    {value ? aptions.find((opt: any) => opt.value === value)?.label : placeholder}
+                    {value ? aptions.find((opt) => opt.value === value)?.label : placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -301,7 +310,7 @@ function Combobox({ aptions, value, setValue, open, setOpen, placeholder }: any)
                     <CommandList><CommandEmpty>Tidak ditemukan.</CommandEmpty>
                         <CommandGroup>
                             <CommandItem onSelect={() => { setValue(''); setOpen(false); }}>Semua</CommandItem>
-                            {aptions.map((opt: any) => (
+                            {aptions.map((opt) => (
                                 <CommandItem key={opt.value} value={opt.label} onSelect={() => { setValue(opt.value); setOpen(false); }}>
                                     <Check className={cn("mr-2 h-4 w-4", value === opt.value ? "opacity-100" : "opacity-0")} />
                                     {opt.label}

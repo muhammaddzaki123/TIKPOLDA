@@ -4,6 +4,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,10 +36,12 @@ export const columns: ColumnDef<PersonilWithSatkerName>[] = [
       return (
         <div className="flex items-center justify-center">
           {fotoUrl ? (
-            <img 
-              src={fotoUrl} 
+            <Image
+              src={fotoUrl}
               alt={`Foto ${row.original.nama}`}
-              className="w-12 h-16 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+              width={48}
+              height={64}
+              className="object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => table.options.meta?.openPhotoDialog?.(row.original)}
             />
           ) : (
