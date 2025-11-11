@@ -11,7 +11,6 @@ import {
   Building,
   RadioTower,
   UserCheck,
-  History,
   Archive,
   ArrowRightLeft,
   CheckSquare,

@@ -15,7 +15,6 @@ import { TrackingTimeline, TrackingStatus } from '@/components/tracking/Tracking
 import { 
   CheckCircle, 
   XCircle, 
-  Clock, 
   Package, 
   FileText, 
   Calendar,
@@ -111,9 +110,9 @@ export function PengajuanApprovalCard({
 
         setShowApproveDialog(false);
         setSelectedHtIds([]); // Reset state setelah berhasil
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error in approval process:', error);
-        toast.error(`Error: ${error.message}`);
+        toast.error(`Error: ${error instanceof Error ? error.message : 'Terjadi kesalahan'}`);
       }
     });
   };
@@ -129,8 +128,8 @@ export function PengajuanApprovalCard({
         await onReject(pengajuan.id, rejectReason);
         toast.success('Pengajuan berhasil ditolak.');
         setShowRejectDialog(false);
-      } catch (error: any) {
-        toast.error(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        toast.error(`Error: ${error instanceof Error ? error.message : 'Terjadi kesalahan'}`);
       }
     });
   };
@@ -143,8 +142,8 @@ export function PengajuanApprovalCard({
           toast.success('Status tracking berhasil diperbarui.');
           setShowTrackingDialog(false);
         }
-      } catch (error: any) {
-        toast.error(`Error: ${error.message}`);
+      } catch (error: unknown) {
+        toast.error(`Error: ${error instanceof Error ? error.message : 'Terjadi kesalahan'}`);
       }
     });
   };
@@ -375,7 +374,7 @@ export function PengajuanApprovalCard({
                     <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm text-blue-800">
                         <strong>Konfirmasi Pengembalian:</strong> Apakah Anda yakin ingin menerima pengembalian HT ini? 
-                        HT akan dikembalikan ke gudang pusat dan status akan diubah menjadi "Sudah Dikembalikan".
+                        HT akan dikembalikan ke gudang pusat dan status akan diubah menjadi &quot;Sudah Dikembalikan&quot;.
                       </p>
                     </div>
                   )}
