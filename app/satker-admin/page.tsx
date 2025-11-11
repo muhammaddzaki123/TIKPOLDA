@@ -7,6 +7,10 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getSatkerStats(satkerId: string) {
   if (!satkerId) {
     return {

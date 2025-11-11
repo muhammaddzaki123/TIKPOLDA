@@ -3,6 +3,10 @@
 import { prisma } from '@/lib/prisma';
 import PersetujuanClient from './PersetujuanClient';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getPengajuanData() {
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
     where: { 

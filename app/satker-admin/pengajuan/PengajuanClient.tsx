@@ -12,17 +12,24 @@ import { ArrowRightLeft, Radio } from 'lucide-react';
 import { createPackagePengembalian } from './actions';
 import { toast } from 'sonner';
 import { Personil, Satker } from '@prisma/client';
+import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
+
+interface HtDetail {
+  id: string;
+  merk: string;
+  serialNumber: string;
+}
 
 interface RiwayatGabunganItem {
     id: string;
     tipe: string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    trackingStatus: string;
+    trackingStatus: TrackingStatus | null;
     createdAt: Date;
     updatedAt: Date;
     alasan?: string;
     catatanAdmin?: string | null;
-    approvedHts?: unknown[];
+    approvedHts?: HtDetail[];
     keperluan?: string;
     jumlah?: number;
     tanggalMulai?: Date | null;

@@ -4,12 +4,16 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { RiwayatInternalClient } from './RiwayatInternalClient';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface RiwayatInternalPageProps {
-  searchParams: {
+  searchParams: Promise<{
     q_ht?: string;
     q_peminjam?: string;
     satker?: string;
-  };
+  }>;
 }
 
 async function getRiwayatInternal(props: RiwayatInternalPageProps) {

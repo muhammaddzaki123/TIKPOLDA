@@ -5,6 +5,10 @@ import { columns } from './columns';
 import { PersonilDataTable } from './data-table';
 import { PersonilWithSatker } from '@/types/custom';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getPersonilData(): Promise<PersonilWithSatker[]> {
   const data = await prisma.personil.findMany({
     include: {

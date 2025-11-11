@@ -10,6 +10,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { addHtBySatker } from './actions';
+
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { columns } from './columns';
 import { InventarisDataTable } from './data-table';
 import { HtWithPeminjaman } from '@/types/custom';

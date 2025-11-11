@@ -3,6 +3,10 @@
 import { prisma } from '@/lib/prisma';
 import InventarisClient from './InventarisClient';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getInventarisData() {
   const allHt = await prisma.hT.findMany({
     include: {

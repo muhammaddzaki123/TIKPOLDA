@@ -11,6 +11,10 @@ import { addAdminSatker } from './actions';
 import { AdminDataTable } from './data-table';
 import { columns } from './columns';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getAdminData() {
   return await prisma.user.findMany({
     where: { role: Role.ADMIN_SATKER },

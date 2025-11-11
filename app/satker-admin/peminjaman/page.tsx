@@ -8,6 +8,10 @@ import { PeminjamanForm } from '@/components/PeminjamanForm';
 import { PengembalianTable } from '@/components/PengembalianTable';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getData(satkerId: string) {
   // Ambil daftar HT yang sedang dipinjam di satker ini
   const htDipinjam = await prisma.peminjaman.findMany({

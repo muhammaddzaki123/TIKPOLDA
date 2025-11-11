@@ -3,6 +3,10 @@
 import { prisma } from '@/lib/prisma';
 import { SatkerMonitoringCard } from '@/components/satker/SatkerMonitoringCard';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fungsi untuk mengambil data satker beserta semua detail relasinya
 async function getSatkerMonitoringData() {
   const satkers = await prisma.satker.findMany({

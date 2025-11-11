@@ -4,12 +4,16 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import { RiwayatMutasiClient } from './RiwayatMutasiClient';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface RiwayatMutasiPageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string;
     asal?: string;
     tujuan?: string;
-  };
+  }>;
 }
 
 async function getRiwayatMutasi(props: RiwayatMutasiPageProps) {

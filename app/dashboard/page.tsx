@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma';
 import { HTStatus } from '@prisma/client';
 import { DashboardClient } from '@/components/dashboard/DashboardClient'; // <-- Impor komponen client
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fungsi untuk mengambil semua data yang dibutuhkan
 async function getDashboardData() {
   // Hitung statistik utama

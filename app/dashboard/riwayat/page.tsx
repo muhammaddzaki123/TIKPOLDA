@@ -3,6 +3,10 @@
 import { prisma } from '@/lib/prisma';
 import { RiwayatPusatClient } from './RiwayatPusatClient'; // <-- Impor komponen client baru
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Definisikan tipe untuk searchParams agar lebih aman
 interface RiwayatPusatPageProps {
   searchParams: Promise<{

@@ -22,7 +22,7 @@ interface EnhancedRiwayat {
   tanggalMulai?: Date | null;
   tanggalSelesai?: Date | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  trackingStatus?: TrackingStatus;
+  trackingStatus?: TrackingStatus | null;
   fileUrl?: string | null;
   catatanAdmin?: string | null;
   estimasiSelesai?: Date | null;

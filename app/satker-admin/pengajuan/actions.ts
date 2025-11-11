@@ -3,7 +3,6 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { PrismaClient } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -224,7 +223,7 @@ export async function createPackagePengembalian(formData: FormData) {
     }
 
     // Create package return request in a transaction
-    await prisma.$transaction(async (tx: PrismaClient) => {
+    await prisma.$transaction(async (tx) => {
       // Create the main return request
       const returnRequest = await tx.pengajuanPengembalian.create({
         data: {

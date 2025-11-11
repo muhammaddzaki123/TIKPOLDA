@@ -6,6 +6,11 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { ApprovedLoanPackage } from '@/components/peminjaman/ReturnPackageForm';
 import PengajuanClient from './PengajuanClient';
+import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
+
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getData(satkerId: string) {
   const [
@@ -34,16 +39,22 @@ async function getData(satkerId: string) {
     prisma.peminjamanSatker.findMany({ where: { satkerId }, include: { ht: true } }),
   ]);
 
+  interface HtDetail {
+    id: string;
+    merk: string;
+    serialNumber: string;
+  }
+
   interface GroupedReturn {
     id: string;
     tipe: string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    trackingStatus: string;
+    trackingStatus: TrackingStatus | null;
     createdAt: Date;
     updatedAt: Date;
     alasan: string;
     catatanAdmin: string | null;
-    approvedHts: unknown[];
+    approvedHts: HtDetail[];
   }
 
   // --- PERUBAHAN LOGIKA PENGELOMPOKAN PENGEMBALIAN DIMULAI DI SINI ---
@@ -82,12 +93,12 @@ async function getData(satkerId: string) {
     id: string;
     tipe: string;
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    trackingStatus: string;
+    trackingStatus: TrackingStatus | null;
     createdAt: Date;
     updatedAt: Date;
     alasan?: string;
     catatanAdmin?: string | null;
-    approvedHts?: unknown[];
+    approvedHts?: HtDetail[];
     keperluan?: string;
     jumlah?: number;
     tanggalMulai?: Date | null;
@@ -144,11 +155,11 @@ async function getData(satkerId: string) {
     ...riwayatMutasi.map((m) => ({ 
       ...m, 
       tipe: 'Mutasi Personil', 
-      trackingStatus: m.status === 'APPROVED' ? 'DISETUJUI' : m.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM' 
+      trackingStatus: (m.status === 'APPROVED' ? 'DISETUJUI' : m.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM') as TrackingStatus
     })),
     ...riwayatPengembalianGrouped.map((r) => ({
       ...r,
-      trackingStatus: r.status === 'APPROVED' ? 'DISETUJUI' : r.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM'
+      trackingStatus: (r.status === 'APPROVED' ? 'DISETUJUI' : r.status === 'REJECTED' ? 'DITOLAK' : 'PENGAJUAN_DIKIRIM') as TrackingStatus
     })), // Gunakan data yang sudah dikelompokkan
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 

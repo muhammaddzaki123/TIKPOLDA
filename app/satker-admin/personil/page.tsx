@@ -8,6 +8,10 @@ import { PersonilDataTable } from './data-table';
 
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getPersonilSatker(satkerId: string) {
   const personil = await prisma.personil.findMany({
     where: { satkerId },
