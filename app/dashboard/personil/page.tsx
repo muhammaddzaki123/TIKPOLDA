@@ -1,11 +1,8 @@
-// app/dashboard/personil/page.tsx
-
 import { prisma } from '@/lib/prisma';
 import { columns } from './columns';
 import { PersonilDataTable } from './data-table';
 import { PersonilWithSatker } from '@/types/custom';
 
-// Force dynamic rendering to avoid Prisma prepared statement conflicts during build
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -28,7 +25,6 @@ async function getSatkerList() {
     });
 }
 
-// --- FUNGSI BARU UNTUK MENGAMBIL DAFTAR PENEMPATAN ---
 async function getPenempatanList() {
     const personilList = await prisma.personil.findMany({
         select: {
@@ -52,12 +48,11 @@ async function getPenempatanList() {
 
     return Array.from(penempatanSet).sort();
 }
-// --- AKHIR FUNGSI BARU ---
 
 export default async function PersonilManagementPage() {
   const personilData = await getPersonilData();
   const satkerList = await getSatkerList();
-  const penempatanList = await getPenempatanList(); // <-- Panggil fungsi baru
+  const penempatanList = await getPenempatanList();
 
   return (
     <div className="w-full space-y-4">
@@ -73,7 +68,7 @@ export default async function PersonilManagementPage() {
             columns={columns} 
             data={personilData} 
             satkerList={satkerList}
-            penempatanList={penempatanList} // <-- Kirim daftar penempatan ke komponen
+            penempatanList={penempatanList}
         />
       </div>
     </div>

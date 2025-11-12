@@ -94,17 +94,18 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
   const penempatanFilterValue = table.getColumn('penempatan')?.getFilterValue() as string ?? '';
 
   return (
-    <>
-      <div className="flex items-center py-4 gap-2 flex-wrap">
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center">
         {/* Filter Satker Induk */}
         <Popover open={openSatker} onOpenChange={setOpenSatker}>
           <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-[250px] justify-between">
+            <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-full justify-between md:w-[250px]">
               {satkerFilterValue ? satkerOptions.find(s => s.value === satkerFilterValue)?.label : "Filter Satker Induk..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0">
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
             <Command>
               <CommandInput placeholder="Cari Satker..." />
               <CommandList>
@@ -129,12 +130,12 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
         {/* Filter Penempatan */}
         <Popover open={openPenempatan} onOpenChange={setOpenPenempatan}>
           <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" aria-expanded={openPenempatan} className="w-[250px] justify-between">
+            <Button variant="outline" role="combobox" aria-expanded={openPenempatan} className="w-full justify-between md:w-[250px]">
               {penempatanFilterValue ? penempatanOptions.find(p => p.value === penempatanFilterValue)?.label : "Filter Penempatan..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[250px] p-0">
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
             <Command>
               <CommandInput placeholder="Cari Penempatan..." />
               <CommandList>
@@ -157,15 +158,14 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
         </Popover>
       </div>
 
-      <div className="rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden rounded-md border md:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
+                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
                 ))}
               </TableRow>
             ))}
@@ -175,41 +175,68 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada data personil.
-                </TableCell>
+                <TableCell colSpan={columns.length} className="h-24 text-center">Tidak ada data personil.</TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
 
-       <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
+      {/* Mobile Card View */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+            <div key={row.id} className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                    {/* Render the photo cell */}
+                    {row.getVisibleCells().map(cell => cell.column.id === 'foto' ? flexRender(cell.column.columnDef.cell, cell.getContext()) : null)}
+                </div>
+                <div className="flex-grow space-y-2">
+                    <p className="font-bold text-lg">{row.original.nama}</p>
+                    <div className="space-y-2 text-sm">
+                        <div>
+                            <p className="text-xs text-muted-foreground">NRP</p>
+                            <p className="font-mono">{row.original.nrp}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Penempatan</p>
+                            <p>{row.original.subSatker || row.original.satker.nama}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Jabatan</p>
+                            <p>{row.original.jabatan}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-shrink-0">
+                    {/* Render the action cell */}
+                    {row.getVisibleCells().map(cell => cell.column.id === 'actions' ? flexRender(cell.column.columnDef.cell, cell.getContext()) : null)}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-lg border bg-card p-4 text-center text-muted-foreground shadow-sm">Tidak ada data personil.</div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-center space-x-2 md:justify-end">
+        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
           Sebelumnya
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
+        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
           Selanjutnya
         </Button>
       </div>
+
 
       <Dialog open={isMutasiDialogOpen} onOpenChange={setIsMutasiDialogOpen}>
         <DialogContent>
@@ -246,6 +273,6 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
           </form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

@@ -68,10 +68,12 @@ export const columns: ColumnDef<PersonilWithSatker>[] = [
   {
     accessorKey: 'pangkat',
     header: 'Pangkat',
+    cell: ({ row }) => <div className="hidden sm:table-cell">{row.original.pangkat}</div>,
   },
   {
     accessorKey: 'jabatan',
     header: 'Jabatan',
+    cell: ({ row }) => <div className="hidden md:table-cell">{row.original.jabatan}</div>,
   },
   {
     id: 'actions',

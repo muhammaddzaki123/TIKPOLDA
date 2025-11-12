@@ -87,15 +87,14 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
           className="max-w-xs"
         />
       </div>
-      <div className="w-full overflow-x-auto rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
+                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
                 ))}
               </TableRow>
             ))}
@@ -105,9 +104,7 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
@@ -120,6 +117,41 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => (
+            <div key={row.id} className="rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Nama Admin</p>
+                    <p className="font-medium">{row.original.nama}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Satuan Kerja</p>
+                    <p className="font-medium">{row.original.satker?.nama || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="text-sm font-mono">{row.original.email}</p>
+                  </div>
+                </div>
+                {/* Render the action cell */}
+                {row.getVisibleCells().map((cell) => {
+                  if (cell.column.id === 'actions') {
+                    return <div key={cell.id} className="flex-shrink-0">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>;
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-lg border bg-card p-4 text-center shadow-sm">Belum ada data Admin Satker.</div>
+        )}
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
