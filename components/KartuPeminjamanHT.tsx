@@ -37,6 +37,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
           alt="Watermark Divisi TIK"
           layout="fill"
           objectFit="contain"
+          unoptimized
         />
       </div>
 
@@ -50,6 +51,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
               alt="Logo Polri"
               layout="fill"
               objectFit="contain"
+              unoptimized
             />
           </div>
           {/* Judul Tengah */}
@@ -64,6 +66,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
               alt="Logo Polda NTB"
               layout="fill"
               objectFit="contain"
+              unoptimized
             />
           </div>
         </div>
