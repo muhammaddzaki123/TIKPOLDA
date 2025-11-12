@@ -14,6 +14,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 import { columns, PeminjamanWithDetails } from './columns';
 import { Satker, Personil, HT } from '@prisma/client'; // Import tipe HT
+import { Badge } from '@/components/ui/badge';
 
 interface RiwayatInternalClientProps {
     riwayatData: PeminjamanWithDetails[];
@@ -57,10 +58,19 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
 
         return () => clearTimeout(handler);
     }, [htFilter, peminjamFilter, satkerFilter, pathname, router, searchParams]);
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        }).format(date);
+    };
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
                 
                 {/* Combobox untuk Serial Number HT */}
                 <Popover open={openHt} onOpenChange={setOpenHt}>
@@ -70,7 +80,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                             <CommandInput placeholder="Cari Serial Number..." />
                             <CommandList>
@@ -100,7 +110,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                             <CommandInput placeholder="Cari Nama Peminjam..." />
                             <CommandList>
@@ -130,7 +140,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                             <CommandInput placeholder="Cari Satker..." />
                             <CommandList>
@@ -153,37 +163,77 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                 </Popover>
             </div>
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                {/* Tampilan Tabel untuk Desktop */}
+                <div className="hidden md:block">
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
                                         ))}
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                                        Tidak ada data riwayat yang cocok dengan filter.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow key={row.id}>
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                                            Tidak ada data riwayat yang cocok dengan filter.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
+                        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
+                    </div>
                 </div>
-                 <div className="flex items-center justify-end space-x-2 py-4">
+
+                {/* Tampilan Kartu untuk Mobile */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {riwayatData.length > 0 ? (
+                        riwayatData.map((item) => (
+                            <div key={item.id} className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <span className="font-semibold text-slate-800">{item.personil.nama}</span>
+                                    {item.tanggalKembali ? (
+                                        <Badge variant="default">Sudah Kembali</Badge>
+                                    ) : (
+                                        <Badge variant="destructive">Dipinjam</Badge>
+                                    )}
+                                </div>
+                                
+                                <div className="text-sm text-slate-600 space-y-1">
+                                    <p><span className="font-medium text-slate-700">Satker:</span> {item.personil.satker.nama}</p>
+                                    <p><span className="font-medium text-slate-700">HT:</span> <span className="font-mono">{item.ht.serialNumber}</span></p>
+                                    <p><span className="font-medium text-slate-700">Tgl Pinjam:</span> {formatDate(item.tanggalPinjam.toString())}</p>
+                                    <p>
+                                        <span className="font-medium text-slate-700">Tgl Kembali:</span> 
+                                        {item.tanggalKembali ? formatDate(item.tanggalKembali.toString()) : ' -'}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-12 text-slate-500">
+                            <p>Tidak ada data riwayat yang cocok.</p>
+                        </div>
+                    )}
+                </div>
+                 {/* Navigasi Paginasi untuk Mobile (jika diperlukan) */}
+                 <div className="flex items-center justify-end space-x-2 pt-4 md:hidden">
                     <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
                     <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
                 </div>

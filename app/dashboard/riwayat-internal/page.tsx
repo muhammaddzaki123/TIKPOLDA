@@ -17,12 +17,9 @@ interface RiwayatInternalPageProps {
 }
 
 async function getRiwayatInternal(props: RiwayatInternalPageProps) {
-  // In Next.js 15+, searchParams is a promise-like object that needs to be awaited.
   const { q_ht, q_peminjam, satker } = await props.searchParams;
 
   const conditions: Prisma.PeminjamanWhereInput[] = [];
-
-  // Filter berdasarkan ID HT spesifik dari Combobox
   if (q_ht) {
     conditions.push({ htId: q_ht });
   }
@@ -66,7 +63,6 @@ async function getPersonilList() {
     return await prisma.personil.findMany({ orderBy: { nama: 'asc' }});
 }
 
-// Fungsi baru untuk mengambil semua HT
 async function getHtList() {
     return await prisma.hT.findMany({ orderBy: { serialNumber: 'asc' }});
 }
@@ -75,24 +71,26 @@ export default async function RiwayatInternalPage(props: RiwayatInternalPageProp
   const riwayatData = await getRiwayatInternal(props);
   const satkerList = await getSatkerList();
   const personilList = await getPersonilList();
-  const htList = await getHtList(); // Ambil daftar HT
+  const htList = await getHtList();
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Riwayat Internal (Satker ke Personil)</h1>
-          <p className="text-sm text-slate-600">
-            Jejak audit untuk semua transaksi peminjaman yang terjadi di dalam Satuan Kerja.
-          </p>
+    <div className="w-full space-y-4 bg-gray-50 p-4 sm:p-6">
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Riwayat Internal (Satker ke Personil)</h1>
+            <p className="text-sm text-slate-600">
+              Jejak audit untuk semua transaksi peminjaman yang terjadi di dalam Satuan Kerja.
+            </p>
+          </div>
         </div>
       </div>
       
-      <RiwayatInternalClient 
+      <RiwayatInternalClient
         riwayatData={riwayatData}
         satkerList={satkerList}
         personilList={personilList}
-        htList={htList} // Kirim daftar HT ke komponen client
+        htList={htList}
       />
     </div>
   );

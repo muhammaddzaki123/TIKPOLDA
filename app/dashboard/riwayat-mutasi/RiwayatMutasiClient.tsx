@@ -11,9 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { ChevronsUpDown, Check } from "lucide-react";
+import { ChevronsUpDown, Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { columns, RiwayatMutasiWithDetails } from './columns';
+import { Badge } from '@/components/ui/badge';
 
 interface RiwayatMutasiClientProps {
     riwayatData: RiwayatMutasiWithDetails[];
@@ -96,15 +97,28 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
 
         return () => clearTimeout(handler);
     }, [searchQuery, satkerAsalFilter, satkerTujuanFilter, pathname, router, searchParams]);
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+    };
+
+    const getStatusVariant = (status: 'APPROVED' | 'REJECTED' | 'PENDING') => {
+        switch (status) {
+            case 'APPROVED': return 'default';
+            case 'REJECTED': return 'destructive';
+            default: return 'secondary';
+        }
+    };
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
                 <Input
                     placeholder="Cari nama, nrp, atau alasan..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="max-w-sm"
+                    className="w-full sm:max-w-sm"
                 />
                 <SatkerCombobox 
                     value={satkerAsalFilter}
@@ -124,37 +138,78 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
                 />
             </div>
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                {/* Tampilan Tabel untuk Desktop */}
+                <div className="hidden md:block">
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
                                         ))}
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                                        Tidak ada data riwayat yang cocok dengan filter.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow key={row.id}>
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                                            Tidak ada data riwayat yang cocok dengan filter.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
+                        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
+                    </div>
                 </div>
-                 <div className="flex items-center justify-end space-x-2 py-4">
+
+                {/* Tampilan Kartu untuk Mobile */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {riwayatData.length > 0 ? (
+                        riwayatData.map((item) => (
+                            <div key={item.id} className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <span className="font-semibold text-slate-800">{item.personil.nama}</span>
+                                        <p className="text-sm text-slate-500 font-mono">{item.personil.nrp}</p>
+                                    </div>
+                                    <Badge variant={getStatusVariant(item.status)} className="whitespace-nowrap">
+                                        {item.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}
+                                    </Badge>
+                                </div>
+                                
+                                <div className="text-sm text-slate-600 space-y-2 pt-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-medium text-slate-700 truncate">{item.satkerAsal.nama}</span>
+                                        <ArrowRight className="h-4 w-4 text-slate-500 shrink-0" />
+                                        <span className="font-medium text-slate-700 truncate text-right">{item.satkerTujuan.nama}</span>
+                                    </div>
+                                    <p><span className="font-medium text-slate-700">Tgl Diproses:</span> {formatDate(item.updatedAt.toString())}</p>
+                                    <p className="truncate" title={item.alasan}><span className="font-medium text-slate-700">Alasan:</span> {item.alasan}</p>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-12 text-slate-500">
+                            <p>Tidak ada data riwayat mutasi yang cocok.</p>
+                        </div>
+                    )}
+                </div>
+                 {/* Navigasi Paginasi untuk Mobile */}
+                 <div className="flex items-center justify-end space-x-2 pt-4 md:hidden">
                     <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
                     <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
                 </div>

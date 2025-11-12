@@ -95,13 +95,15 @@ export default async function RiwayatPusatPage(props: RiwayatPusatPageProps) {
   const serializedSatkerList = JSON.parse(JSON.stringify(satkerList));
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Riwayat Peminjaman (Pusat ke Satker)</h1>
-          <p className="text-sm text-slate-600">
-            Jejak audit untuk semua aset yang dipinjamkan atau ditolak dari gudang pusat ke Satuan Kerja.
-          </p>
+    <div className="w-full space-y-4 bg-gray-50 p-4 sm:p-6">
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Riwayat Peminjaman (Pusat ke Satker)</h1>
+            <p className="text-sm text-slate-600">
+              Jejak audit untuk semua aset yang dipinjamkan atau ditolak dari gudang pusat ke Satuan Kerja.
+            </p>
+          </div>
         </div>
       </div>
       

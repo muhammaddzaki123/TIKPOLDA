@@ -58,13 +58,15 @@ export default async function RiwayatMutasiPage(props: RiwayatMutasiPageProps) {
   const satkerList = await getSatkerList();
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Riwayat Mutasi Personil</h1>
-          <p className="text-sm text-slate-600">
-            Jejak audit untuk semua permohonan pemindahan tugas personil antar Satuan Kerja.
-          </p>
+    <div className="w-full space-y-4 bg-gray-50 p-4 sm:p-6">
+      <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Riwayat Mutasi Personil</h1>
+            <p className="text-sm text-slate-600">
+              Jejak audit untuk semua permohonan pemindahan tugas personil antar Satuan Kerja.
+            </p>
+          </div>
         </div>
       </div>
       

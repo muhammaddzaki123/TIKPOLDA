@@ -64,23 +64,23 @@ export function RiwayatPusatClient({ riwayatData, satkerList }: RiwayatPusatClie
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                 <Input
                     placeholder="Cari keperluan atau nama satker..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="max-w-sm"
+                    className="w-full sm:max-w-sm"
                 />
 
                 {/* --- COMBOBOX UNTUK FILTER SATKER --- */}
                 <Popover open={openSatker} onOpenChange={setOpenSatker}>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-[220px] justify-between">
+                        <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-full justify-between sm:w-[220px]">
                         {satkerFilter ? satkerList.find((s) => s.id === satkerFilter)?.nama : "Filter Satker..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[220px] p-0">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                             <CommandInput placeholder="Cari Satker..." />
                             <CommandList>
