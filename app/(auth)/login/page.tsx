@@ -54,11 +54,11 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="grid min-h-screen w-full grid-cols-1 md:grid-cols-2">
-       <div className="flex items-center justify-center bg-gray-50 p-8">
-        <div className="w-full max-w-md space-y-8">
+    <main className="grid min-h-screen w-full grid-cols-1 lg:grid-cols-2">
+       <div className="flex items-center justify-center bg-gray-50 p-4 sm:p-6 md:p-8">
+        <div className="w-full max-w-md space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               Selamat Datang Kembali
             </h1>
             <p className="mt-2 text-sm text-slate-600">
@@ -104,7 +104,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-      <div className="hidden items-center justify-center bg-[#0d2436] p-10 md:flex">
+      <div className="hidden items-center justify-center bg-[#0d2436] p-10 lg:flex">
         <Image
           src="/gambarawal.svg"
           alt="POLDA NTB"

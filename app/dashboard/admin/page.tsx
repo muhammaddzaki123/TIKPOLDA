@@ -27,10 +27,10 @@ export default async function AdminManagementPage() {
   const adminData = await getAdminData();
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen Admin & Satker</h1>
+          <h1 className="text-xl font-bold md:text-2xl">Manajemen Admin & Satker</h1>
           <p className="text-sm text-slate-600">Kelola semua akun admin dan Satuan Kerja yang mereka kelola.</p>
         </div>
         <Dialog>
@@ -79,7 +79,7 @@ export default async function AdminManagementPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
+      <div className="rounded-lg border bg-white p-2 shadow-sm sm:p-4">
         <AdminDataTable columns={columns} data={adminData} />
       </div>
     </div>

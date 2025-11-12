@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { ColumnDef, flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from '@tanstack/react-table';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     meta: {
       openResetDialog: (user) => {
         setSelectedUser(user as TData);
@@ -78,7 +79,15 @@ export function AdminDataTable<TData extends AdminWithSatker, TValue>({
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Cari berdasarkan nama admin..."
+          value={(table.getColumn('nama')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('nama')?.setFilterValue(event.target.value)}
+          className="max-w-xs"
+        />
+      </div>
+      <div className="w-full overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

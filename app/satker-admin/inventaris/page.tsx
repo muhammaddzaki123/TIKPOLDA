@@ -44,9 +44,9 @@ export default async function InventarisSatkerPage() {
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen Inventaris HT</h1>
+          <h1 className="text-xl font-bold md:text-2xl">Manajemen Inventaris HT</h1>
           <p className="text-sm text-slate-600">Kelola semua aset HT di unit kerja Anda.</p>
         </div>
         
@@ -58,7 +58,7 @@ export default async function InventarisSatkerPage() {
               <DialogDescription>Masukkan detail lengkap untuk perangkat HT baru di unit Anda.</DialogDescription>
             </DialogHeader>
             <form action={addHtBySatker}>
-              <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 py-4 sm:grid-cols-2">
                 <div className="space-y-2"><Label htmlFor="serialNumber">Serial Number</Label><Input id="serialNumber" name="serialNumber" required /></div>
                 <div className="space-y-2"><Label htmlFor="merk">Merk HT</Label><Input id="merk" name="merk" required /></div>
                 <div className="space-y-2"><Label htmlFor="jenis">Jenis HT</Label><Input id="jenis" name="jenis" required /></div>
@@ -73,7 +73,7 @@ export default async function InventarisSatkerPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
+      <div className="rounded-lg border bg-white p-2 shadow-sm sm:p-4">
         <InventarisDataTable columns={columns} data={inventarisData} />
       </div>
     </div>

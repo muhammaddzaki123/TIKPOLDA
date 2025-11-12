@@ -61,7 +61,7 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
         {/* Bagian Kartu Statistik Utama */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-slate-700">Ringkasan Sistem</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard title="Total Satuan Kerja" value={stats.satkerCount.toString()} icon={Building} color="bg-blue-500" />
             <StatCard title="Total Personil" value={stats.personilCount.toString()} icon={Users} color="bg-cyan-500" />
             {/* Kartu Total HT dibuat bisa diklik */}
@@ -76,7 +76,7 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
         {/* Bagian Kartu Status HT */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-slate-700">Status Aset HT</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <DialogTrigger asChild onClick={() => handleCardClick('Daftar HT Tersedia', htData.htTersedia)}>
               <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Tersedia" value={stats.tersediaCount.toString()} icon={CheckCircle} color="bg-green-500" /></div>
             </DialogTrigger>
@@ -94,11 +94,11 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
       </div>
 
       {/* Konten Dialog yang akan muncul */}
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[90vh] sm:h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto pr-4">
+        <div className="flex-grow overflow-y-auto pr-2">
           {dialogTitle === 'Total Unit HT Berdasarkan Merek' ? (
             // Tampilan khusus untuk kartu Total HT
             <Table>
@@ -111,30 +111,32 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
             </Table>
           ) : (
             // Tampilan tabel umum untuk kartu lainnya
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Serial Number</TableHead>
-                  <TableHead>Merek</TableHead>
-                  <TableHead>Penempatan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Pemegang</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dialogData.length > 0 ? dialogData.map(ht => (
-                  <TableRow key={ht.id}>
-                    <TableCell className="font-mono">{ht.serialNumber}</TableCell>
-                    <TableCell>{ht.merk}</TableCell>
-                    <TableCell>{ht.satker?.nama || 'Gudang Pusat'}</TableCell>
-                    <TableCell><Badge variant={ht.status !== 'BAIK' ? 'destructive' : 'outline'}>{ht.status.replace('_', ' ')}</Badge></TableCell>
-                    <TableCell>{ht.peminjaman[0]?.personil.nama || '-'}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Serial Number</TableHead>
+                    <TableHead>Merek</TableHead>
+                    <TableHead>Penempatan</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Pemegang</TableHead>
                   </TableRow>
-                )) : (
-                  <TableRow><TableCell colSpan={5} className="h-24 text-center">Tidak ada data untuk ditampilkan.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {dialogData.length > 0 ? dialogData.map(ht => (
+                    <TableRow key={ht.id}>
+                      <TableCell className="font-mono">{ht.serialNumber}</TableCell>
+                      <TableCell>{ht.merk}</TableCell>
+                      <TableCell>{ht.satker?.nama || 'Gudang Pusat'}</TableCell>
+                      <TableCell><Badge variant={ht.status !== 'BAIK' ? 'destructive' : 'outline'}>{ht.status.replace('_', ' ')}</Badge></TableCell>
+                      <TableCell>{ht.peminjaman[0]?.personil.nama || '-'}</TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow><TableCell colSpan={5} className="h-24 text-center">Tidak ada data untuk ditampilkan.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
       </DialogContent>

@@ -69,10 +69,10 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
           placeholder="Cari berdasarkan Serial Number..."
           value={(table.getColumn('serialNumber')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('serialNumber')?.setFilterValue(event.target.value)}
-          className="max-w-sm"
+          className="max-w-xs"
         />
       </div>
-      <div className="rounded-md border">
+      <div className="w-full overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

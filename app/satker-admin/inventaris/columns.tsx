@@ -20,10 +20,13 @@ export const columns: ColumnDef<HtWithPeminjaman>[] = [
   {
     accessorKey: 'serialNumber',
     header: 'Serial Number',
+    cell: ({ row }) => <span className="font-mono">{row.original.serialNumber}</span>,
   },
   {
     accessorKey: 'merk',
     header: 'Merk',
+    // Sembunyikan di layar kecil
+    cell: ({ row }) => <span className="hidden sm:table-cell">{row.original.merk}</span>,
   },
   {
     id: 'statusPeminjaman',
@@ -33,27 +36,28 @@ export const columns: ColumnDef<HtWithPeminjaman>[] = [
       return isDipinjam ? (
         <Badge variant="destructive">Dipinjam</Badge>
       ) : (
-        <Badge variant="default">Tersedia</Badge>
+        <Badge variant="default" className="bg-green-600">Tersedia</Badge>
       );
     },
   },
   {
     accessorKey: 'status',
-    header: 'Kondisi Fisik',
+    header: 'Kondisi',
+    // Sembunyikan di layar sangat kecil
     cell: ({ row }) => {
       const status = row.original.status;
       let variant: 'outline' | 'secondary' | 'destructive' = 'outline';
       if (status === 'RUSAK_RINGAN' || status === 'RUSAK_BERAT') variant = 'secondary';
       if (status === 'HILANG') variant = 'destructive';
-      return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
+      return <Badge variant={variant} className="hidden md:inline-flex">{status.replace('_', ' ')}</Badge>;
     },
   },
   {
     id: 'pemegang',
-    header: 'Pemegang Saat Ini',
+    header: 'Pemegang',
     cell: ({ row }) => {
       const pemegang = row.original.peminjaman[0]?.personil;
-      return pemegang ? pemegang.nama : '-';
+      return <span className="hidden lg:table-cell">{pemegang ? pemegang.nama : '-'}</span>;
     },
   },
   {

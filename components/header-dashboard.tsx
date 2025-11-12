@@ -1,8 +1,6 @@
-// components/header-dashboard.tsx
-
 'use client';
 
-import { UserCircle, LogOut } from 'lucide-react';
+import { UserCircle, LogOut, Menu } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -15,33 +13,35 @@ import {
 import { Button } from './ui/button';
 import NotificationBell from './notifications/NotificationBell';
 
-export default function HeaderDashboard() {
+interface HeaderDashboardProps {
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (isOpen: boolean) => void;
+}
+
+export default function HeaderDashboard({ isSidebarOpen, setIsSidebarOpen }: HeaderDashboardProps) {
   const { data: session } = useSession();
 
-  // Fungsi ini akan menghancurkan sesi dan mengarahkan pengguna
-  // ke halaman login. URL lengkap akan dibangun secara aman
-  // oleh NextAuth menggunakan variabel NEXTAUTH_URL.
   const handleLogout = async () => {
     await signOut({
-      callbackUrl: '/login', // Setelah logout, kembali ke halaman login
-      redirect: true,        // Pastikan redirect terjadi
+      callbackUrl: '/login',
+      redirect: true,
     });
   };
 
   return (
-    <header className="flex items-center justify-between border-b bg-white p-4 shadow-sm">
-      <div>
-        <h1 className="text-xl font-bold text-slate-800">
-          Dashboard {session?.user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin Satker'}
-        </h1>
-        {session?.user?.role === 'ADMIN_SATKER' && session?.user?.satker && (
-          <p className="text-sm text-slate-600 mt-1">
-            {session.user.satker.nama}
-          </p>
-        )}
+    <header className="flex items-center justify-between border-b bg-white p-4 shadow-sm md:justify-end">
+      {/* Tombol Hamburger untuk Mobile */}
+      <div className="flex items-center md:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
       </div>
+
       <div className="flex items-center space-x-4">
-        {/* Komponen Notifikasi */}
         <NotificationBell />
 
         <DropdownMenu>
@@ -61,7 +61,7 @@ export default function HeaderDashboard() {
               Profil
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={handleLogout} // Panggil fungsi logout
+              onClick={handleLogout}
               className="text-red-600 focus:bg-red-50 focus:text-red-700"
             >
               <LogOut className="mr-2 h-4 w-4" />

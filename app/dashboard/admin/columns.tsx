@@ -23,16 +23,17 @@ export const columns: ColumnDef<AdminWithSatker>[] = [
   {
     accessorKey: 'satker.nama',
     header: 'Satuan Kerja Dikelola',
-    cell: ({ row }) => row.original.satker?.nama || '-',
+    cell: ({ row }) => <span className="hidden sm:table-cell">{row.original.satker?.nama || '-'}</span>,
   },
   {
     accessorKey: 'email',
     header: 'Email',
+    cell: ({ row }) => <span className="hidden md:table-cell">{row.original.email}</span>,
   },
   {
     accessorKey: 'createdAt',
     header: 'Tanggal Dibuat',
-    cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }),
+    cell: ({ row }) => <span className="hidden lg:table-cell">{new Date(row.getValue('createdAt')).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>,
   },
   {
     id: 'actions',
