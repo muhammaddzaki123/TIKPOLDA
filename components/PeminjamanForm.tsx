@@ -75,14 +75,14 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Formulir Peminjaman Baru</CardTitle>
+        <CardTitle className="text-base sm:text-lg">Formulir Peminjaman Baru</CardTitle>
       </CardHeader>
       <CardContent>
-        <form id="form-peminjaman-internal" onSubmit={handleSubmit} className="space-y-6">
+        <form id="form-peminjaman-internal" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="htId">Pilih HT yang Tersedia</Label>
+            <Label htmlFor="htId" className="text-xs sm:text-sm">Pilih HT yang Tersedia</Label>
             <Select name="htId" required>
-              <SelectTrigger><SelectValue placeholder="Pilih Kode HT..." /></SelectTrigger>
+              <SelectTrigger className="text-xs sm:text-sm"><SelectValue placeholder="Pilih Kode HT..." /></SelectTrigger>
               <SelectContent>
                 {htTersedia.length > 0 ? (
                   htTersedia.map((ht) => (
@@ -95,9 +95,9 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="personilId">Pilih Personil Peminjam</Label>
+            <Label htmlFor="personilId" className="text-xs sm:text-sm">Pilih Personil Peminjam</Label>
             <Select name="personilId" required>
-              <SelectTrigger><SelectValue placeholder="Pilih Nama Personil..." /></SelectTrigger>
+              <SelectTrigger className="text-xs sm:text-sm"><SelectValue placeholder="Pilih Nama Personil..." /></SelectTrigger>
               <SelectContent>
                 {personilList.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.nama} - {p.nrp}</SelectItem>
@@ -108,17 +108,17 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
 
           {/* --- INPUT DATE PICKER UNTUK ESTIMASI PENGEMBALIAN --- */}
           <div className="space-y-2">
-            <Label htmlFor="estimasiKembali">Estimasi Pengembalian</Label>
+            <Label htmlFor="estimasiKembali" className="text-xs sm:text-sm">Estimasi Pengembalian</Label>
             <Popover>
                 <PopoverTrigger asChild>
                     <Button
                         variant={"outline"}
                         className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-normal text-xs sm:text-sm",
                         !estimasiKembali && "text-muted-foreground"
                         )}
                     >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         {estimasiKembali ? format(estimasiKembali, "PPP", { locale: id }) : <span>Pilih tanggal</span>}
                     </Button>
                 </PopoverTrigger>
@@ -135,19 +135,19 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kondisiSaatPinjam">Kondisi HT Saat Dipinjam</Label>
-            <Textarea id="kondisiSaatPinjam" name="kondisiSaatPinjam" placeholder="Contoh: Kondisi fisik baik, baterai penuh, lengkap dengan charger." required />
+            <Label htmlFor="kondisiSaatPinjam" className="text-xs sm:text-sm">Kondisi HT Saat Dipinjam</Label>
+            <Textarea id="kondisiSaatPinjam" name="kondisiSaatPinjam" placeholder="Contoh: Kondisi fisik baik, baterai penuh, lengkap dengan charger." className="text-xs sm:text-sm" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="catatan">Catatan Tambahan (Opsional)</Label>
-            <Textarea id="catatan" name="catatan" placeholder="Catatan jika ada..." />
+            <Label htmlFor="catatan" className="text-xs sm:text-sm">Catatan Tambahan (Opsional)</Label>
+            <Textarea id="catatan" name="catatan" placeholder="Catatan jika ada..." className="text-xs sm:text-sm" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="file">Unggah SPRINT (PDF)</Label>
-            <Input id="file" name="file" type="file" accept=".pdf" />
+            <Label htmlFor="file" className="text-xs sm:text-sm">Unggah SPRINT (PDF)</Label>
+            <Input id="file" name="file" type="file" accept=".pdf" className="text-xs sm:text-sm" />
             <p className="text-xs text-muted-foreground">Opsional. Ukuran file maksimal 2MB.</p>
           </div>
-          <Button type="submit" className="w-full" disabled={isPending || htTersedia.length === 0}>
+          <Button type="submit" className="w-full text-xs sm:text-sm" disabled={isPending || htTersedia.length === 0}>
             {isPending ? 'Memproses...' : 'Catat Peminjaman'}
           </Button>
         </form>

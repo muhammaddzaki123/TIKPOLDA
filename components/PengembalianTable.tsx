@@ -70,17 +70,18 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
 
   return (
     <>
-      <div className="rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Serial Number</TableHead>
-              <TableHead>Peminjam</TableHead>
-              <TableHead>Tgl Pinjam</TableHead>
-              <TableHead>Batas Kembali</TableHead>
-              <TableHead>Sprint</TableHead>
-              <TableHead>Kartu</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead className="text-xs sm:text-sm">Serial Number</TableHead>
+              <TableHead className="text-xs sm:text-sm">Peminjam</TableHead>
+              <TableHead className="text-xs sm:text-sm">Tgl Pinjam</TableHead>
+              <TableHead className="text-xs sm:text-sm">Batas Kembali</TableHead>
+              <TableHead className="text-xs sm:text-sm">Sprint</TableHead>
+              <TableHead className="text-xs sm:text-sm">Kartu</TableHead>
+              <TableHead className="text-right text-xs sm:text-sm">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,32 +95,32 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
 
                 return (
                   <TableRow key={peminjaman.id} className={cn(isOverdue && "bg-red-50 text-red-900")}>
-                    <TableCell className="font-medium">{peminjaman.ht.serialNumber}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{peminjaman.ht.serialNumber}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">
                       <div>{peminjaman.personil.nama}</div>
-                      <div className="text-xs text-muted-foreground">{peminjaman.personil.nrp}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground">{peminjaman.personil.nrp}</div>
                     </TableCell>
-                    <TableCell>{format(new Date(peminjaman.tanggalPinjam), 'dd MMM yyyy', { locale: id })}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{format(new Date(peminjaman.tanggalPinjam), 'dd MMM yyyy', { locale: id })}</TableCell>
                     
                     {/*
                       PERUBAHAN DI SINI:
                       - Tampilkan tanggal jika ada, atau tampilkan placeholder jika null.
                     */}
-                    <TableCell className={cn(isOverdue && "font-bold")}>
+                    <TableCell className={cn("text-xs sm:text-sm", isOverdue && "font-bold")}>
                       {peminjaman.estimasiKembali 
                         ? format(new Date(peminjaman.estimasiKembali), 'dd MMM yyyy', { locale: id }) 
-                        : <span className="text-xs text-muted-foreground">-</span>}
+                        : <span className="text-[10px] sm:text-xs text-muted-foreground">-</span>}
                     </TableCell>
                     
                     <TableCell>
                       {peminjaman.fileUrl ? (
-                        <Button variant="outline" size="sm" className="h-8" asChild>
+                        <Button variant="outline" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs" asChild>
                           <Link href={peminjaman.fileUrl} target="_blank" rel="noopener noreferrer">
-                            <FileText className="mr-2 h-3 w-3" /> PDF
+                            <FileText className="mr-1 h-3 w-3" /> PDF
                           </Link>
                         </Button>
                       ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     
@@ -127,7 +128,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                        className="h-7 sm:h-8 text-[10px] sm:text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                         onClick={() => openKartuModal(peminjaman)}
                       >
                         Lihat Kartu
@@ -135,7 +136,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                     </TableCell>
                     
                     <TableCell className="text-right">
-                      <Button size="sm" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
+                      <Button size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs" onClick={() => openDialog(peminjaman)}>Kembalikan</Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -151,25 +152,100 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
         </Table>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {data.length > 0 ? (
+          data.map((peminjaman) => {
+            const isOverdue = peminjaman.estimasiKembali ? new Date() > new Date(peminjaman.estimasiKembali) : false;
+            
+            return (
+              <div key={peminjaman.id} className={cn(
+                "rounded-lg border p-3 space-y-3 shadow-sm",
+                isOverdue && "bg-red-50 border-red-200"
+              )}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm">{peminjaman.ht.serialNumber}</h3>
+                    <p className="text-xs text-muted-foreground">{peminjaman.ht.merk}</p>
+                  </div>
+                  {isOverdue && (
+                    <span className="text-[10px] px-2 py-0.5 bg-red-100 text-red-700 rounded font-medium">Terlambat</span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-muted-foreground mb-0.5">Peminjam</p>
+                    <p className="font-medium">{peminjaman.personil.nama}</p>
+                    <p className="text-[10px] text-muted-foreground">{peminjaman.personil.nrp}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-0.5">Tgl Pinjam</p>
+                    <p className="font-medium">{format(new Date(peminjaman.tanggalPinjam), 'dd MMM yyyy', { locale: id })}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-0.5">Batas Kembali</p>
+                    <p className={cn("font-medium", isOverdue && "text-red-700 font-bold")}>
+                      {peminjaman.estimasiKembali 
+                        ? format(new Date(peminjaman.estimasiKembali), 'dd MMM yyyy', { locale: id }) 
+                        : '-'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {peminjaman.fileUrl && (
+                    <Button variant="outline" size="sm" className="w-full text-xs h-8" asChild>
+                      <Link href={peminjaman.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <FileText className="mr-1 h-3 w-3" /> Lihat Sprint PDF
+                      </Link>
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-xs h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                    onClick={() => openKartuModal(peminjaman)}
+                  >
+                    Lihat Kartu Peminjaman
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="w-full text-xs h-8"
+                    onClick={() => openDialog(peminjaman)}
+                  >
+                    Kembalikan HT
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-sm text-muted-foreground border rounded-lg">
+            Tidak ada HT yang sedang dipinjam.
+          </div>
+        )}
+      </div>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Formulir Pengembalian HT</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Formulir Pengembalian HT</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Anda akan mencatat pengembalian untuk HT <strong>{selectedPeminjaman?.ht.serialNumber}</strong> oleh <strong>{selectedPeminjaman?.personil.nama}</strong>.
             </DialogDescription>
           </DialogHeader>
           <form action={handleSubmit}>
             <input type="hidden" name="peminjamanId" value={selectedPeminjaman?.id ?? ''} />
-            <div className="py-4 space-y-4">
+            <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="kondisiSaatKembali">Kondisi HT Saat Dikembalikan</Label>
-                <Textarea id="kondisiSaatKembali" name="kondisiSaatKembali" placeholder="Contoh: Kondisi baik, lengkap dengan charger." required />
+                <Label htmlFor="kondisiSaatKembali" className="text-xs sm:text-sm">Kondisi HT Saat Dikembalikan</Label>
+                <Textarea id="kondisiSaatKembali" name="kondisiSaatKembali" placeholder="Contoh: Kondisi baik, lengkap dengan charger." className="text-xs sm:text-sm" required />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Batal</Button>
-              <Button type="submit" disabled={isPending}>{isPending ? 'Memproses...' : 'Catat Pengembalian'}</Button>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto text-xs sm:text-sm">Batal</Button>
+              <Button type="submit" disabled={isPending} className="w-full sm:w-auto text-xs sm:text-sm">{isPending ? 'Memproses...' : 'Catat Pengembalian'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

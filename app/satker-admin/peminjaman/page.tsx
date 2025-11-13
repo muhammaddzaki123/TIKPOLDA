@@ -61,15 +61,15 @@ export default async function PeminjamanPage() {
   const { htDipinjam, htTersedia, personilList } = await getData(satkerId);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Peminjaman & Pengembalian HT</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Peminjaman & Pengembalian HT</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">
           Catat transaksi peminjaman dan pengembalian aset HT di unit kerja Anda.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Kolom Kiri: Form Peminjaman */}
         <div className="lg:col-span-1">
           <PeminjamanForm htTersedia={htTersedia} personilList={personilList} />
@@ -79,7 +79,7 @@ export default async function PeminjamanPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Daftar HT Sedang Dipinjam</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Daftar HT Sedang Dipinjam</CardTitle>
             </CardHeader>
             <CardContent>
               <PengembalianTable data={htDipinjam} />

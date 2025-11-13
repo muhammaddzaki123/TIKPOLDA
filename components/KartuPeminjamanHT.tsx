@@ -22,118 +22,129 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
   return (
     <div
       id="kartu-peminjaman"
-      className="relative w-full max-w-3xl mx-auto bg-[#3E2723] text-white rounded-xl shadow-2xl shadow-black/50 overflow-hidden border-2 border-yellow-800/50"
-      style={{ aspectRatio: '1.586 / 1', minHeight: '360px' }} // Rasio KTP/SIM, ukuran lebih besar
+      className="relative mx-auto overflow-hidden"
+      style={{ 
+        width: '323px',
+        height: '220px',
+        background: 'linear-gradient(to bottom, #1a4d9e 0%, #2563eb 100%)',
+        borderRadius: '6px',
+        fontFamily: 'Arial, sans-serif'
+      }}
     >
-      {/* Latar Belakang dengan Pola Halus */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20"
-      ></div>
-
-      {/* Watermark Logo TIK di tengah */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 opacity-5 pointer-events-none">
-        <Image
-          src="/tik.png"
-          alt="Watermark Divisi TIK"
-          layout="fill"
-          objectFit="contain"
-          unoptimized
-        />
+      {/* Background Pattern - Subtle */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,0.1) 8px, rgba(255,255,255,0.1) 16px)',
+        }}></div>
       </div>
 
-      <div className="relative z-10 h-full flex flex-col">
+      <div className="relative z-10 h-full flex flex-col text-white">
         {/* Header Kartu */}
-        <div className="bg-black/30 px-6 py-3 flex items-center justify-between border-b-2 border-yellow-700">
+        <div className="bg-blue-800 px-3 py-2 flex items-center justify-between border-b-2 border-yellow-400">
           {/* Logo Polri Kiri */}
-          <div className="w-16 h-16 relative">
+          <div className="w-10 h-10 relative shrink-0">
             <Image
               src="/polri.png"
               alt="Logo Polri"
-              layout="fill"
-              objectFit="contain"
+              width={40}
+              height={40}
+              className="object-contain"
               unoptimized
+              priority
             />
           </div>
           {/* Judul Tengah */}
-          <div className="text-center">
-            <h2 className="text-xl font-bold tracking-wider text-yellow-500">KARTU PEMINJAMAN</h2>
-            <p className="text-lg opacity-90 font-semibold">ALAT KOMUNIKASI HT</p>
+          <div className="text-center flex-1 mx-2">
+            <h2 className="text-sm font-extrabold tracking-wide text-yellow-300 uppercase leading-tight">
+              POLDA NUSA TENGGARA BARAT
+            </h2>
           </div>
           {/* Logo Polda Kanan */}
-          <div className="w-16 h-16 relative">
+          <div className="w-10 h-10 relative shrink-0">
             <Image
               src="/polda.png"
               alt="Logo Polda NTB"
-              layout="fill"
-              objectFit="contain"
+              width={40}
+              height={40}
+              className="object-contain"
               unoptimized
+              priority
             />
           </div>
         </div>
 
         {/* Konten Utama */}
-        <div className="flex-1 px-6 py-4 flex">
+        <div className="flex-1 px-3 py-3 flex gap-3">
           {/* Foto Personil */}
-          <div className="flex-shrink-0 mr-6">
-            <div className="w-28 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-yellow-600/60 p-1">
+          <div className="flex-shrink-0">
+            <div className="w-20 h-24 bg-white rounded overflow-hidden border-2 border-gray-200">
               {personil.fotoUrl ? (
                 <Image
                   src={personil.fotoUrl}
                   alt={`Foto ${personil.nama}`}
-                  width={112}
-                  height={144}
-                  className="w-full h-full object-cover rounded-md"
+                  width={80}
+                  height={96}
+                  className="w-full h-full object-cover"
                   unoptimized
+                  priority
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">
-                  No Photo
+                <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-xs font-semibold">
+                  NO PHOTO
                 </div>
               )}
             </div>
           </div>
 
           {/* Data Personil dan HT */}
-          <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-2 text-base">
+          <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
             {/* Kolom Kiri */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">NAMA</p>
-                <p className="font-semibold text-lg leading-tight">{personil.nama}</p>
+                <p className="text-[10px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Nama Personil</p>
+                <p className="font-bold text-sm leading-tight text-white">{personil.nama}</p>
               </div>
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">NRP / PANGKAT</p>
-                <p className="font-medium leading-tight">{personil.nrp} / {personil.pangkat}</p>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">NRP</p>
+                <p className="font-semibold text-xs leading-tight text-white">{personil.nrp}</p>
               </div>
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">JABATAN</p>
-                <p className="font-medium leading-tight">{personil.jabatan}</p>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Jabatan</p>
+                <p className="font-medium text-xs leading-tight text-white">{personil.jabatan}</p>
               </div>
             </div>
 
             {/* Kolom Kanan */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">SERIAL NUMBER</p>
-                <p className="font-bold text-lg leading-tight">{ht.serialNumber}</p>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Pangkat</p>
+                <p className="font-semibold text-xs leading-tight text-white">{personil.pangkat}</p>
               </div>
               <div>
-                <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">MERK / JENIS</p>
-                <p className="font-medium leading-tight">{ht.merk} - {ht.jenis}</p>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Serial Number</p>
+                <p className="font-bold text-sm leading-tight text-yellow-200">{ht.serialNumber}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-1">
+              <div>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Merk</p>
+                <p className="font-semibold text-xs leading-tight text-white">{ht.merk}</p>
+              </div>
+            </div>
+
+            {/* Baris Bawah - Full Width */}
+            <div className="col-span-2 mt-1 pt-2 border-t border-white/20">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">TGL PINJAM</p>
-                  <p className="font-semibold text-white leading-tight">
-                    {format(new Date(tanggalPinjam), 'dd MMM yyyy', { locale: id })}
+                  <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Tgl Pinjam</p>
+                  <p className="font-semibold text-xs leading-tight text-white">
+                    {format(new Date(tanggalPinjam), 'dd/MM/yyyy', { locale: id })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-yellow-500/80 leading-tight tracking-wider">BATAS WAKTU</p>
-                  <p className="font-bold text-yellow-400 leading-tight">
+                  <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Batas Kembali</p>
+                  <p className="font-bold text-xs leading-tight text-red-300">
                     {estimasiKembali
-                      ? format(new Date(estimasiKembali), 'dd MMM yyyy', { locale: id })
-                      : 'Tidak ditentukan'}
+                      ? format(new Date(estimasiKembali), 'dd/MM/yyyy', { locale: id })
+                      : '-'}
                   </p>
                 </div>
               </div>
@@ -142,9 +153,9 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
         </div>
 
         {/* Footer */}
-        <div className="bg-black/30 px-6 py-2 border-t-2 border-yellow-700">
-          <p className="text-sm text-center text-white/80 font-medium">
-            Kartu ini merupakan bukti peminjaman resmi dan wajib dijaga
+        <div className="bg-blue-800 px-3 py-1.5 border-t-2 border-yellow-400">
+          <p className="text-[9px] text-center text-yellow-200 font-semibold tracking-wide uppercase">
+            Divisi TIK Polda NTB • Kartu Bukti Peminjaman Resmi
           </p>
         </div>
       </div>
