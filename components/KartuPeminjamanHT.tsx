@@ -40,14 +40,14 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
 
       <div className="relative z-10 h-full flex flex-col text-white">
         {/* Header Kartu */}
-        <div className="bg-blue-800 px-3 py-2 flex items-center justify-between border-b-2 border-yellow-400">
+        <div className="bg-blue-800 px-3 py-1.5 flex items-center justify-between border-b-2 border-yellow-400">
           {/* Logo Polri Kiri */}
-          <div className="w-10 h-10 relative shrink-0">
+          <div className="w-9 h-9 relative shrink-0">
             <Image
               src="/polri.png"
               alt="Logo Polri"
-              width={40}
-              height={40}
+              width={36}
+              height={36}
               className="object-contain"
               unoptimized
               priority
@@ -55,17 +55,17 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
           </div>
           {/* Judul Tengah */}
           <div className="text-center flex-1 mx-2">
-            <h2 className="text-sm font-extrabold tracking-wide text-yellow-300 uppercase leading-tight">
+            <h2 className="text-[13px] font-extrabold tracking-wide text-yellow-300 uppercase leading-tight">
               POLDA NUSA TENGGARA BARAT
             </h2>
           </div>
           {/* Logo Polda Kanan */}
-          <div className="w-10 h-10 relative shrink-0">
+          <div className="w-9 h-9 relative shrink-0">
             <Image
               src="/polda.png"
               alt="Logo Polda NTB"
-              width={40}
-              height={40}
+              width={36}
+              height={36}
               className="object-contain"
               unoptimized
               priority
@@ -74,16 +74,16 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
         </div>
 
         {/* Konten Utama */}
-        <div className="flex-1 px-3 py-3 flex gap-3">
+        <div className="flex-1 px-3 py-2.5 flex gap-3">
           {/* Foto Personil */}
           <div className="flex-shrink-0">
-            <div className="w-20 h-24 bg-white rounded overflow-hidden border-2 border-gray-200">
+            <div className="w-[70px] h-[88px] bg-white rounded overflow-hidden border-2 border-gray-200">
               {personil.fotoUrl ? (
                 <Image
                   src={personil.fotoUrl}
                   alt={`Foto ${personil.nama}`}
-                  width={80}
-                  height={96}
+                  width={70}
+                  height={88}
                   className="w-full h-full object-cover"
                   unoptimized
                   priority
@@ -97,51 +97,51 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
           </div>
 
           {/* Data Personil dan HT */}
-          <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2">
+          <div className="flex-1 grid grid-cols-2 gap-x-3 gap-y-1.5">
             {/* Kolom Kiri */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div>
-                <p className="text-[10px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Nama Personil</p>
-                <p className="font-bold text-sm leading-tight text-white">{personil.nama}</p>
+                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Nama Personil</p>
+                <p className="font-bold text-[13px] leading-tight text-white">{personil.nama}</p>
               </div>
               <div>
-                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">NRP</p>
-                <p className="font-semibold text-xs leading-tight text-white">{personil.nrp}</p>
+                <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">NRP</p>
+                <p className="font-semibold text-[11px] leading-tight text-white">{personil.nrp}</p>
               </div>
               <div>
-                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Jabatan</p>
-                <p className="font-medium text-xs leading-tight text-white">{personil.jabatan}</p>
+                <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Jabatan</p>
+                <p className="font-medium text-[11px] leading-tight text-white">{personil.jabatan}</p>
               </div>
             </div>
 
             {/* Kolom Kanan */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div>
-                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Pangkat</p>
-                <p className="font-semibold text-xs leading-tight text-white">{personil.pangkat}</p>
+                <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Pangkat</p>
+                <p className="font-semibold text-[11px] leading-tight text-white">{personil.pangkat}</p>
               </div>
               <div>
-                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Serial Number</p>
-                <p className="font-bold text-sm leading-tight text-yellow-200">{ht.serialNumber}</p>
+                <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Serial Number</p>
+                <p className="font-bold text-[13px] leading-tight text-yellow-200">{ht.serialNumber}</p>
               </div>
               <div>
-                <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Merk</p>
-                <p className="font-semibold text-xs leading-tight text-white">{ht.merk}</p>
+                <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Merk</p>
+                <p className="font-semibold text-[11px] leading-tight text-white">{ht.merk}</p>
               </div>
             </div>
 
             {/* Baris Bawah - Full Width */}
-            <div className="col-span-2 mt-1 pt-2 border-t border-white/20">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 mt-0.5 pt-1.5 border-t border-white/20">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Tgl Pinjam</p>
-                  <p className="font-semibold text-xs leading-tight text-white">
+                  <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Tgl Pinjam</p>
+                  <p className="font-semibold text-[11px] leading-tight text-white">
                     {format(new Date(tanggalPinjam), 'dd/MM/yyyy', { locale: id })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[9px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Batas Kembali</p>
-                  <p className="font-bold text-xs leading-tight text-red-300">
+                  <p className="text-[8px] text-yellow-300 font-bold uppercase tracking-wide mb-0.5">Batas Kembali</p>
+                  <p className="font-bold text-[11px] leading-tight text-red-300">
                     {estimasiKembali
                       ? format(new Date(estimasiKembali), 'dd/MM/yyyy', { locale: id })
                       : '-'}
@@ -153,8 +153,8 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
         </div>
 
         {/* Footer */}
-        <div className="bg-blue-800 px-3 py-1.5 border-t-2 border-yellow-400">
-          <p className="text-[9px] text-center text-yellow-200 font-semibold tracking-wide uppercase">
+        <div className="bg-blue-800 px-3 py-1 border-t-2 border-yellow-400">
+          <p className="text-[8.5px] text-center text-yellow-200 font-semibold tracking-wide uppercase">
             Divisi TIK Polda NTB • Kartu Bukti Peminjaman Resmi
           </p>
         </div>
