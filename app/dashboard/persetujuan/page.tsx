@@ -9,12 +9,6 @@ export const revalidate = 0;
 
 async function getPengajuanData() {
   const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
-    where: { 
-      OR: [
-        { status: { in: ['PENDING', 'APPROVED'] } },
-        { trackingStatus: 'PERMINTAAN_PENGEMBALIAN' }
-      ]
-    },
     include: {
       satkerPengaju: { select: { nama: true } },
     },
@@ -22,11 +16,6 @@ async function getPengajuanData() {
   });
 
   const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
-    where: { 
-      status: { 
-        in: ['PENDING', 'APPROVED'] 
-      } 
-    },
     include: {
       personil: { select: { nama: true, nrp: true } },
       satkerAsal: { select: { nama: true } },
