@@ -74,7 +74,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
         </div>
 
         {/* Konten Utama */}
-        <div className="flex-1 px-3 py-2.5 flex gap-3">
+        <div className="flex-1 px-3 py-1.5 flex gap-3">
           {/* Foto Personil */}
           <div className="flex-shrink-0">
             <div className="w-[70px] h-[88px] bg-white rounded overflow-hidden border-2 border-gray-200">
