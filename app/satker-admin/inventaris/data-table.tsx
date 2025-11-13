@@ -69,32 +69,54 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
           placeholder="Cari berdasarkan Serial Number..."
           value={(table.getColumn('serialNumber')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('serialNumber')?.setFilterValue(event.target.value)}
-          className="max-w-xs"
+          className="w-full md:max-w-xs"
         />
       </div>
-      <div className="w-full overflow-x-auto rounded-md border">
+      <div className="rounded-md border md:border-none">
         <Table>
-          <TableHeader>
+          <TableHeader className="hidden md:table-header-group">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>{headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-              ))}</TableRow>
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                ))}
+              </TableRow>
             ))}
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>{row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                ))}</TableRow>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && 'selected'}
+                  className="block md:table-row mb-4 md:mb-0 border-b md:border-b-0 rounded-lg shadow-md md:shadow-none"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="flex items-center justify-between md:table-cell px-4 py-2 md:px-6 md:py-4 border-b md:border-b-1"
+                    >
+                      <span className="md:hidden font-semibold text-sm mr-2">
+                        {typeof cell.column.columnDef.header === 'function'
+                          ? null
+                          : String(cell.column.columnDef.header)}
+                      </span>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))
             ) : (
-              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Tidak ada data inventaris.</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Tidak ada data inventaris.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex items-center justify-center md:justify-end space-x-2 py-4">
         <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
       </div>

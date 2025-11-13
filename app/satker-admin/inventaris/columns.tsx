@@ -25,8 +25,7 @@ export const columns: ColumnDef<HtWithPeminjaman>[] = [
   {
     accessorKey: 'merk',
     header: 'Merk',
-    // Sembunyikan di layar kecil
-    cell: ({ row }) => <span className="hidden sm:table-cell">{row.original.merk}</span>,
+    cell: ({ row }) => <span>{row.original.merk}</span>,
   },
   {
     id: 'statusPeminjaman',
@@ -49,7 +48,7 @@ export const columns: ColumnDef<HtWithPeminjaman>[] = [
       let variant: 'outline' | 'secondary' | 'destructive' = 'outline';
       if (status === 'RUSAK_RINGAN' || status === 'RUSAK_BERAT') variant = 'secondary';
       if (status === 'HILANG') variant = 'destructive';
-      return <Badge variant={variant} className="hidden md:inline-flex">{status.replace('_', ' ')}</Badge>;
+      return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
     },
   },
   {
@@ -57,7 +56,7 @@ export const columns: ColumnDef<HtWithPeminjaman>[] = [
     header: 'Pemegang',
     cell: ({ row }) => {
       const pemegang = row.original.peminjaman[0]?.personil;
-      return <span className="hidden lg:table-cell">{pemegang ? pemegang.nama : '-'}</span>;
+      return <span>{pemegang ? pemegang.nama : '-'}</span>;
     },
   },
   {
