@@ -10,14 +10,14 @@ export default async function RiwayatPeminjamanPage() {
     const dataRiwayat = await getRiwayatPeminjamanBySatker();
 
     return (
-        <main className="p-4 sm:p-6 md:p-8 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Riwayat Peminjaman Internal</h1>
+        <main className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
+            <div className="flex items-center">
+                <h1 className="text-2xl md:text-3xl font-bold">Riwayat Peminjaman Internal</h1>
             </div>
             
             <Card>
                 <CardHeader>
-                    <CardTitle>Daftar Peminjaman Selesai</CardTitle>
+                    <CardTitle className="text-xl md:text-2xl">Daftar Peminjaman Selesai</CardTitle>
                     <CardDescription>
                         Halaman ini berisi daftar semua transaksi peminjaman HT yang telah selesai (dikembalikan).
                     </CardDescription>

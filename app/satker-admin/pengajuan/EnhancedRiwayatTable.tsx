@@ -140,11 +140,11 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
   return (
     <div className="space-y-6">
       {/* Filter dan Pencarian */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Cari berdasarkan keperluan, alasan, atau ID..."
+            placeholder="Cari berdasarkan ID, keperluan, atau alasan..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -152,8 +152,8 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter Status" />
+          <SelectTrigger className="w-full md:w-56">
+            <SelectValue placeholder="Filter Status Pengajuan" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Status</SelectItem>
@@ -164,8 +164,8 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
         </Select>
 
         <Select value={trackingFilter} onValueChange={setTrackingFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter Tracking" />
+          <SelectTrigger className="w-full md:w-56">
+            <SelectValue placeholder="Filter Status Tracking" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Tracking</SelectItem>

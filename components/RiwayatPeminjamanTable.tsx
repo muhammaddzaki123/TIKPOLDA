@@ -26,11 +26,17 @@ interface RiwayatPeminjamanTableProps {
 }
 
 export function RiwayatPeminjamanTable({ data }: RiwayatPeminjamanTableProps) {
+  const renderCell = (label: string, content: React.ReactNode) => (
+    <TableCell className="p-2 md:p-4 flex justify-between items-start border-b md:border-none md:table-cell">
+      <span className="text-sm font-semibold text-gray-600 md:hidden">{label}</span>
+      <div className="text-right md:text-left">{content}</div>
+    </TableCell>
+  );
 
   return (
-    <div className="rounded-md border">
+    <div className="md:border md:rounded-md">
       <Table>
-        <TableHeader>
+        <TableHeader className="hidden md:table-header-group">
           <TableRow>
             <TableHead>Serial Number</TableHead>
             <TableHead>Personil Peminjam</TableHead>
@@ -40,31 +46,33 @@ export function RiwayatPeminjamanTable({ data }: RiwayatPeminjamanTableProps) {
             <TableHead>SPRINT</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="flex flex-col gap-4 md:table-row-group">
           {data.length > 0 ? (
             data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">
+              <TableRow key={item.id} className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-2 md:table-row md:shadow-none md:p-0 md:bg-transparent">
+                {renderCell("Serial Number", (
+                  <div className="font-medium">
                     {item.ht.serialNumber}
                     <div className="text-xs text-muted-foreground">{item.ht.merk}</div>
-                </TableCell>
-                <TableCell>
-                    <div>{item.personil.nama}</div>
+                  </div>
+                ))}
+                {renderCell("Peminjam", (
+                  <div>
+                    {item.personil.nama}
                     <div className="text-xs text-muted-foreground">{item.personil.nrp}</div>
-                </TableCell>
-                <TableCell>{format(new Date(item.tanggalPinjam), 'dd MMM yyyy', { locale: id })}</TableCell>
-                <TableCell className="font-semibold">
-                  {/*
-                    PERUBAHAN DI SINI:
-                    - Tambahkan pengecekan untuk memastikan `tanggalKembali` tidak null sebelum diformat.
-                  */}
-                  {item.tanggalKembali 
-                    ? format(new Date(item.tanggalKembali), 'dd MMM yyyy', { locale: id })
-                    : '-'}
-                </TableCell>
-                <TableCell>{item.kondisiSaatKembali || '-'}</TableCell>
-                <TableCell>
-                  {item.fileUrl ? (
+                  </div>
+                ))}
+                {renderCell("Tgl Pinjam", format(new Date(item.tanggalPinjam), 'dd MMM yyyy', { locale: id }))}
+                {renderCell("Tgl Kembali", (
+                  <span className="font-semibold">
+                    {item.tanggalKembali 
+                      ? format(new Date(item.tanggalKembali), 'dd MMM yyyy', { locale: id })
+                      : '-'}
+                  </span>
+                ))}
+                {renderCell("Kondisi Kembali", item.kondisiSaatKembali || '-')}
+                {renderCell("SPRINT", (
+                  item.fileUrl ? (
                     <Button variant="outline" size="sm" className="h-8" asChild>
                       <Link href={item.fileUrl} target="_blank" rel="noopener noreferrer">
                         <FileText className="mr-2 h-3 w-3" /> PDF
@@ -72,12 +80,12 @@ export function RiwayatPeminjamanTable({ data }: RiwayatPeminjamanTableProps) {
                     </Button>
                   ) : (
                     <Badge variant="secondary">Tidak ada</Badge>
-                  )}
-                </TableCell>
+                  )
+                ))}
               </TableRow>
             ))
           ) : (
-            <TableRow>
+            <TableRow className="md:table-row">
               <TableCell colSpan={6} className="h-24 text-center">
                 Belum ada riwayat peminjaman yang selesai.
               </TableCell>

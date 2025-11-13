@@ -86,21 +86,27 @@ export default function PengajuanClient({
   };
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Pusat Pengajuan</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="text-2xl md:text-3xl font-bold">Pusat Pengajuan</h1>
+        <p className="text-sm text-slate-600 mt-1">
           Gunakan formulir di bawah ini untuk mengirimkan permintaan resmi kepada Super Admin.
         </p>
       </div>
 
-      <Tabs defaultValue="peminjaman" className="w-full space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="peminjaman"><Radio className="mr-2 h-4 w-4" />Peminjaman & Pengembalian HT</TabsTrigger>
-          <TabsTrigger value="mutasi"><ArrowRightLeft className="mr-2 h-4 w-4" />Mutasi Personil</TabsTrigger>
+      <Tabs defaultValue="peminjaman" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10">
+          <TabsTrigger value="peminjaman" className="text-xs sm:text-sm">
+            <Radio className="mr-2 h-4 w-4" />
+            Peminjaman & Pengembalian HT
+          </TabsTrigger>
+          <TabsTrigger value="mutasi" className="text-xs sm:text-sm">
+            <ArrowRightLeft className="mr-2 h-4 w-4" />
+            Mutasi Personil
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="peminjaman" className="space-y-6">
+        <TabsContent value="peminjaman" className="space-y-6 mt-6">
           <div className="space-y-6">
             <FormPeminjaman />
             
