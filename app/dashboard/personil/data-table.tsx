@@ -196,7 +196,7 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
                     {/* Render the photo cell */}
-                    {row.getVisibleCells().map(cell => cell.column.id === 'foto' ? flexRender(cell.column.columnDef.cell, cell.getContext()) : null)}
+                    {row.getVisibleCells().map(cell => cell.column.id === 'foto' ? <div key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</div> : null)}
                 </div>
                 <div className="flex-grow space-y-2">
                     <p className="font-bold text-lg">{row.original.nama}</p>
@@ -217,7 +217,7 @@ export function PersonilDataTable<TData extends PersonilWithSatker, TValue>({
                 </div>
                 <div className="flex-shrink-0">
                     {/* Render the action cell */}
-                    {row.getVisibleCells().map(cell => cell.column.id === 'actions' ? flexRender(cell.column.columnDef.cell, cell.getContext()) : null)}
+                    {row.getVisibleCells().map(cell => cell.column.id === 'actions' ? <div key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</div> : null)}
                 </div>
               </div>
             </div>

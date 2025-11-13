@@ -17,241 +17,289 @@ interface NotificationItem {
 }
 
 // Fungsi untuk mendapatkan notifikasi Super Admin
-async function getSuperAdminNotifications(): Promise<NotificationItem[]> {
-  const notifications: NotificationItem[] = [];
+async function getSuperAdminNotifications(userId: string): Promise<NotificationItem[]> { 
+  const existingNotifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  });
+
+  const existingIds = new Set(existingNotifications.map(n => n.relatedId));
 
   try {
-    // 1. Pengajuan Peminjaman Baru (PENDING)
-    const pengajuanPeminjamanBaru = await prisma.pengajuanPeminjaman.findMany({
-      where: { status: 'PENDING' },
+    // 1. Pengajuan Peminjaman (PENDING dan yang baru diupdate)
+    const pengajuanPeminjaman = await prisma.pengajuanPeminjaman.findMany({
+      where: {
+        OR: [
+          { status: 'PENDING' },
+          { 
+            status: { in: ['APPROVED', 'REJECTED'] },
+            updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+          }
+        ]
+      },
       include: { satkerPengaju: true },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 20
     });
 
-    pengajuanPeminjamanBaru.forEach((pengajuan) => {
-      notifications.push({
-        id: `peminjaman_${pengajuan.id}`,
-        type: 'peminjaman_baru',
-        title: 'Pengajuan Peminjaman Baru',
-        message: `${pengajuan.satkerPengaju.nama} mengajukan peminjaman ${pengajuan.jumlah} unit HT`,
-        createdAt: pengajuan.createdAt,
-        isRead: false,
-        priority: 'high',
-        relatedId: pengajuan.id,
-        satkerName: pengajuan.satkerPengaju.nama
-      });
-    });
+    for (const pengajuan of pengajuanPeminjaman) {
+      if (!existingIds.has(pengajuan.id)) {
+        const title = pengajuan.status === 'PENDING' 
+          ? 'Pengajuan Peminjaman Baru'
+          : pengajuan.status === 'APPROVED'
+          ? 'Peminjaman Disetujui'
+          : 'Peminjaman Ditolak';
+        
+        const priority = pengajuan.status === 'PENDING' ? 'high' : 'medium';
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'peminjaman_baru',
+            title,
+            message: `${pengajuan.satkerPengaju.nama} - ${pengajuan.jumlah} unit HT - Status: ${pengajuan.status}`,
+            relatedId: pengajuan.id,
+            satkerName: pengajuan.satkerPengaju.nama,
+            priority,
+            createdAt: pengajuan.updatedAt
+          }
+        });
+      }
+    }
 
-    // 2. Pengajuan Mutasi Baru (PENDING)
-    const pengajuanMutasiBaru = await prisma.pengajuanMutasi.findMany({
-      where: { status: 'PENDING' },
+    // 2. Pengajuan Mutasi
+    const pengajuanMutasi = await prisma.pengajuanMutasi.findMany({
+      where: {
+        OR: [
+          { status: 'PENDING' },
+          { 
+            status: { in: ['APPROVED', 'REJECTED'] },
+            updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+          }
+        ]
+      },
       include: { 
         personil: true,
         satkerAsal: true,
         satkerTujuan: true 
       },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 20
     });
 
-    pengajuanMutasiBaru.forEach((mutasi) => {
-      notifications.push({
-        id: `mutasi_${mutasi.id}`,
-        type: 'mutasi_baru',
-        title: 'Pengajuan Mutasi Baru',
-        message: `Mutasi ${mutasi.personil.nama} dari ${mutasi.satkerAsal.nama} ke ${mutasi.satkerTujuan.nama}`,
-        createdAt: mutasi.createdAt,
-        isRead: false,
-        priority: 'medium',
-        relatedId: mutasi.id,
-        satkerName: mutasi.satkerAsal.nama
-      });
-    });
+    for (const mutasi of pengajuanMutasi) {
+      if (!existingIds.has(mutasi.id)) {
+        const title = mutasi.status === 'PENDING'
+          ? 'Pengajuan Mutasi Baru'
+          : mutasi.status === 'APPROVED'
+          ? 'Mutasi Disetujui'
+          : 'Mutasi Ditolak';
+        
+        const priority = mutasi.status === 'PENDING' ? 'high' : 'medium';
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'mutasi_baru',
+            title,
+            message: `${mutasi.personil.nama} dari ${mutasi.satkerAsal.nama} ke ${mutasi.satkerTujuan.nama} - Status: ${mutasi.status}`,
+            relatedId: mutasi.id,
+            satkerName: mutasi.satkerAsal.nama,
+            priority,
+            createdAt: mutasi.updatedAt
+          }
+        });
+      }
+    }
 
-    // 3. Pengajuan Pengembalian Baru (PENDING)
-    const pengajuanPengembalianBaru = await prisma.pengajuanPengembalian.findMany({
-      where: { status: 'PENDING' },
+    // 3. Pengajuan Pengembalian
+    const pengajuanPengembalian = await prisma.pengajuanPengembalian.findMany({
+      where: {
+        OR: [
+          { status: 'PENDING' },
+          { 
+            status: { in: ['APPROVED', 'REJECTED'] },
+            updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+          }
+        ]
+      },
       include: { 
         satkerPengaju: true,
-        pengembalianDetails: {
-          include: { ht: true }
-        }
+        pengembalianDetails: { include: { ht: true } }
       },
       orderBy: { createdAt: 'desc' },
-      take: 10
+      take: 20
     });
 
-    pengajuanPengembalianBaru.forEach((pengembalian) => {
-      const jumlahHT = pengembalian.pengembalianDetails.length;
-      notifications.push({
-        id: `pengembalian_${pengembalian.id}`,
-        type: 'pengembalian_baru',
-        title: 'Pengajuan Pengembalian Baru',
-        message: `${pengembalian.satkerPengaju.nama} mengajukan pengembalian ${jumlahHT} unit HT`,
-        createdAt: pengembalian.createdAt,
-        isRead: false,
-        priority: 'medium',
-        relatedId: pengembalian.id,
-        satkerName: pengembalian.satkerPengaju.nama
-      });
-    });
-
-    // 4. Keterlambatan Pengembalian (Peminjaman Satker)
-    const today = new Date();
-    const peminjamanTerlambat = await prisma.peminjamanSatker.findMany({
-      where: {
-        tanggalKembali: null,
-        tanggalPinjam: {
-          lt: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000) // 30 hari yang lalu
-        }
-      },
-      include: {
-        satker: true,
-        ht: true
-      },
-      take: 10
-    });
-
-    peminjamanTerlambat.forEach((peminjaman) => {
-      const hariTerlambat = Math.floor((today.getTime() - peminjaman.tanggalPinjam.getTime()) / (1000 * 60 * 60 * 24)) - 30;
-      notifications.push({
-        id: `keterlambatan_${peminjaman.id}`,
-        type: 'keterlambatan',
-        title: 'Keterlambatan Pengembalian',
-        message: `${peminjaman.satker.nama} terlambat ${hariTerlambat} hari mengembalikan HT ${peminjaman.ht.serialNumber}`,
-        createdAt: peminjaman.tanggalPinjam,
-        isRead: false,
-        priority: 'high',
-        relatedId: peminjaman.id,
-        satkerName: peminjaman.satker.nama
-      });
-    });
+    for (const pengembalian of pengajuanPengembalian) {
+      if (!existingIds.has(pengembalian.id)) {
+        const jumlahHT = pengembalian.pengembalianDetails.length;
+        const title = pengembalian.status === 'PENDING'
+          ? 'Pengajuan Pengembalian Baru'
+          : pengembalian.status === 'APPROVED'
+          ? 'Pengembalian Disetujui'
+          : 'Pengembalian Ditolak';
+        
+        const priority = pengembalian.status === 'PENDING' ? 'high' : 'medium';
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'pengembalian_baru',
+            title,
+            message: `${pengembalian.satkerPengaju.nama} - ${jumlahHT} unit HT - Status: ${pengembalian.status}`,
+            relatedId: pengembalian.id,
+            satkerName: pengembalian.satkerPengaju.nama,
+            priority,
+            createdAt: pengembalian.updatedAt
+          }
+        });
+      }
+    }
 
   } catch (error) {
-    console.error('Error fetching super admin notifications:', error);
+    console.error('Error creating notifications:', error);
   }
 
-  // Urutkan berdasarkan prioritas dan tanggal
-  return notifications.sort((a, b) => {
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
-    }
-    return b.createdAt.getTime() - a.createdAt.getTime();
+  // Ambil semua notifikasi dari database
+  const allNotifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 50
   });
+
+  return allNotifications.map(n => ({
+    id: n.id,
+    type: n.type as NotificationItem['type'],
+    title: n.title,
+    message: n.message,
+    createdAt: n.createdAt,
+    isRead: n.isRead,
+    priority: n.priority as NotificationItem['priority'],
+    relatedId: n.relatedId || undefined,
+    satkerName: n.satkerName || undefined
+  }));
 }
 
 // Fungsi untuk mendapatkan notifikasi Admin Satker
-async function getSatkerAdminNotifications(satkerId: string): Promise<NotificationItem[]> {
-  const notifications: NotificationItem[] = [];
+async function getSatkerAdminNotifications(userId: string, satkerId: string): Promise<NotificationItem[]> {
+  const existingNotifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  });
+
+  const existingIds = new Set(existingNotifications.map(n => n.relatedId));
 
   try {
-    // 1. Status Pengajuan yang Diupdate (APPROVED/REJECTED dalam 7 hari terakhir)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
     
+    // 1. Pengajuan Peminjaman yang diupdate (tracking status berubah)
     const pengajuanUpdated = await prisma.pengajuanPeminjaman.findMany({
       where: {
         satkerId,
-        status: { in: ['APPROVED', 'REJECTED'] },
-        updatedAt: { gte: sevenDaysAgo }
+        updatedAt: { gte: last24Hours }
       },
       orderBy: { updatedAt: 'desc' },
-      take: 5
+      take: 20
     });
 
-    pengajuanUpdated.forEach((pengajuan) => {
-      notifications.push({
-        id: `update_${pengajuan.id}`,
-        type: pengajuan.status === 'APPROVED' ? 'peminjaman_baru' : 'peminjaman_baru',
-        title: `Pengajuan ${pengajuan.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}`,
-        message: `Pengajuan peminjaman ${pengajuan.jumlah} unit HT telah ${pengajuan.status === 'APPROVED' ? 'disetujui' : 'ditolak'}`,
-        createdAt: pengajuan.updatedAt,
-        isRead: false,
-        priority: pengajuan.status === 'APPROVED' ? 'high' : 'medium',
-        relatedId: pengajuan.id
-      });
-    });
-
-    // 2. Keterlambatan Pengembalian Internal (Peminjaman Personil)
-    const today = new Date();
-    const peminjamanTerlambat = await prisma.peminjaman.findMany({
-      where: {
-        ht: { satkerId },
-        tanggalKembali: null,
-        estimasiKembali: {
-          lt: today
+    for (const pengajuan of pengajuanUpdated) {
+      const notifKey = `${pengajuan.id}_${pengajuan.trackingStatus || pengajuan.status}`;
+      if (!existingIds.has(notifKey)) {
+        let title = 'Update Pengajuan';
+        let priority: 'low' | 'medium' | 'high' = 'medium';
+        
+        if (pengajuan.status === 'APPROVED') {
+          title = 'Pengajuan Disetujui';
+          priority = 'high';
+        } else if (pengajuan.status === 'REJECTED') {
+          title = 'Pengajuan Ditolak';
+          priority = 'medium';
+        } else if (pengajuan.trackingStatus === 'SIAP_DIAMBIL') {
+          title = 'HT Siap Diambil';
+          priority = 'high';
+        } else if (pengajuan.trackingStatus === 'SUDAH_DIKEMBALIKAN') {
+          title = 'Pengembalian Diterima';
+          priority = 'high';
         }
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'peminjaman_baru',
+            title,
+            message: `Peminjaman ${pengajuan.jumlah} unit HT - Status: ${pengajuan.trackingStatus || pengajuan.status}`,
+            relatedId: notifKey,
+            priority,
+            createdAt: pengajuan.updatedAt
+          }
+        });
+      }
+    }
+
+    // 2. Pengajuan Mutasi yang diupdate
+    const mutasiUpdated = await prisma.pengajuanMutasi.findMany({
+      where: {
+        satkerAsalId: satkerId,
+        updatedAt: { gte: last24Hours }
       },
       include: {
         personil: true,
-        ht: true
+        satkerTujuan: true
       },
+      orderBy: { updatedAt: 'desc' },
       take: 10
     });
 
-    peminjamanTerlambat.forEach((peminjaman) => {
-      if (peminjaman.estimasiKembali) {
-        const hariTerlambat = Math.floor((today.getTime() - peminjaman.estimasiKembali.getTime()) / (1000 * 60 * 60 * 24));
-        notifications.push({
-          id: `keterlambatan_internal_${peminjaman.id}`,
-          type: 'keterlambatan',
-          title: 'Keterlambatan Pengembalian Internal',
-          message: `${peminjaman.personil.nama} terlambat ${hariTerlambat} hari mengembalikan HT ${peminjaman.ht.serialNumber}`,
-          createdAt: peminjaman.estimasiKembali,
-          isRead: false,
-          priority: hariTerlambat > 7 ? 'high' : 'medium',
-          relatedId: peminjaman.id
+    for (const mutasi of mutasiUpdated) {
+      const notifKey = `${mutasi.id}_${mutasi.status}`;
+      if (!existingIds.has(notifKey)) {
+        const title = mutasi.status === 'APPROVED'
+          ? 'Mutasi Disetujui'
+          : mutasi.status === 'REJECTED'
+          ? 'Mutasi Ditolak'
+          : 'Update Mutasi';
+        
+        const priority = mutasi.status === 'APPROVED' ? 'high' : 'medium';
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'mutasi_baru',
+            title,
+            message: `Mutasi ${mutasi.personil.nama} ke ${mutasi.satkerTujuan.nama} - Status: ${mutasi.status}`,
+            relatedId: notifKey,
+            priority,
+            createdAt: mutasi.updatedAt
+          }
         });
       }
-    });
-
-    // 3. HT Mendekati Batas Waktu Pengembalian (3 hari lagi)
-    const threeDaysFromNow = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
-    const peminjamanMendekatiDeadline = await prisma.peminjaman.findMany({
-      where: {
-        ht: { satkerId },
-        tanggalKembali: null,
-        estimasiKembali: {
-          gte: today,
-          lte: threeDaysFromNow
-        }
-      },
-      include: {
-        personil: true,
-        ht: true
-      },
-      take: 5
-    });
-
-    peminjamanMendekatiDeadline.forEach((peminjaman) => {
-      if (peminjaman.estimasiKembali) {
-        const hariSisa = Math.ceil((peminjaman.estimasiKembali.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        notifications.push({
-          id: `deadline_${peminjaman.id}`,
-          type: 'keterlambatan',
-          title: 'Mendekati Batas Pengembalian',
-          message: `HT ${peminjaman.ht.serialNumber} (${peminjaman.personil.nama}) harus dikembalikan dalam ${hariSisa} hari`,
-          createdAt: peminjaman.tanggalPinjam,
-          isRead: false,
-          priority: 'medium',
-          relatedId: peminjaman.id
-        });
-      }
-    });
+    }
 
   } catch (error) {
-    console.error('Error fetching satker admin notifications:', error);
+    console.error('Error creating satker notifications:', error);
   }
 
-  // Urutkan berdasarkan prioritas dan tanggal
-  return notifications.sort((a, b) => {
-    const priorityOrder = { high: 3, medium: 2, low: 1 };
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
-    }
-    return b.createdAt.getTime() - a.createdAt.getTime();
+  // Ambil semua notifikasi dari database
+  const allNotifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 50
   });
+
+  return allNotifications.map(n => ({
+    id: n.id,
+    type: n.type as NotificationItem['type'],
+    title: n.title,
+    message: n.message,
+    createdAt: n.createdAt,
+    isRead: n.isRead,
+    priority: n.priority as NotificationItem['priority'],
+    relatedId: n.relatedId || undefined,
+    satkerName: n.satkerName || undefined
+  }));
 }
 
 export async function GET() {
@@ -263,11 +311,12 @@ export async function GET() {
     }
 
     let notifications: NotificationItem[] = [];
+    const userId = session.user.id;
     
     if (session.user.role === 'SUPER_ADMIN') {
-      notifications = await getSuperAdminNotifications();
+      notifications = await getSuperAdminNotifications(userId);
     } else if (session.user.role === 'ADMIN_SATKER' && session.user.satkerId) {
-      notifications = await getSatkerAdminNotifications(session.user.satkerId);
+      notifications = await getSatkerAdminNotifications(userId, session.user.satkerId);
     }
 
     const unreadCount = notifications.filter(n => !n.isRead).length;

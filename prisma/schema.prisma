@@ -204,12 +204,28 @@ enum PengajuanStatus {
 }
 
 enum TrackingStatus {
-  PENGAJUAN_DIKIRIM      // Pengajuan dikirim
-  SEDANG_DIPROSES        // Sedang diproses
-  DISETUJUI              // Disetujui
-  SIAP_DIAMBIL           // Siap diambil
-  SEDANG_DIGUNAKAN       // Sedang digunakan
-  PERMINTAAN_PENGEMBALIAN // Permintaan pengembalian
-  SUDAH_DIKEMBALIKAN     // Sudah dikembalikan
-  DITOLAK                // Ditolak
+  PENGAJUAN_DIKIRIM
+  SEDANG_DIPROSES
+  DISETUJUI
+  SIAP_DIAMBIL
+  SEDANG_DIGUNAKAN
+  PERMINTAAN_PENGEMBALIAN
+  SUDAH_DIKEMBALIKAN
+  DITOLAK
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String
+  title        String
+  message      String
+  relatedId    String?
+  satkerName   String?
+  priority     String   @default("medium")
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

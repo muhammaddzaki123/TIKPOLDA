@@ -34,7 +34,7 @@ type PeminjamanWithRelations = Peminjaman & {
 
 export interface NotificationItem {
   id: string;
-  type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan';
+  type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan' | 'tracking_update';
   title: string;
   message: string;
   createdAt: Date;

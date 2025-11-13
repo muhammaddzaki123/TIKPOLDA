@@ -20,8 +20,19 @@ export default function NotificationList({
   onRefresh
 }: NotificationListProps) {
   
-  const getNotificationIcon = (type: NotificationItem['type'], priority: NotificationItem['priority']) => {
-    const iconClass = `h-4 w-4 ${priority === 'high' ? 'text-red-500' : priority === 'medium' ? 'text-yellow-500' : 'text-blue-500'}`;
+  const getNotificationIcon = (type: NotificationItem['type'], priority: NotificationItem['priority'], title: string) => {
+    // Tentukan warna berdasarkan status di title
+    let colorClass = 'text-yellow-500'; // Default: kuning (pending/proses)
+    
+    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap')) {
+      colorClass = 'text-green-500'; // Hijau untuk approved
+    } else if (title.includes('Ditolak')) {
+      colorClass = 'text-red-500'; // Merah untuk rejected
+    } else if (type === 'keterlambatan') {
+      colorClass = 'text-red-500'; // Merah untuk keterlambatan
+    }
+    
+    const iconClass = `h-4 w-4 ${colorClass}`;
     
     switch (type) {
       case 'peminjaman_baru':
@@ -37,16 +48,14 @@ export default function NotificationList({
     }
   };
 
-  const getPriorityColor = (priority: NotificationItem['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'border-l-red-500 bg-red-50';
-      case 'medium':
-        return 'border-l-yellow-500 bg-yellow-50';
-      case 'low':
-        return 'border-l-blue-500 bg-blue-50';
-      default:
-        return 'border-l-gray-500 bg-gray-50';
+  const getPriorityColor = (priority: NotificationItem['priority'], title: string) => {
+    // Warna border dan background berdasarkan status
+    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap')) {
+      return 'border-l-green-500 bg-green-50';
+    } else if (title.includes('Ditolak')) {
+      return 'border-l-red-500 bg-red-50';
+    } else {
+      return 'border-l-yellow-500 bg-yellow-50'; // Pending/proses
     }
   };
 
@@ -83,13 +92,13 @@ export default function NotificationList({
         <div
           key={notification.id}
           className={`p-3 border-l-4 transition-colors hover:bg-slate-50 cursor-pointer ${
-            !notification.isRead ? getPriorityColor(notification.priority) : 'border-l-slate-200 bg-white'
+            !notification.isRead ? getPriorityColor(notification.priority, notification.title) : 'border-l-slate-200 bg-white'
           }`}
           onClick={() => !notification.isRead && onMarkAsRead(notification.id)}
         >
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0 mt-0.5">
-              {getNotificationIcon(notification.type, notification.priority)}
+              {getNotificationIcon(notification.type, notification.priority, notification.title)}
             </div>
             
             <div className="flex-1 min-w-0">
