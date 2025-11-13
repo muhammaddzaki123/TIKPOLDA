@@ -86,12 +86,12 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="space-y-2">
             <CardTitle className="text-lg">
               Pengajuan #{pengajuan.id.substring(0, 8).toUpperCase()}
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Badge className={getStatusColor(pengajuan.status)}>
                 {pengajuan.status}
               </Badge>
@@ -100,7 +100,7 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
               </Badge>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Dialog open={showTracking} onOpenChange={setShowTracking}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">

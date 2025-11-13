@@ -84,7 +84,7 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
           {approvedLoans.length > 0 ? (
             approvedLoans.map((loan) => (
               <div key={loan.id} className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-semibold text-slate-800 text-sm">Keperluan: {loan.keperluan}</h4>

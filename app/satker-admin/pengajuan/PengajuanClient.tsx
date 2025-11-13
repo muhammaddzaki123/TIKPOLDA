@@ -108,12 +108,31 @@ export default function PengajuanClient({
 
         <TabsContent value="peminjaman" className="space-y-6 mt-6">
           <div className="space-y-6">
-            <FormPeminjaman />
-            
-            {/* Paket Peminjaman Aktif untuk Pengembalian */}
-            {approvedLoans.length > 0 && (
-              <ReturnPackageForm approvedLoans={approvedLoans} />
-            )}
+            {/* Grid responsif untuk form */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Formulir Peminjaman HT</CardTitle>
+                  <CardDescription>Ajukan permintaan peminjangan HT baru.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormPeminjaman />
+                </CardContent>
+              </Card>
+
+              {/* Paket Peminjaman Aktif untuk Pengembalian */}
+              {approvedLoans.length > 0 && (
+                 <Card>
+                   <CardHeader>
+                     <CardTitle>Formulir Pengembalian HT</CardTitle>
+                     <CardDescription>Pilih paket peminjaman yang aktif untuk dikembalikan.</CardDescription>
+                   </CardHeader>
+                   <CardContent>
+                    <ReturnPackageForm approvedLoans={approvedLoans} />
+                   </CardContent>
+                 </Card>
+              )}
+            </div>
             
             <Card>
               <CardHeader>
@@ -132,9 +151,18 @@ export default function PengajuanClient({
           </div>
         </TabsContent>
 
-        <TabsContent value="mutasi" className="space-y-6">
+        <TabsContent value="mutasi" className="space-y-6 mt-6">
           <div className="space-y-6">
-            <FormMutasi personilList={personilList} satkerList={satkerList} />
+            <Card>
+              <CardHeader>
+                <CardTitle>Formulir Mutasi Personil</CardTitle>
+                <CardDescription>Pindahkan personil ke Satuan Kerja (Satker) lain.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormMutasi personilList={personilList} satkerList={satkerList} />
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Riwayat Pengajuan Mutasi Personil</CardTitle>
