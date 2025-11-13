@@ -219,90 +219,60 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
 
   return (
     <>
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
+      <div className="flex items-center justify-between py-4">
         <Input
           placeholder="Cari nama personil..."
           value={(table.getColumn('nama')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('nama')?.setFilterValue(event.target.value)}
-          className="w-full md:max-w-sm"
+          className="max-w-sm"
         />
-        <Button onClick={handleOpenAddDialog} className="w-full md:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Tambah Personil
-        </Button>
+        <Button onClick={handleOpenAddDialog}><PlusCircle className="mr-2 h-4 w-4" />Tambah Personil</Button>
       </div>
-      <div className="rounded-md border md:border-none">
-      <Table className="min-w-full">
-        <TableHeader className="hidden md:table-header-group">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody className="grid grid-cols-1 gap-4 md:table-row-group">
-            {table.getRowModel().rows?.length ? (
+      <div className="rounded-md border md:border">
+        <Table>
+            <TableHeader className="hidden md:table-header-group">
+                {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                    ))}
+                </TableRow>
+                ))}
+            </TableHeader>
+            <TableBody>
+                {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                <TableRow 
-                    key={row.id}
-                    className="bg-white rounded-lg shadow-md p-4 grid grid-cols-2 gap-x-4 gap-y-2 md:table-row md:shadow-none md:rounded-none md:p-0"
-                >
-                    {row.getVisibleCells().map((cell) => {
-                    const headerText = typeof cell.column.columnDef.header === 'function'
-                        ? 'Data'
-                        : String(cell.column.columnDef.header);
-
-                    // Sembunyikan sel aksi di tampilan kartu utama, tampilkan di bawah
-                    if (cell.column.id === 'actions') {
-                        return null; 
-                    }
-                    
-                    // Buat foto memenuhi satu kolom penuh di mobile
-                    if (cell.column.id === 'foto') {
-                        return (
-                        <TableCell key={cell.id} className="col-span-2 p-0 mb-2 flex justify-center items-center">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                        );
-                    }
-
-                    return (
+                    <TableRow 
+                        key={row.id}
+                        data-state={row.getIsSelected() && 'selected'}
+                        className="block md:table-row mb-4 md:mb-0 border-b md:border-b-0 rounded-lg shadow-md md:shadow-none"
+                    >
+                    {row.getVisibleCells().map((cell) => (
                         <TableCell 
-                        key={cell.id} 
-                        className="p-0 md:p-4 border-none h-auto flex flex-col justify-center"
+                            key={cell.id}
+                            className="flex items-center justify-between md:table-cell px-4 py-2 md:px-6 md:py-4 border-b md:border-b-1"
                         >
-                        <span className="text-xs font-bold text-gray-500 md:hidden">{headerText}</span>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                    );
-                    })}
-                    {/* Tampilkan Aksi secara terpisah di bawah kartu pada tampilan mobile */}
-                    <div className="col-span-2 mt-2 border-t pt-2 md:hidden">
-                    {row.getVisibleCells().map(cell => 
-                        cell.column.id === 'actions' ? (
-                        <div key={`${cell.id}-actions`} className="flex justify-end">
+                            <span className="md:hidden font-semibold text-sm mr-2">
+                                {typeof cell.column.columnDef.header === 'function' 
+                                    ? null 
+                                    : String(cell.column.columnDef.header)}
+                            </span>
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </div>
-                        ) : null
-                    )}
-                    </div>
-                </TableRow>
+                        </TableCell>
+                    ))}
+                    </TableRow>
                 ))
-            ) : (
+                ) : (
                 <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
                     Tidak ada data personil.
-                </TableCell>
+                    </TableCell>
                 </TableRow>
-            )}
+                )}
             </TableBody>
-      </Table>
+        </Table>
       </div>
-      <div className="flex items-center justify-center md:justify-end space-x-2 py-4">
+      <div className="flex items-center justify-end space-x-2 py-4">
         <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
       </div>

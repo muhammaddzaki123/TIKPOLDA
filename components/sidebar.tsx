@@ -46,29 +46,37 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
         />
       )}
 
+      {/* PERUBAHAN 1: Menghapus 'p-4' dan menambahkan 'flex flex-col' */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-[#0d2436] p-4 text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-[#0d2436] text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } flex flex-col`}
       >
-        <div className="mb-6 flex items-center justify-between">
+        {/* PERUBAHAN 2: Menambahkan 'relative', 'justify-center', dan padding (px-4 pt-4 pb-6) */}
+        <div className="relative mb-6 flex items-center justify-center px-4 pt-4 pb-6">
           <div className="flex items-center space-x-3">
             <Image src="/icon.svg" width={32} height={32} alt="Logo POLDA NTB" />
             <span className="text-base font-semibold">Logistik POLDA NTB</span>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden">
+          {/* PERUBAHAN 3: Tombol 'X' diposisikan 'absolute' */}
+          <button 
+            onClick={() => setIsSidebarOpen(false)} 
+            className="absolute top-4 right-4 text-gray-400 hover:text-white md:hidden"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <nav className="flex-1">
+        {/* PERUBAHAN 4: Menambahkan 'px-4' untuk padding horizontal */}
+        <nav className="flex-1 px-4">
           <ul>
             {sidebarItems.map((item) => (
               <li key={item.name}>
                 <Link
                   href={item.href}
                   className={`flex items-center space-x-3 rounded-md p-2.5 text-sm font-medium transition-colors ${
-                    pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`))
+                    // Logika active link sudah baik
+                    pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
                       ? 'bg-slate-700 text-white'
                       : 'text-gray-300 hover:bg-slate-700 hover:text-white'
                   }`}
@@ -80,7 +88,9 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
             ))}
           </ul>
         </nav>
-        <div className="mt-auto border-t border-gray-700 pt-4">
+
+        {/* PERUBAHAN 5: 'mt-auto' sudah ada, ubah 'pt-4' menjadi 'p-4' */}
+        <div className="mt-auto border-t border-gray-700 p-4">
           <p className="text-center text-xs text-gray-400">© 2025 Polda NTB</p>
         </div>
       </aside>

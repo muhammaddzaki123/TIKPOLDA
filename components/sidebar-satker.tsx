@@ -43,11 +43,11 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-[#0d2436] p-4 text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-[#0d2436] text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } flex flex-col`}
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="relative mb-6 flex items-center justify-center px-4 pt-4 pb-6">
           <div className="flex flex-col items-center space-y-2 text-center">
             <Image src="/icon.svg" width={32} height={32} alt="Logo" />
             <div className="flex flex-col">
@@ -55,12 +55,20 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
               <span className="text-xs font-medium text-cyan-400">{session?.user.satker?.nama || 'Satuan Kerja'}</span>
             </div>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden">
+
+          <button 
+            onClick={() => setIsSidebarOpen(false)} 
+            className="absolute top-4 right-4 text-gray-400 hover:text-white md:hidden"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <nav className="flex-1">
+        {/* PERUBAHAN 4 (Nav):
+          - Menambahkan 'px-4' untuk padding horizontal
+          - 'flex-1' akan otomatis mengisi ruang kosong
+        */}
+        <nav className="flex-1 px-4">
           <ul>
             {sidebarItems.map((item) => (
               <li key={item.name}>
@@ -79,7 +87,8 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
             ))}
           </ul>
         </nav>
-        <div className="mt-auto border-t border-gray-700 pt-4">
+
+        <div className="mt-auto border-t border-gray-700 p-4">
           <p className="text-center text-xs text-gray-400">© 2025 Polda NTB</p>
         </div>
       </aside>
