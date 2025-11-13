@@ -70,18 +70,23 @@ export default function ExportButton({ currentTab }: ExportButtonProps) {
         <Button 
           variant="outline" 
           disabled={isExporting}
-          className="bg-green-600 text-white hover:bg-green-700 border-green-600"
+          className="w-full bg-green-600 text-white hover:bg-green-700 border-green-600 sm:w-auto text-xs sm:text-sm"
         >
-          {isExporting ? 'Mengexport...' : 'Export Excel'}
+          {isExporting ? 'Mengexport...' : (
+            <>
+              <span className="hidden sm:inline">Export Excel</span>
+              <span className="sm:hidden">Export</span>
+            </>
+          )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-64 sm:w-72">
         <DropdownMenuItem 
           onClick={() => handleExport(currentTab)}
           className="cursor-pointer"
         >
           <div className="flex flex-col">
-            <span className="font-medium">
+            <span className="text-sm font-medium">
               Export Tab Aktif ({currentTab === 'gudang' ? 'Gudang' : 'Terdistribusi'})
             </span>
             <span className="text-xs text-gray-500">
@@ -94,7 +99,7 @@ export default function ExportButton({ currentTab }: ExportButtonProps) {
           className="cursor-pointer"
         >
           <div className="flex flex-col">
-            <span className="font-medium">Export Inventaris Gudang</span>
+            <span className="text-sm font-medium">Export Inventaris Gudang</span>
             <span className="text-xs text-gray-500">
               Export semua HT di gudang pusat
             </span>
@@ -105,7 +110,7 @@ export default function ExportButton({ currentTab }: ExportButtonProps) {
           className="cursor-pointer"
         >
           <div className="flex flex-col">
-            <span className="font-medium">Export Inventaris Terdistribusi</span>
+            <span className="text-sm font-medium">Export Inventaris Terdistribusi</span>
             <span className="text-xs text-gray-500">
               Export semua HT yang sudah terdistribusi
             </span>
@@ -116,7 +121,7 @@ export default function ExportButton({ currentTab }: ExportButtonProps) {
           className="cursor-pointer"
         >
           <div className="flex flex-col">
-            <span className="font-medium">Export Semua Data</span>
+            <span className="text-sm font-medium">Export Semua Data</span>
             <span className="text-xs text-gray-500">
               Export seluruh inventaris HT
             </span>

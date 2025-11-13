@@ -76,11 +76,12 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
     cell: ({ row, table }) => {
         const isDipinjam = row.original.peminjamanOlehSatker.length > 0;
         return (
-            <div className="text-right space-x-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
                 <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => table.options.meta?.openEditDialog?.(row.original)}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Edit
                 </Button>
@@ -88,6 +89,7 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
                     size="sm" 
                     onClick={() => table.options.meta?.openPinjamkanDialog?.(row.original)}
                     disabled={isDipinjam}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Pinjamkan
                 </Button>
@@ -96,6 +98,7 @@ export const gudangColumns: ColumnDef<HtDetails>[] = [
                     variant="destructive"
                     onClick={() => table.options.meta?.openDeleteDialog?.(row.original)}
                     disabled={isDipinjam}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Hapus
                 </Button>
@@ -174,11 +177,12 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
     cell: ({ row, table }) => {
         const isDipinjamPersonil = row.original.peminjaman.length > 0;
         return (
-            <div className="text-right space-x-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
                 <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => table.options.meta?.openEditDialog?.(row.original)}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Edit
                 </Button>
@@ -187,6 +191,7 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
                     variant="secondary"
                     onClick={() => table.options.meta?.openTarikDialog?.(row.original)}
                     disabled={isDipinjamPersonil}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Tarik ke Gudang
                 </Button>
@@ -195,6 +200,7 @@ export const terdistribusiColumns: ColumnDef<HtDetails>[] = [
                     variant="destructive"
                     onClick={() => table.options.meta?.openDeleteDialog?.(row.original)}
                     disabled={isDipinjamPersonil}
+                    className="w-full text-xs sm:w-auto sm:text-sm"
                 >
                     Hapus
                 </Button>
