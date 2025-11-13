@@ -175,29 +175,29 @@ export function PengajuanApprovalCard({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               {getTipeIcon()}
-              {getTipeLabel()} #{pengajuan.id.substring(0, 8).toUpperCase()}
+              <span className="break-all">{getTipeLabel()} #{pengajuan.id.substring(0, 8).toUpperCase()}</span>
             </CardTitle>
             <Badge className={getStatusColor(pengajuan.status)}>
               {pengajuan.status}
             </Badge>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {pengajuan.trackingStatus && (
               <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="w-full text-xs sm:w-auto sm:text-sm">
+                    <Eye className="mr-2 h-4 w-4" />
                     Tracking
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>Status Tracking Pengajuan</DialogTitle>
+                    <DialogTitle className="text-base sm:text-lg">Status Tracking Pengajuan</DialogTitle>
                   </DialogHeader>
                   <TrackingTimeline
                     currentStatus={pengajuan.trackingStatus}
@@ -206,12 +206,12 @@ export function PengajuanApprovalCard({
                   />
                   {onUpdateTracking && pengajuan.status === 'APPROVED' && (
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="font-medium">Update Status Tracking</h4>
+                      <h4 className="text-sm font-medium sm:text-base">Update Status Tracking</h4>
                       <div className="space-y-3">
                         <div>
-                          <Label>Status Baru</Label>
+                          <Label className="text-sm">Status Baru</Label>
                           <Select value={newTrackingStatus} onValueChange={(value) => setNewTrackingStatus(value as TrackingStatus)}>
-                            <SelectTrigger>
+                            <SelectTrigger className="text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -223,14 +223,15 @@ export function PengajuanApprovalCard({
                           </Select>
                         </div>
                         <div>
-                          <Label>Catatan (Opsional)</Label>
+                          <Label className="text-sm">Catatan (Opsional)</Label>
                           <Textarea
                             value={trackingNotes}
                             onChange={(e) => setTrackingNotes(e.target.value)}
                             placeholder="Tambahkan catatan untuk update status..."
+                            className="text-sm"
                           />
                         </div>
-                        <Button onClick={handleUpdateTracking} disabled={isPending}>
+                        <Button onClick={handleUpdateTracking} disabled={isPending} className="w-full text-sm sm:w-auto">
                           {isPending ? 'Memperbarui...' : 'Update Status'}
                         </Button>
                       </div>
@@ -241,9 +242,9 @@ export function PengajuanApprovalCard({
             )}
             
             {pengajuan.fileUrl && (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="w-full text-xs sm:w-auto sm:text-sm">
                 <a href={pengajuan.fileUrl} target="_blank" rel="noopener noreferrer">
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="mr-2 h-4 w-4" />
                   Dokumen
                 </a>
               </Button>
@@ -252,25 +253,25 @@ export function PengajuanApprovalCard({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="space-y-4 p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-3">
             {pengajuan.tipe === 'peminjaman' && (
               <>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Satker Pemohon</h4>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Satker Pemohon</h4>
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm">{pengajuan.satkerPengaju?.nama}</span>
+                    <span className="text-xs sm:text-sm">{pengajuan.satkerPengaju?.nama}</span>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Keperluan</h4>
-                  <p className="text-sm">{pengajuan.keperluan}</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Keperluan</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.keperluan}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Jumlah HT</h4>
-                  <p className="text-sm font-medium">{pengajuan.jumlah} unit</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Jumlah HT</h4>
+                  <p className="text-xs font-medium sm:text-sm">{pengajuan.jumlah} unit</p>
                 </div>
               </>
             )}
@@ -278,16 +279,16 @@ export function PengajuanApprovalCard({
             {pengajuan.tipe === 'mutasi' && (
               <>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Personil</h4>
-                  <p className="text-sm">{pengajuan.personil?.nama} ({pengajuan.personil?.nrp})</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Personil</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.personil?.nama} ({pengajuan.personil?.nrp})</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Mutasi</h4>
-                  <p className="text-sm">{pengajuan.satkerAsal?.nama} → {pengajuan.satkerTujuan?.nama}</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Mutasi</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.satkerAsal?.nama} → {pengajuan.satkerTujuan?.nama}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Alasan</h4>
-                  <p className="text-sm">{pengajuan.alasan}</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Alasan</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.alasan}</p>
                 </div>
               </>
             )}
@@ -295,14 +296,14 @@ export function PengajuanApprovalCard({
             {pengajuan.tipe === 'pengembalian' && (
               <>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Satker Pemohon</h4>
-                  <p className="text-sm">{pengajuan.satkerPengaju?.nama}</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Satker Pemohon</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.satkerPengaju?.nama}</p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">HT yang Dikembalikan</h4>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">HT yang Dikembalikan</h4>
                   {pengajuan.pengembalianDetails && pengajuan.pengembalianDetails.length > 0 ? (
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">{pengajuan.pengembalianDetails.length} unit HT:</p>
+                      <p className="text-xs font-medium sm:text-sm">{pengajuan.pengembalianDetails.length} unit HT:</p>
                       <div className="flex flex-wrap gap-1">
                         {pengajuan.pengembalianDetails.map((detail, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
@@ -312,14 +313,14 @@ export function PengajuanApprovalCard({
                       </div>
                     </div>
                   ) : pengajuan.ht ? (
-                    <p className="text-sm">{pengajuan.ht.serialNumber} ({pengajuan.ht.merk})</p>
+                    <p className="text-xs sm:text-sm">{pengajuan.ht.serialNumber} ({pengajuan.ht.merk})</p>
                   ) : (
-                    <p className="text-sm text-gray-500">Tidak ada data HT</p>
+                    <p className="text-xs text-gray-500 sm:text-sm">Tidak ada data HT</p>
                   )}
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-gray-600 mb-1">Alasan</h4>
-                  <p className="text-sm">{pengajuan.alasan}</p>
+                  <h4 className="mb-1 text-xs font-medium text-gray-600 sm:text-sm">Alasan</h4>
+                  <p className="text-xs sm:text-sm">{pengajuan.alasan}</p>
                 </div>
               </>
             )}
@@ -403,11 +404,11 @@ export function PengajuanApprovalCard({
                       </div>
                     </div>
                   )}
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowApproveDialog(false)} className="flex-1">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                    <Button variant="outline" onClick={() => setShowApproveDialog(false)} className="w-full sm:flex-1">
                       Batal
                     </Button>
-                    <Button onClick={handleApprove} disabled={isPending} className="flex-1">
+                    <Button onClick={handleApprove} disabled={isPending} className="w-full sm:flex-1">
                       {isPending ? 'Memproses...' : (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima' : 'Setujui')}
                     </Button>
                   </div>
@@ -417,20 +418,20 @@ export function PengajuanApprovalCard({
 
             <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
               <DialogTrigger asChild>
-                <Button variant="destructive" className="flex-1">
-                  <XCircle className="h-4 w-4 mr-2" />
+                <Button variant="destructive" className="w-full text-xs sm:text-sm">
+                  <XCircle className="mr-2 h-4 w-4" />
                   {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian' : 'Tolak'}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">
                     {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian HT' : 'Tolak Pengajuan'}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>
+                    <Label className="text-sm">
                       {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Alasan Penolakan Pengembalian *' : 'Alasan Penolakan *'}
                     </Label>
                     <Textarea
@@ -442,13 +443,14 @@ export function PengajuanApprovalCard({
                           : 'Jelaskan alasan penolakan...'
                       }
                       rows={4}
+                      className="text-sm"
                     />
                   </div>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="flex-1">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                    <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:flex-1">
                       Batal
                     </Button>
-                    <Button variant="destructive" onClick={handleReject} disabled={isPending} className="flex-1">
+                    <Button variant="destructive" onClick={handleReject} disabled={isPending} className="w-full sm:flex-1">
                       {isPending ? 'Memproses...' : 'Tolak'}
                     </Button>
                   </div>

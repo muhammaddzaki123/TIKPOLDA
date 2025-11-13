@@ -98,62 +98,64 @@ export function EnhancedPersetujuanTable({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600">Total</p>
-              <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+              <p className="text-xs font-medium text-blue-600 sm:text-sm">Total</p>
+              <p className="text-xl font-bold text-blue-900 sm:text-2xl">{stats.total}</p>
             </div>
-            <Package className="h-8 w-8 text-blue-500" />
+            <Package className="h-6 w-6 text-blue-500 sm:h-8 sm:w-8" />
           </div>
         </div>
         
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-yellow-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
+              <p className="text-xs font-medium text-yellow-600 sm:text-sm">Pending</p>
+              <p className="text-xl font-bold text-yellow-900 sm:text-2xl">{stats.pending}</p>
             </div>
-            <Clock className="h-8 w-8 text-yellow-500" />
+            <Clock className="h-6 w-6 text-yellow-500 sm:h-8 sm:w-8" />
           </div>
         </div>
         
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-600">Approved</p>
-              <p className="text-2xl font-bold text-green-900">{stats.approved}</p>
+              <p className="text-xs font-medium text-green-600 sm:text-sm">Approved</p>
+              <p className="text-xl font-bold text-green-900 sm:text-2xl">{stats.approved}</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <CheckCircle className="h-6 w-6 text-green-500 sm:h-8 sm:w-8" />
           </div>
         </div>
         
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-red-600">Rejected</p>
-              <p className="text-2xl font-bold text-red-900">{stats.rejected}</p>
+              <p className="text-xs font-medium text-red-600 sm:text-sm">Rejected</p>
+              <p className="text-xl font-bold text-red-900 sm:text-2xl">{stats.rejected}</p>
             </div>
-            <Package className="h-8 w-8 text-red-500" />
+            <Package className="h-6 w-6 text-red-500 sm:h-8 sm:w-8" />
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Filter Section - Responsive */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <Input
-            placeholder="Cari berdasarkan keperluan, satker, personil, atau ID..."
+            placeholder="Cari berdasarkan keperluan, satker..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="w-full text-xs sm:w-40 sm:text-sm">
             <SelectValue placeholder="Filter Status" />
           </SelectTrigger>
           <SelectContent>
@@ -165,7 +167,7 @@ export function EnhancedPersetujuanTable({
         </Select>
 
         <Select value={tipeFilter} onValueChange={setTipeFilter}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="w-full text-xs sm:w-40 sm:text-sm">
             <SelectValue placeholder="Filter Tipe" />
           </SelectTrigger>
           <SelectContent>

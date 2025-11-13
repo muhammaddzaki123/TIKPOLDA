@@ -259,30 +259,36 @@ export default function PersetujuanClient({
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Pusat Persetujuan</h1>
-        <p className="text-sm text-slate-600">
-          Proses semua pengajuan dari Satuan Kerja dengan sistem tracking yang terintegrasi.
+    <div className="w-full space-y-4 p-4 sm:space-y-6 sm:p-6">
+      {/* Header Section - Responsive */}
+      <div className="space-y-1">
+        <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Pusat Persetujuan</h1>
+        <p className="text-xs text-slate-600 sm:text-sm">
+          Proses semua pengajuan dari Satuan Kerja dengan sistem tracking yang terintegrasi
         </p>
       </div>
 
+      {/* Tabs Section - Responsive */}
       <Tabs defaultValue="peminjaman" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="peminjaman">
-            Peminjaman HT ({pengajuanPeminjaman.filter(p => p.status === 'PENDING').length}/{pengajuanPeminjaman.length})
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1">
+          <TabsTrigger value="peminjaman" className="flex flex-col gap-1 py-2 text-xs sm:flex-row sm:gap-2 sm:text-sm">
+            <span className="hidden sm:inline">Peminjaman HT</span>
+            <span className="sm:hidden">Peminjaman</span>
+            <span className="font-bold">({pengajuanPeminjaman.filter(p => p.status === 'PENDING').length}/{pengajuanPeminjaman.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="mutasi">
-            Mutasi Personil ({pengajuanMutasi.filter(m => m.status === 'PENDING').length}/{pengajuanMutasi.length})
+          <TabsTrigger value="mutasi" className="flex flex-col gap-1 py-2 text-xs sm:flex-row sm:gap-2 sm:text-sm">
+            <span className="hidden sm:inline">Mutasi Personil</span>
+            <span className="sm:hidden">Mutasi</span>
+            <span className="font-bold">({pengajuanMutasi.filter(m => m.status === 'PENDING').length}/{pengajuanMutasi.length})</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="peminjaman" className="space-y-6">
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <TabsContent value="peminjaman" className="mt-4 space-y-4 sm:space-y-6">
+          <div className="rounded-lg border bg-white p-3 shadow-sm sm:p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">Peminjaman & Pengembalian HT</h3>
-              <p className="text-sm text-gray-600">
-                Kelola pengajuan peminjaman dan pengembalian HT dari berbagai satker dengan sistem tracking yang terintegrasi.
+              <h3 className="text-base font-semibold sm:text-lg">Peminjaman & Pengembalian HT</h3>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Kelola pengajuan peminjaman dan pengembalian HT dari berbagai satker dengan sistem tracking yang terintegrasi
               </p>
             </div>
             <EnhancedPersetujuanTable
@@ -295,12 +301,12 @@ export default function PersetujuanClient({
           </div>
         </TabsContent>
 
-        <TabsContent value="mutasi" className="space-y-6">
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <TabsContent value="mutasi" className="mt-4 space-y-4 sm:space-y-6">
+          <div className="rounded-lg border bg-white p-3 shadow-sm sm:p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">Pengajuan Mutasi Personil</h3>
-              <p className="text-sm text-gray-600">
-                Kelola pengajuan mutasi personil antar satker.
+              <h3 className="text-base font-semibold sm:text-lg">Pengajuan Mutasi Personil</h3>
+              <p className="text-xs text-gray-600 sm:text-sm">
+                Kelola pengajuan mutasi personil antar satker
               </p>
             </div>
             <EnhancedPersetujuanTable
