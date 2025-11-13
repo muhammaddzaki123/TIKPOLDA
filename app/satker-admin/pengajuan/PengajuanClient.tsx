@@ -86,34 +86,36 @@ export default function PengajuanClient({
   };
 
   return (
-    <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="w-full space-y-4 md:space-y-6 p-4 sm:p-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Pusat Pengajuan</h1>
-        <p className="text-sm text-slate-600 mt-1">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Pusat Pengajuan</h1>
+        <p className="text-xs sm:text-sm text-slate-600 mt-1">
           Gunakan formulir di bawah ini untuk mengirimkan permintaan resmi kepada Super Admin.
         </p>
       </div>
 
       <Tabs defaultValue="peminjaman" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10">
-          <TabsTrigger value="peminjaman" className="text-xs sm:text-sm">
-            <Radio className="mr-2 h-4 w-4" />
-            Peminjaman & Pengembalian HT
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10 gap-2 sm:gap-0">
+          <TabsTrigger value="peminjaman" className="text-xs sm:text-sm py-2 sm:py-0">
+            <Radio className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Peminjaman & Pengembalian HT</span>
+            <span className="sm:hidden">Peminjaman HT</span>
           </TabsTrigger>
-          <TabsTrigger value="mutasi" className="text-xs sm:text-sm">
-            <ArrowRightLeft className="mr-2 h-4 w-4" />
-            Mutasi Personil
+          <TabsTrigger value="mutasi" className="text-xs sm:text-sm py-2 sm:py-0">
+            <ArrowRightLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Mutasi Personil</span>
+            <span className="sm:hidden">Mutasi</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="peminjaman" className="space-y-6 mt-6">
-          <div className="space-y-6">
+        <TabsContent value="peminjaman" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Grid responsif untuk form */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Formulir Peminjaman HT</CardTitle>
-                  <CardDescription>Ajukan permintaan peminjangan HT baru.</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Formulir Peminjaman HT</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Ajukan permintaan peminjangan HT baru.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <FormPeminjaman />
@@ -124,8 +126,8 @@ export default function PengajuanClient({
               {approvedLoans.length > 0 && (
                  <Card>
                    <CardHeader>
-                     <CardTitle>Formulir Pengembalian HT</CardTitle>
-                     <CardDescription>Pilih paket peminjaman yang aktif untuk dikembalikan.</CardDescription>
+                     <CardTitle className="text-base sm:text-lg">Formulir Pengembalian HT</CardTitle>
+                     <CardDescription className="text-xs sm:text-sm">Pilih paket peminjaman yang aktif untuk dikembalikan.</CardDescription>
                    </CardHeader>
                    <CardContent>
                     <ReturnPackageForm approvedLoans={approvedLoans} />
@@ -136,8 +138,8 @@ export default function PengajuanClient({
             
             <Card>
               <CardHeader>
-                <CardTitle>Riwayat Pengajuan Peminjaman & Pengembalian HT</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base sm:text-lg">Riwayat Pengajuan Peminjaman & Pengembalian HT</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Pantau status pengajuan Anda dengan sistem tracking yang detail. Ajukan pengembalian langsung dari tracking atau gunakan form paket di atas.
                 </CardDescription>
               </CardHeader>
@@ -151,12 +153,12 @@ export default function PengajuanClient({
           </div>
         </TabsContent>
 
-        <TabsContent value="mutasi" className="space-y-6 mt-6">
-          <div className="space-y-6">
+        <TabsContent value="mutasi" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
+          <div className="space-y-4 sm:space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Formulir Mutasi Personil</CardTitle>
-                <CardDescription>Pindahkan personil ke Satuan Kerja (Satker) lain.</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Formulir Mutasi Personil</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Pindahkan personil ke Satuan Kerja (Satker) lain.</CardDescription>
               </CardHeader>
               <CardContent>
                 <FormMutasi personilList={personilList} satkerList={satkerList} />
@@ -165,8 +167,8 @@ export default function PengajuanClient({
 
             <Card>
               <CardHeader>
-                <CardTitle>Riwayat Pengajuan Mutasi Personil</CardTitle>
-                <CardDescription>Jejak audit untuk semua permintaan mutasi anggota Anda.</CardDescription>
+                <CardTitle className="text-base sm:text-lg">Riwayat Pengajuan Mutasi Personil</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Jejak audit untuk semua permintaan mutasi anggota Anda.</CardDescription>
               </CardHeader>
               <CardContent>
                 <EnhancedRiwayatTable 

@@ -67,14 +67,14 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
   return (
     <>
       <Card className="shadow-sm border-0 bg-gradient-to-br from-white to-slate-50">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="h-5 w-5 text-blue-600" />
+        <CardHeader className="pb-3 sm:pb-4">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg shrink-0">
+              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             </div>
             <div>
-              <CardTitle className="text-lg font-semibold text-slate-800">Paket Peminjaman Aktif</CardTitle>
-              <CardDescription className="text-sm text-slate-600">
+              <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold text-slate-800">Paket Peminjaman Aktif</CardTitle>
+              <CardDescription className="text-xs sm:text-sm text-slate-600">
                 Ajukan pengembalian untuk paket peminjaman yang telah disetujui
               </CardDescription>
             </div>
@@ -83,15 +83,15 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
         <CardContent className="space-y-4">
           {approvedLoans.length > 0 ? (
             approvedLoans.map((loan) => (
-              <div key={loan.id} className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold text-slate-800 text-sm">Keperluan: {loan.keperluan}</h4>
+              <div key={loan.id} className="rounded-xl border border-slate-200 p-3 sm:p-4 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="flex flex-col gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-xs sm:text-sm leading-relaxed">Keperluan: {loan.keperluan}</h4>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-slate-500">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar className="h-3 w-3 shrink-0" />
                         <span>Disetujui: {new Date(loan.updatedAt).toLocaleDateString('id-ID')}</span>
                       </div>
                       {loan.tanggalMulai && loan.tanggalSelesai && (
@@ -105,26 +105,26 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
                     size="sm" 
                     variant="outline" 
                     onClick={() => openDialog(loan)}
-                    className="ml-4 hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition-colors"
+                    className="w-full sm:w-auto text-xs sm:text-sm hover:bg-red-50 hover:border-red-200 hover:text-red-700 transition-colors"
                     disabled={loan.htDetails.length === 0}
                   >
-                    <Undo2 className="h-4 w-4 mr-2" />
+                    <Undo2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Ajukan Pengembalian
                   </Button>
                 </div>
-                <div className="pt-3 border-t border-slate-100">
-                  <p className="text-xs font-medium text-slate-700 mb-2">
+                <div className="pt-2 sm:pt-3 border-t border-slate-100">
+                  <p className="text-[10px] sm:text-xs font-medium text-slate-700 mb-1.5 sm:mb-2">
                     Aset HT dalam paket ini ({loan.htDetails.length} unit):
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {loan.htDetails.length > 0 ? (
                       loan.htDetails.map(ht => (
-                        <Badge key={ht.serialNumber} variant="secondary" className="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200">
+                        <Badge key={ht.serialNumber} variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5 bg-slate-100 text-slate-700 hover:bg-slate-200">
                           {ht.serialNumber} - {ht.merk}
                         </Badge>
                       ))
                     ) : (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge variant="destructive" className="text-[10px] sm:text-xs px-2 py-0.5">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Tidak ada HT aktif
                       </Badge>
@@ -134,10 +134,10 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
               </div>
             ))
           ) : (
-            <div className="h-32 flex flex-col items-center justify-center text-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-              <Package className="h-8 w-8 text-slate-400 mb-2" />
-              <p className="text-sm text-slate-500 font-medium">Tidak ada paket peminjaman aktif</p>
-              <p className="text-xs text-slate-400">Paket akan muncul setelah pengajuan peminjaman disetujui</p>
+            <div className="h-28 sm:h-32 flex flex-col items-center justify-center text-center bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 px-4">
+              <Package className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400 mb-2" />
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">Tidak ada paket peminjaman aktif</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Paket akan muncul setelah pengajuan peminjaman disetujui</p>
             </div>
           )}
         </CardContent>
@@ -145,13 +145,13 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
 
       {/* Dialog untuk konfirmasi dan mengisi alasan */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <Undo2 className="h-5 w-5 text-red-600" />
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Undo2 className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               Ajukan Pengembalian Paket
             </DialogTitle>
-            <DialogDescription className="text-sm text-slate-600">
+            <DialogDescription className="text-xs sm:text-sm text-slate-600">
               Anda akan mengajukan pengembalian untuk <strong className="text-slate-800">{selectedLoan?.htDetails.length} unit HT</strong> dengan keperluan <strong className="text-slate-800">&quot;{selectedLoan?.keperluan}&quot;</strong>.
             </DialogDescription>
           </DialogHeader>
@@ -174,20 +174,20 @@ export function ReturnPackageForm({ approvedLoans }: ReturnPackageFormProps) {
                 Berikan alasan yang jelas untuk mempercepat proses persetujuan
               </p>
             </div>
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={closeDialog}
                 disabled={isPending}
-                className="flex-1"
+                className="w-full sm:flex-1 text-xs sm:text-sm"
               >
                 Batal
               </Button>
               <Button 
                 type="submit" 
                 disabled={isPending || !alasan.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                className="w-full sm:flex-1 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
               >
                 {isPending ? (
                   <>

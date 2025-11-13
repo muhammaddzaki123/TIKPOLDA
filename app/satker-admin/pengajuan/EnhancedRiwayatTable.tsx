@@ -95,14 +95,14 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
 
   const renderOtherCard = (item: EnhancedRiwayat) => {
     return (
-      <div key={item.id} className="bg-white border rounded-lg p-4 space-y-3">
-        <div className="flex items-start justify-between">
+      <div key={item.id} className="bg-white border rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+        <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-medium text-lg">
+            <h3 className="font-medium text-sm sm:text-base">
               {item.tipe} #{item.id.substring(0, 8).toUpperCase()}
             </h3>
-            <div className="flex gap-2 mt-2">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
+            <div className="flex gap-2 mt-1 sm:mt-2">
+              <span className={`px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium ${
                 item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                 item.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                 'bg-red-100 text-red-800'
@@ -111,24 +111,24 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
               </span>
             </div>
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-xs sm:text-sm text-gray-500 shrink-0">
             {item.createdAt.toLocaleDateString('id-ID')}
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {item.tipe === 'Mutasi Personil' && (
-            <p className="text-sm">
+            <p className="text-xs sm:text-sm">
               <strong>Personil:</strong> {item.personil?.nama} → {item.satkerTujuan?.nama}
             </p>
           )}
           {item.alasan && (
-            <p className="text-sm">
+            <p className="text-xs sm:text-sm">
               <strong>Alasan:</strong> {item.alasan}
             </p>
           )}
           {item.catatanAdmin && (
-            <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+            <p className="text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 rounded">
               <strong>Catatan Admin:</strong> {item.catatanAdmin}
             </p>
           )}
@@ -138,21 +138,21 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Filter dan Pencarian */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Cari berdasarkan ID, keperluan, atau alasan..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-xs sm:text-sm"
           />
         </div>
         
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full md:w-56">
+          <SelectTrigger className="w-full sm:w-56 text-xs sm:text-sm">
             <SelectValue placeholder="Filter Status Pengajuan" />
           </SelectTrigger>
           <SelectContent>
@@ -164,7 +164,7 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
         </Select>
 
         <Select value={trackingFilter} onValueChange={setTrackingFilter}>
-          <SelectTrigger className="w-full md:w-56">
+          <SelectTrigger className="w-full sm:w-56 text-xs sm:text-sm">
             <SelectValue placeholder="Filter Status Tracking" />
           </SelectTrigger>
           <SelectContent>
@@ -182,10 +182,10 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
 
       {/* Hasil */}
       {filteredData.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Tidak ada data</h3>
-          <p className="text-gray-500">
+        <div className="text-center py-8 sm:py-12">
+          <Package className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Tidak ada data</h3>
+          <p className="text-xs sm:text-sm text-gray-500">
             {data.length === 0 
               ? 'Belum ada riwayat pengajuan.' 
               : 'Tidak ada data yang sesuai dengan filter yang dipilih.'
@@ -193,14 +193,14 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Pengajuan Peminjaman dengan tracking detail */}
           {peminjamanData.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 border-b pb-2">
                 Pengajuan Peminjaman HT ({peminjamanData.length})
               </h3>
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4">
                 {peminjamanData.map(renderPeminjamanCard)}
               </div>
             </div>
@@ -208,11 +208,11 @@ export function EnhancedRiwayatTable({ data, onReturnRequest }: EnhancedRiwayatT
 
           {/* Pengajuan lainnya */}
           {otherData.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 border-b pb-2">
                 Pengajuan Lainnya ({otherData.length})
               </h3>
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4">
                 {otherData.map(renderOtherCard)}
               </div>
             </div>
