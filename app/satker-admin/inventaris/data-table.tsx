@@ -69,68 +69,32 @@ export function InventarisDataTable<TData extends HtWithPeminjaman, TValue>({
           placeholder="Cari berdasarkan Serial Number..."
           value={(table.getColumn('serialNumber')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('serialNumber')?.setFilterValue(event.target.value)}
-          className="w-full md:max-w-xs"
+          className="max-w-xs"
         />
       </div>
-      <div className="rounded-md border md:border-none">
+      <div className="w-full overflow-x-auto rounded-md border">
         <Table>
-          <TableHeader className="hidden md:table-header-group">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
-                ))}
-              </TableRow>
+              <TableRow key={headerGroup.id}>{headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+              ))}</TableRow>
             ))}
           </TableHeader>
-          <TableBody className="grid grid-cols-1 gap-4 md:table-row-group">
+          <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="bg-white rounded-lg shadow-md p-4 grid grid-cols-2 gap-x-4 gap-y-3 md:table-row md:shadow-none md:rounded-none md:p-0"
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const headerText = typeof cell.column.columnDef.header === 'function' 
-                      ? 'Data' 
-                      : String(cell.column.columnDef.header);
-                    
-                    if (cell.column.id === 'actions') {
-                      return null; // Hide actions in the main grid, will be rendered separately
-                    }
-
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        className="p-0 md:p-4 border-none h-auto flex flex-col justify-center col-span-1"
-                      >
-                        <span className="text-xs font-bold text-gray-500 md:hidden">{headerText}</span>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    );
-                  })}
-                  <div className="col-span-2 mt-2 border-t pt-2 md:hidden">
-                    {row.getVisibleCells().map(cell => 
-                      cell.column.id === 'actions' ? (
-                        <div key={`${cell.id}-actions`} className="flex justify-end">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </div>
-                      ) : null
-                    )}
-                  </div>
-                </TableRow>
+                <TableRow key={row.id}>{row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                ))}</TableRow>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada data inventaris.
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center">Tidak ada data inventaris.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-center md:justify-end space-x-2 py-4">
+      <div className="flex items-center justify-end space-x-2 py-4">
         <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Sebelumnya</Button>
         <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Selanjutnya</Button>
       </div>

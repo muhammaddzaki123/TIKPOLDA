@@ -43,20 +43,15 @@ export default async function InventarisSatkerPage() {
   const inventarisData = await getInventarisSatker(satkerId);
 
   return (
-    <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="w-full space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Manajemen Inventaris HT</h1>
-          <p className="text-sm text-slate-600 mt-1">Kelola semua aset HT di unit kerja Anda.</p>
+          <h1 className="text-xl font-bold md:text-2xl">Manajemen Inventaris HT</h1>
+          <p className="text-sm text-slate-600">Kelola semua aset HT di unit kerja Anda.</p>
         </div>
         
         <Dialog>
-          <DialogTrigger asChild>
-            <Button className="w-full md:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Tambah HT Baru
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" />Tambah HT Baru</Button></DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Input Data Aset HT Baru</DialogTitle>
