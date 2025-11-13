@@ -112,30 +112,32 @@ async function getData(satkerId: string) {
     ...riwayatPeminjaman.map((p) => {
       const approvedHts = p.status === 'APPROVED' ? peminjamanSatker.filter((ps) => ps.catatan?.includes(p.id.substring(0, 8))).map((ps) => ps.ht) : [];
       
-      // Tentukan tracking status berdasarkan kondisi peminjaman dan pengembalian
+      // Gunakan trackingStatus dari database, prioritas utama!
       let trackingStatus = p.trackingStatus || 'PENGAJUAN_DIKIRIM';
       
-      // Jika tidak ada trackingStatus dari database, tentukan berdasarkan kondisi
-      if (!p.trackingStatus) {
+      // Hanya recalculate jika trackingStatus belum diset atau masih default
+      // KECUALI jika sudah SUDAH_DIKEMBALIKAN (final state yang tidak boleh diubah)
+      const shouldRecalculate = (!p.trackingStatus || p.trackingStatus === 'PENGAJUAN_DIKIRIM');
+      const isFinalState = p.trackingStatus === 'SUDAH_DIKEMBALIKAN';
+      
+      if (shouldRecalculate && !isFinalState) {
         if (p.status === 'APPROVED') {
-          // Cek apakah ada pengajuan pengembalian untuk paket ini
-          const hasReturnRequest = riwayatPengembalian.some((r) => 
-            r.pengajuanPeminjamanId === p.id && r.status === 'PENDING'
+          // Cek status pengembalian dari database
+          const returnRequests = riwayatPengembalian.filter((r) => 
+            r.pengajuanPeminjamanId === p.id
           );
           
-          // Cek apakah sudah ada pengembalian yang disetujui
-          const hasApprovedReturn = riwayatPengembalian.some((r) => 
-            r.pengajuanPeminjamanId === p.id && r.status === 'APPROVED'
-          );
+          const hasApprovedReturn = returnRequests.some((r) => r.status === 'APPROVED');
+          const hasPendingReturn = returnRequests.some((r) => r.status === 'PENDING');
           
-          // Cek apakah semua HT sudah dikembalikan (tanggalKembali tidak null)
+          // Cek kondisi fisik HT
           const allHtsReturned = peminjamanSatker
             .filter((ps) => ps.catatan?.includes(p.id.substring(0, 8)))
             .every((ps) => ps.tanggalKembali !== null);
           
           if (hasApprovedReturn || allHtsReturned) {
             trackingStatus = 'SUDAH_DIKEMBALIKAN';
-          } else if (hasReturnRequest) {
+          } else if (hasPendingReturn) {
             trackingStatus = 'PERMINTAAN_PENGEMBALIAN';
           } else {
             trackingStatus = 'SEDANG_DIGUNAKAN';

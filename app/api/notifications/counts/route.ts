@@ -62,7 +62,8 @@ export async function GET() {
       const [
         pengajuanUpdated,
         keterlambatanInternal,
-        mendekatiDeadline
+        mendekatiDeadline,
+        statusTrackingBerubah
       ] = await Promise.all([
         prisma.pengajuanPeminjaman.count({
           where: {
@@ -87,11 +88,19 @@ export async function GET() {
               lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000)
             }
           }
+        }),
+        // Hitung pengajuan dengan perubahan tracking status dalam 24 jam terakhir
+        prisma.pengajuanPeminjaman.count({
+          where: {
+            satkerId,
+            trackingStatus: { in: ['SIAP_DIAMBIL', 'PERMINTAAN_PENGEMBALIAN', 'SUDAH_DIKEMBALIKAN'] },
+            updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+          }
         })
       ]);
 
       result = {
-        pendingPeminjaman: pengajuanUpdated,
+        pendingPeminjaman: pengajuanUpdated + statusTrackingBerubah,
         pendingMutasi: 0,
         pendingPengembalian: 0,
         keterlambatan: keterlambatanInternal,

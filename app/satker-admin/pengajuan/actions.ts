@@ -247,13 +247,12 @@ export async function createPackagePengembalian(formData: FormData) {
         where: { id: pengajuanPeminjamanId },
         data: {
           trackingStatus: 'PERMINTAAN_PENGEMBALIAN',
+          tanggalPermintaanKembali: new Date(),
           catatanAdmin: `Permintaan pengembalian diajukan: ${alasan.trim()}`,
           updatedAt: new Date()
         }
       });
     });
-
-    console.log(`Package return request created successfully for loan ${pengajuanPeminjamanId} with ${htIdsToReturn.length} HT units`);
 
   } catch (error: unknown) {
     console.error('Error creating package return request:', error);

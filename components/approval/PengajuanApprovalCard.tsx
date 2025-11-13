@@ -97,17 +97,15 @@ export function PengajuanApprovalCard({
 
     startTransition(async () => {
       try {
-        // [FIX] Tambahkan kondisi untuk membedakan aksi
-        // Jika ini adalah permintaan pengembalian dari tracking, panggil onUpdateTracking
-        if (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' && onUpdateTracking) {
-          await onUpdateTracking(pengajuan.id, 'SUDAH_DIKEMBALIKAN');
-          toast.success('Pengembalian HT berhasil diterima.');
-        } else {
-          // Untuk semua kasus persetujuan lainnya (peminjaman, mutasi, atau pengembalian tipe baru)
-          await onApprove(pengajuan.id, selectedHtIds);
-          toast.success('Pengajuan berhasil disetujui.');
-        }
-
+        // Panggil onApprove untuk semua jenis persetujuan
+        // handleApprove di PersetujuanClient akan menentukan aksi yang tepat
+        await onApprove(pengajuan.id, selectedHtIds, pengajuan.trackingStatus);
+        
+        const successMessage = pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' 
+          ? 'Pengembalian HT berhasil diterima.' 
+          : 'Pengajuan berhasil disetujui.';
+        
+        toast.success(successMessage);
         setShowApproveDialog(false);
         setSelectedHtIds([]); // Reset state setelah berhasil
       } catch (error: unknown) {

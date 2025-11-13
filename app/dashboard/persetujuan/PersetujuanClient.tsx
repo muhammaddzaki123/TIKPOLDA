@@ -170,12 +170,18 @@ export default function PersetujuanClient({
       
       if (isPeminjaman) {
         console.log('Peminjaman trackingStatus:', isPeminjaman.trackingStatus);
+        console.log('returnRequestId:', isPeminjaman.returnRequestId);
       }
 
       // Cek apakah ini adalah permintaan pengembalian
       if (isPeminjaman && isPeminjaman.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') {
-        if (!isPeminjaman.returnRequestId) throw new Error('Return request ID not found.');
+        if (!isPeminjaman.returnRequestId) {
+          console.error('Return request ID not found for pengajuan:', pengajuanId);
+          throw new Error('Return request ID not found.');
+        }
+        console.log('Calling approvePengembalian with ID:', isPeminjaman.returnRequestId);
         await approvePengembalian(isPeminjaman.returnRequestId);
+        console.log('approvePengembalian completed successfully');
         toast.success('Pengembalian HT berhasil disetujui.');
       } else if (isPeminjaman) {
         console.log('Processing normal peminjaman approval for:', pengajuanId);
@@ -236,6 +242,7 @@ export default function PersetujuanClient({
   const handleUpdateTracking = async (pengajuanId: string, trackingStatus: TrackingStatus, notes?: string) => {
     try {
       console.log('handleUpdateTracking called with:', { pengajuanId, trackingStatus, notes });
+      
       await updateTrackingStatus(pengajuanId, trackingStatus, notes);
       console.log('updateTrackingStatus completed successfully');
       toast.success('Status tracking berhasil diperbarui.');

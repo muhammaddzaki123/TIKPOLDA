@@ -157,6 +157,7 @@ export async function approvePengembalian(pengajuanId: string) {
     const currentTime = new Date();
 
     await prisma.$transaction(async (tx) => {
+      // Update status pengajuan pengembalian
       await tx.pengajuanPengembalian.update({
         where: { id: pengajuanId },
         data: { 
@@ -165,6 +166,20 @@ export async function approvePengembalian(pengajuanId: string) {
         },
       });
 
+      // Update tracking status pengajuan peminjaman terkait
+      if (pengajuan.pengajuanPeminjamanId) {
+        await tx.pengajuanPeminjaman.update({
+          where: { id: pengajuan.pengajuanPeminjamanId },
+          data: {
+            trackingStatus: 'SUDAH_DIKEMBALIKAN',
+            tanggalSudahDikembalikan: currentTime,
+            catatanAdmin: `HT berhasil dikembalikan ke gudang pada ${currentTime.toLocaleDateString('id-ID')}`,
+            updatedAt: currentTime
+          }
+        });
+      }
+
+      // Proses pengembalian setiap HT
       for (const detail of pengajuan.pengembalianDetails) {
         const peminjamanAktif = await tx.peminjamanSatker.findFirst({
           where: { 
@@ -321,48 +336,7 @@ export async function updateTrackingStatus(pengajuanId: string, trackingStatus: 
       data: updateData
     });
 
-    console.log('Pengajuan updated successfully:', updatedPengajuan.id);
-
-    if (trackingStatus === 'SUDAH_DIKEMBALIKAN') {
-      console.log('Processing HT return to warehouse...');
-      
-      const pengajuan = await prisma.pengajuanPeminjaman.findUnique({
-        where: { id: pengajuanId }
-      });
-
-      if (pengajuan) {
-        console.log('Found pengajuan for HT return:', pengajuan.id);
-        
-        const updatedLoans = await prisma.peminjamanSatker.updateMany({
-          where: {
-            satkerId: pengajuan.satkerId,
-            catatan: { contains: pengajuan.id.substring(0, 8) },
-            tanggalKembali: null
-          },
-          data: { tanggalKembali: currentTime }
-        });
-
-        console.log('Updated loan records:', updatedLoans.count);
-
-        const peminjamanSatker = await prisma.peminjamanSatker.findMany({
-          where: {
-            satkerId: pengajuan.satkerId,
-            catatan: { contains: pengajuan.id.substring(0, 8) }
-          }
-        });
-
-        console.log('Found peminjaman satker records:', peminjamanSatker.length);
-
-        for (const peminjaman of peminjamanSatker) {
-          await prisma.hT.update({
-            where: { id: peminjaman.htId },
-            data: { satkerId: null }
-          });
-          console.log('Returned HT to warehouse:', peminjaman.htId);
-        }
-      }
-    }
-
+    console.log('Pengajuan tracking status updated successfully:', updatedPengajuan.id);
     console.log('updateTrackingStatus completed successfully');
 
     revalidatePath('/dashboard/persetujuan');
