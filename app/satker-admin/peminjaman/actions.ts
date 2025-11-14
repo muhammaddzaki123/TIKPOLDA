@@ -225,6 +225,19 @@ export async function perpanjangPeminjaman(formData: FormData) {
   }
 
   try {
+    // Ambil data peminjaman lama
+    const peminjamanLama = await prisma.peminjaman.findUnique({
+      where: { id: peminjamanId },
+      include: {
+        ht: true,
+        personil: true,
+      },
+    });
+
+    if (!peminjamanLama) {
+      throw new Error('Peminjaman tidak ditemukan.');
+    }
+
     // Update estimasi kembali dan SPRINT
     const updateData: { estimasiKembali: Date; fileUrl?: string; catatan?: string } = {
       estimasiKembali: estimasiKembaliBaru,
@@ -238,9 +251,37 @@ export async function perpanjangPeminjaman(formData: FormData) {
       updateData.catatan = catatan;
     }
 
-    await prisma.peminjaman.update({
-      where: { id: peminjamanId },
-      data: updateData,
+    await prisma.$transaction(async (tx) => {
+      // 1. Update peminjaman
+      await tx.peminjaman.update({
+        where: { id: peminjamanId },
+        data: updateData,
+      });
+
+      // 2. Catat riwayat perpanjangan
+      await tx.riwayatPerpanjangan.create({
+        data: {
+          peminjamanId: peminjamanId,
+          estimasiKembaliLama: peminjamanLama.estimasiKembali,
+          estimasiKembaliBaru: estimasiKembaliBaru,
+          fileUrlLama: peminjamanLama.fileUrl,
+          fileUrlBaru: fileUrl,
+          catatan: catatan,
+          adminPencatatId: session.user.id,
+        },
+      });
+
+      // 3. Buat notifikasi untuk admin satker
+      await tx.notification.create({
+        data: {
+          userId: session.user.id,
+          type: 'perpanjangan_peminjaman',
+          title: 'Perpanjangan Peminjaman HT',
+          message: `HT ${peminjamanLama.ht.serialNumber} oleh ${peminjamanLama.personil.nama} diperpanjang hingga ${estimasiKembaliBaru.toLocaleDateString('id-ID', { dateStyle: 'long' })}`,
+          relatedId: peminjamanId,
+          priority: 'medium',
+        },
+      });
     });
   } catch (error) {
     console.error(error);

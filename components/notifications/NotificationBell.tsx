@@ -52,7 +52,16 @@ export default function NotificationBell() {
       // Set interval untuk polling notifikasi setiap 30 detik
       const interval = setInterval(fetchNotifications, 30000);
       
-      return () => clearInterval(interval);
+      // Listen untuk custom event refresh dari komponen lain
+      const handleRefresh = () => {
+        fetchNotifications();
+      };
+      window.addEventListener('refreshNotifications', handleRefresh);
+      
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('refreshNotifications', handleRefresh);
+      };
     }
   }, [session, fetchNotifications]);
 

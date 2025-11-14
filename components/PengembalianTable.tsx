@@ -15,6 +15,7 @@ import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { KartuPeminjamanModal } from './KartuPeminjamanModal';
 import { PerpanjanganModal } from './PerpanjanganModal';
+import { RiwayatPerpanjanganModal } from './RiwayatPerpanjanganModal';
 
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -47,6 +48,10 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
   const [isPerpanjanganModalOpen, setIsPerpanjanganModalOpen] = useState(false);
   const [selectedPerpanjanganData, setSelectedPerpanjanganData] = useState<PeminjamanAktif | null>(null);
 
+  // State untuk modal riwayat perpanjangan
+  const [isRiwayatModalOpen, setIsRiwayatModalOpen] = useState(false);
+  const [selectedRiwayatData, setSelectedRiwayatData] = useState<PeminjamanAktif | null>(null);
+
   const openDialog = (peminjaman: PeminjamanAktif) => {
     setSelectedPeminjaman(peminjaman);
     setIsDialogOpen(true);
@@ -60,6 +65,11 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
   const openPerpanjanganModal = (peminjaman: PeminjamanAktif) => {
     setSelectedPerpanjanganData(peminjaman);
     setIsPerpanjanganModalOpen(true);
+  };
+
+  const openRiwayatModal = (peminjaman: PeminjamanAktif) => {
+    setSelectedRiwayatData(peminjaman);
+    setIsRiwayatModalOpen(true);
   };
 
   const handleSubmit = (formData: FormData) => {
@@ -91,6 +101,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               <TableHead className="text-xs sm:text-sm">Batas Kembali</TableHead>
               <TableHead className="text-xs sm:text-sm">Sprint</TableHead>
               <TableHead className="text-xs sm:text-sm">Kartu</TableHead>
+              <TableHead className="text-xs sm:text-sm">Riwayat</TableHead>
               <TableHead className="text-right text-xs sm:text-sm">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -145,6 +156,17 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                       </Button>
                     </TableCell>
                     
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-7 sm:h-8 text-[10px] sm:text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                        onClick={() => openRiwayatModal(peminjaman)}
+                      >
+                        Lihat
+                      </Button>
+                    </TableCell>
+                    
                     <TableCell className="text-right space-x-1">
                       <Button 
                         variant="outline"
@@ -167,7 +189,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   Tidak ada HT yang sedang dipinjam.
                 </TableCell>
               </TableRow>
@@ -225,14 +247,24 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
                       </Link>
                     </Button>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full text-xs h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                    onClick={() => openKartuModal(peminjaman)}
-                  >
-                    Lihat Kartu Peminjaman
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                      onClick={() => openKartuModal(peminjaman)}
+                    >
+                      Kartu
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs h-8 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                      onClick={() => openRiwayatModal(peminjaman)}
+                    >
+                      Riwayat
+                    </Button>
+                  </div>
                   <Button 
                     variant="outline"
                     size="sm" 
@@ -295,6 +327,13 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
         isOpen={isPerpanjanganModalOpen}
         onClose={() => setIsPerpanjanganModalOpen(false)}
         peminjaman={selectedPerpanjanganData}
+      />
+
+      {/* Modal Riwayat Perpanjangan */}
+      <RiwayatPerpanjanganModal
+        isOpen={isRiwayatModalOpen}
+        onClose={() => setIsRiwayatModalOpen(false)}
+        peminjaman={selectedRiwayatData}
       />
     </>
   );

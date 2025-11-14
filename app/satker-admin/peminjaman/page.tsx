@@ -4,10 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { PeminjamanForm } from '@/components/PeminjamanForm';
-import { PengembalianTable } from '@/components/PengembalianTable';
-import { OverdueNotificationAlert } from '@/components/OverdueNotificationAlert';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { PeminjamanClientWrapper } from './PeminjamanClientWrapper';
 
 // Force dynamic rendering to avoid Prisma prepared statement conflicts during build
 export const dynamic = 'force-dynamic';
@@ -70,27 +67,11 @@ export default async function PeminjamanPage() {
         </p>
       </div>
 
-      {/* Notifikasi HT Terlambat */}
-      <OverdueNotificationAlert />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Kolom Kiri: Form Peminjaman */}
-        <div className="lg:col-span-1">
-          <PeminjamanForm htTersedia={htTersedia} personilList={personilList} />
-        </div>
-
-        {/* Kolom Kanan: Tabel Pengembalian */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Daftar HT Sedang Dipinjam</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PengembalianTable data={htDipinjam} />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <PeminjamanClientWrapper
+        htDipinjam={htDipinjam}
+        htTersedia={htTersedia}
+        personilList={personilList}
+      />
     </div>
   );
 }

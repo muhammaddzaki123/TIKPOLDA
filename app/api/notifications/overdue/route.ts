@@ -9,8 +9,9 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     const satkerId = session?.user?.satkerId;
+    const userId = session?.user?.id;
 
-    if (!satkerId) {
+    if (!satkerId || !userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,6 +35,42 @@ export async function GET() {
         estimasiKembali: 'asc',
       },
     });
+
+    // Buat notifikasi untuk setiap HT yang terlambat (jika belum ada notifikasi untuk hari ini)
+    for (const loan of overdueLoans) {
+      const daysOverdue = Math.floor(
+        (today.getTime() - new Date(loan.estimasiKembali!).getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // Cek apakah sudah ada notifikasi untuk peminjaman ini hari ini
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: userId,
+          type: 'keterlambatan_peminjaman',
+          relatedId: loan.id,
+          createdAt: {
+            gte: todayStart,
+          },
+        },
+      });
+
+      // Jika belum ada notifikasi hari ini, buat yang baru
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: userId,
+            type: 'keterlambatan_peminjaman',
+            title: '⚠️ HT Terlambat Dikembalikan',
+            message: `HT ${loan.ht.serialNumber} oleh ${loan.personil.nama} terlambat ${daysOverdue} hari. Segera hubungi personil!`,
+            relatedId: loan.id,
+            priority: 'high',
+          },
+        });
+      }
+    }
 
     return NextResponse.json({
       count: overdueLoans.length,

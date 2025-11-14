@@ -19,7 +19,11 @@ interface OverdueLoan {
   daysOverdue: number;
 }
 
-export function OverdueNotificationAlert() {
+interface OverdueNotificationAlertProps {
+  onNotificationCreated?: () => void;
+}
+
+export function OverdueNotificationAlert({ onNotificationCreated }: OverdueNotificationAlertProps) {
   const [overdueLoans, setOverdueLoans] = useState<OverdueLoan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -31,6 +35,11 @@ export function OverdueNotificationAlert() {
         if (response.ok) {
           const data = await response.json();
           setOverdueLoans(data.overdueLoans || []);
+          
+          // Trigger callback jika ada notifikasi baru yang dibuat
+          if (data.overdueLoans && data.overdueLoans.length > 0 && onNotificationCreated) {
+            onNotificationCreated();
+          }
         }
       } catch (error) {
         console.error('Error fetching overdue loans:', error);
@@ -45,7 +54,7 @@ export function OverdueNotificationAlert() {
     const interval = setInterval(fetchOverdueLoans, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [onNotificationCreated]);
 
   if (isLoading || overdueLoans.length === 0 || isDismissed) {
     return null;
