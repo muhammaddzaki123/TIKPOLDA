@@ -1,8 +1,12 @@
 // app/api/uploads/[...path]/route.ts
+/**
+ * DEPRECATED: This API route is no longer needed.
+ * All files are now stored in Supabase Storage with public URLs.
+ * 
+ * This route is kept for backward compatibility with old file URLs.
+ * New uploads will use Supabase Storage directly.
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
 
 export async function GET(
   request: NextRequest,
@@ -11,41 +15,22 @@ export async function GET(
   try {
     const { path: filePath } = await params;
     
-    // Construct the full file path
-    const fullPath = path.join(process.cwd(), 'public', 'uploads', ...filePath);
-    
-    // Check if file exists
-    if (!existsSync(fullPath)) {
-      return new NextResponse('File not found', { status: 404 });
-    }
-    
-    // Read the file
-    const fileBuffer = await readFile(fullPath);
-    
-    // Determine content type based on file extension
-    const ext = path.extname(fullPath).toLowerCase();
-    const contentTypeMap: { [key: string]: string } = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.pdf': 'application/pdf',
-    };
-    
-    const contentType = contentTypeMap[ext] || 'application/octet-stream';
-    
-    // Return the file with proper cache headers
-    return new NextResponse(fileBuffer as unknown as BodyInit, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
-    });
+    // Return a helpful message for deprecated endpoint
+    return new NextResponse(
+      JSON.stringify({
+        error: 'This endpoint is deprecated',
+        message: 'Files are now stored in Supabase Storage. Please use the new file URLs from Supabase.',
+        requestedPath: filePath.join('/'),
+      }),
+      { 
+        status: 410, // Gone
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
-    console.error('Error serving file:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('Error in deprecated uploads route:', error);
+    return new NextResponse('Gone - Files moved to cloud storage', { status: 410 });
   }
 }

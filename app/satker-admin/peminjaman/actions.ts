@@ -6,8 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { uploadPdfToSupabase } from '@/lib/supabase/storage';
 
 export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -37,24 +36,16 @@ export async function createPeminjaman(formData: FormData) {
   let fileUrl: string | null = null;
 
   if (file && file.size > 0) {
-    if (file.size > 2 * 1024 * 1024) { // 2MB
-      throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+    try {
+      // Upload PDF ke Supabase Storage
+      fileUrl = await uploadPdfToSupabase(file, 'dokumen-peminjaman', 'berita_acara');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Gagal mengupload dokumen.');
     }
-    if (file.type !== 'application/pdf') {
-       throw new Error('File yang diunggah harus berformat PDF.');
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `${Date.now()}_${personilId}_${file.name.replace(/\s/g, '_')}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'berita_acara');
-
-    await mkdir(uploadDir, { recursive: true });
-
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
-
-    fileUrl = `/uploads/berita_acara/${filename}`;
   }
 
   try {
@@ -205,24 +196,16 @@ export async function perpanjangPeminjaman(formData: FormData) {
 
   // Upload SPRINT baru jika ada
   if (file && file.size > 0) {
-    if (file.size > 2 * 1024 * 1024) {
-      throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+    try {
+      // Upload PDF ke Supabase Storage
+      fileUrl = await uploadPdfToSupabase(file, 'dokumen-peminjaman', 'berita_acara');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Gagal mengupload dokumen perpanjangan.');
     }
-    if (file.type !== 'application/pdf') {
-      throw new Error('File yang diunggah harus berformat PDF.');
-    }
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `${Date.now()}_perpanjangan_${file.name.replace(/\s/g, '_')}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'berita_acara');
-
-    await mkdir(uploadDir, { recursive: true });
-
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
-
-    fileUrl = `/uploads/berita_acara/${filename}`;
   }
 
   try {

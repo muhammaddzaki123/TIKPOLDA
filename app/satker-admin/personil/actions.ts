@@ -6,8 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { uploadFileToSupabase } from '@/lib/supabase/storage';
 
 async function getSessionOrThrow() {
   const session = await getServerSession(authOptions);
@@ -20,39 +19,15 @@ async function getSessionOrThrow() {
 async function handleFileUpload(file: File): Promise<string | null> {
   if (!file || file.size === 0) return null;
 
-  // Validasi ukuran file (1MB = 1024 * 1024 bytes)
-  if (file.size > 1024 * 1024) {
-    throw new Error('Ukuran file tidak boleh lebih dari 1MB.');
-  }
-
-  // Validasi tipe file
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('Format file harus JPG, JPEG, atau PNG.');
-  }
-
   try {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Generate nama file unik
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const fileExtension = file.name.split('.').pop();
-    const filename = `${timestamp}_${randomString}.${fileExtension}`;
-    
-    // Buat direktori jika belum ada
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'foto_personil');
-    await mkdir(uploadDir, { recursive: true });
-    
-    // Simpan file
-    const filePath = path.join(uploadDir, filename);
-    await writeFile(filePath, buffer);
-    
-    // Return URL relatif
-    return `/uploads/foto_personil/${filename}`;
+    // Upload ke Supabase Storage
+    const fileUrl = await uploadFileToSupabase(file);
+    return fileUrl;
   } catch (error) {
     console.error('Error uploading file:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('Gagal mengupload foto.');
   }
 }
