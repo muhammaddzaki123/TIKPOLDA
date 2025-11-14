@@ -278,6 +278,45 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
       }
     }
 
+    // 3. Pengajuan Pengembalian yang diupdate
+    const pengembalianUpdated = await prisma.pengajuanPengembalian.findMany({
+      where: {
+        satkerId,
+        updatedAt: { gte: last24Hours }
+      },
+      include: {
+        pengembalianDetails: { include: { ht: true } }
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 20
+    });
+
+    for (const pengembalian of pengembalianUpdated) {
+      const notifKey = `${pengembalian.id}_${pengembalian.status}`;
+      if (!existingIds.has(notifKey)) {
+        const jumlahHT = pengembalian.pengembalianDetails.length;
+        const title = pengembalian.status === 'APPROVED'
+          ? 'Pengembalian Diterima'
+          : pengembalian.status === 'REJECTED'
+          ? 'Pengembalian Ditolak'
+          : 'Update Pengembalian';
+        
+        const priority = pengembalian.status === 'REJECTED' ? 'high' : 'medium';
+        
+        await prisma.notification.create({
+          data: {
+            userId,
+            type: 'pengembalian_baru',
+            title,
+            message: `${jumlahHT} unit HT - Status: ${pengembalian.status}${pengembalian.catatanAdmin ? ` - ${pengembalian.catatanAdmin}` : ''}`,
+            relatedId: notifKey,
+            priority,
+            createdAt: pengembalian.updatedAt
+          }
+        });
+      }
+    }
+
   } catch (error) {
     console.error('Error creating satker notifications:', error);
   }

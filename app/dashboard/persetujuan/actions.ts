@@ -12,6 +12,43 @@ async function getSuperAdminIdOrThrow() {
   }
 }
 
+// Helper function untuk membuat notifikasi untuk semua admin satker
+async function createNotificationForSatker(
+  satkerId: string, 
+  type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan',
+  title: string, 
+  message: string,
+  priority: 'low' | 'medium' | 'high',
+  relatedId: string
+) {
+  try {
+    // Cari semua user yang merupakan admin satker dari satker ini
+    const adminUsers = await prisma.user.findMany({
+      where: { 
+        satkerId,
+        role: 'ADMIN_SATKER'
+      }
+    });
+
+    // Buat notifikasi untuk setiap admin
+    for (const admin of adminUsers) {
+      await prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type,
+          title,
+          message,
+          priority,
+          relatedId,
+          isRead: false
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error creating notification for satker:', error);
+  }
+}
+
 export async function approveMutasi(pengajuanId: string) {
   await getSuperAdminIdOrThrow();
 
@@ -205,6 +242,16 @@ export async function approvePengembalian(pengajuanId: string) {
 
     console.log(`Package return approved: ${pengajuan.pengembalianDetails.length} HT units returned to warehouse from ${pengajuan.satkerPengaju.nama}`);
 
+    // Buat notifikasi untuk admin satker
+    await createNotificationForSatker(
+      pengajuan.satkerId,
+      'pengembalian_baru',
+      'Pengembalian Diterima',
+      `${pengajuan.pengembalianDetails.length} unit HT berhasil dikembalikan ke gudang pusat`,
+      'high',
+      `${pengajuanId}_APPROVED`
+    );
+
     revalidatePath('/dashboard/persetujuan');
     revalidatePath('/dashboard/inventaris');
     revalidatePath('/dashboard/satker');
@@ -234,6 +281,9 @@ export async function rejectPengajuan(formData: FormData) {
     if (tipe === 'pengembalian') {
       const pengajuanPengembalian = await prisma.pengajuanPengembalian.findUnique({
         where: { id: pengajuanId },
+        include: {
+          pengembalianDetails: { include: { ht: true } }
+        }
       });
       
       if (!pengajuanPengembalian) {
@@ -260,6 +310,16 @@ export async function rejectPengajuan(formData: FormData) {
           },
         })
       ]);
+
+      // Buat notifikasi untuk admin satker tentang penolakan
+      await createNotificationForSatker(
+        pengajuanPengembalian.satkerId,
+        'pengembalian_baru',
+        'Pengembalian Ditolak',
+        `Pengembalian ${pengajuanPengembalian.pengembalianDetails.length} unit HT ditolak. Alasan: ${catatanAdmin}`,
+        'high',
+        `${pengajuanId}_REJECTED`
+      );
     } else if (tipe === 'mutasi') {
       await prisma.pengajuanMutasi.update({
         where: { id: pengajuanId },

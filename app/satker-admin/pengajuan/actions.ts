@@ -254,6 +254,26 @@ export async function createPackagePengembalian(formData: FormData) {
       });
     });
 
+    // Buat notifikasi untuk semua Super Admin
+    const superAdmins = await prisma.user.findMany({
+      where: { role: 'SUPER_ADMIN' }
+    });
+
+    for (const admin of superAdmins) {
+      await prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type: 'pengembalian_baru',
+          title: 'Pengajuan Pengembalian Baru',
+          message: `${originalLoan.satkerPengaju.nama} mengajukan pengembalian ${htIdsToReturn.length} unit HT`,
+          priority: 'high',
+          relatedId: pengajuanPeminjamanId,
+          satkerName: originalLoan.satkerPengaju.nama,
+          isRead: false
+        }
+      });
+    }
+
   } catch (error: unknown) {
     console.error('Error creating package return request:', error);
     
