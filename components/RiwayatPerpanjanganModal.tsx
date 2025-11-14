@@ -38,12 +38,6 @@ export function RiwayatPerpanjanganModal({ isOpen, onClose, peminjaman }: Riwaya
   const [riwayat, setRiwayat] = useState<RiwayatPerpanjangan[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && peminjaman) {
-      fetchRiwayat();
-    }
-  }, [isOpen, peminjaman]);
-
   const fetchRiwayat = async () => {
     if (!peminjaman) return;
     
@@ -60,6 +54,13 @@ export function RiwayatPerpanjanganModal({ isOpen, onClose, peminjaman }: Riwaya
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && peminjaman) {
+      fetchRiwayat();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, peminjaman]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

@@ -1,4 +1,4 @@
-// app/api/peminjaman/[id]/riwayat-perpanjangan/route.ts
+// app/api/peminjaman/[id]/count-perpanjangan/route.ts
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
@@ -20,21 +20,18 @@ export async function GET(
     const params = await context.params;
     const peminjamanId = params.id;
 
-    // Ambil riwayat perpanjangan
-    const riwayat = await prisma.riwayatPerpanjangan.findMany({
+    // Hitung jumlah perpanjangan
+    const count = await prisma.riwayatPerpanjangan.count({
       where: {
         peminjamanId: peminjamanId,
-      },
-      orderBy: {
-        createdAt: 'desc',
       },
     });
 
     return NextResponse.json({
-      riwayat,
+      count,
     });
   } catch (error) {
-    console.error('Error fetching riwayat perpanjangan:', error);
+    console.error('Error counting perpanjangan:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
