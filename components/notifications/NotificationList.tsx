@@ -2,7 +2,19 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Clock, AlertCircle, CheckCircle, Info, RefreshCw, Bell, PackageCheck, PackageX, PackagePlus } from 'lucide-react';
+import { 
+  Clock, 
+  AlertCircle, 
+  CheckCircle, 
+  Info, 
+  RefreshCw, 
+  Bell, 
+  PackageCheck, 
+  PackageX, 
+  PackagePlus,
+  Truck,
+  Package
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationItem } from '@/lib/supabase/notifications';
 
@@ -24,17 +36,39 @@ export default function NotificationList({
     // Tentukan warna berdasarkan status di title
     let colorClass = 'text-yellow-500'; // Default: kuning (pending/proses)
     
-    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap')) {
-      colorClass = 'text-green-500'; // Hijau untuk approved
+    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap') || title.includes('Berhasil')) {
+      colorClass = 'text-green-500'; // Hijau untuk approved/siap
     } else if (title.includes('Ditolak')) {
       colorClass = 'text-red-500'; // Merah untuk rejected
     } else if (type === 'keterlambatan') {
       colorClass = 'text-red-500'; // Merah untuk keterlambatan
     } else if (title.includes('Masuk') || title.includes('Baru')) {
       colorClass = 'text-blue-500'; // Biru untuk masuk/baru
+    } else if (title.includes('Diproses')) {
+      colorClass = 'text-blue-500'; // Biru untuk sedang diproses
+    } else if (title.includes('Digunakan')) {
+      colorClass = 'text-orange-500'; // Orange untuk sedang digunakan
     }
     
     const iconClass = `h-4 w-4 ${colorClass}`;
+    
+    // Icon khusus untuk status tracking peminjaman
+    if (type === 'peminjaman_baru') {
+      if (title.includes('Siap Diambil')) {
+        return <Truck className={iconClass} />;
+      } else if (title.includes('Sedang Digunakan')) {
+        return <Package className={iconClass} />;
+      } else if (title.includes('Berhasil Dikembalikan')) {
+        return <PackageCheck className={iconClass} />;
+      } else if (title.includes('Sedang Diproses')) {
+        return <RefreshCw className={iconClass} />;
+      } else if (title.includes('Disetujui')) {
+        return <CheckCircle className={iconClass} />;
+      } else if (title.includes('Ditolak')) {
+        return <AlertCircle className={iconClass} />;
+      }
+      return <CheckCircle className={iconClass} />;
+    }
     
     // Icon khusus untuk pengembalian
     if (type === 'pengembalian_baru') {
@@ -49,8 +83,6 @@ export default function NotificationList({
     }
     
     switch (type) {
-      case 'peminjaman_baru':
-        return <CheckCircle className={iconClass} />;
       case 'mutasi_baru':
         return <Info className={iconClass} />;
       case 'keterlambatan':
@@ -62,12 +94,14 @@ export default function NotificationList({
 
   const getPriorityColor = (priority: NotificationItem['priority'], title: string) => {
     // Warna border dan background berdasarkan status
-    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap')) {
+    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap') || title.includes('Berhasil')) {
       return 'border-l-green-500 bg-green-50';
     } else if (title.includes('Ditolak')) {
       return 'border-l-red-500 bg-red-50';
-    } else if (title.includes('Masuk') || title.includes('Baru')) {
+    } else if (title.includes('Masuk') || title.includes('Baru') || title.includes('Diproses')) {
       return 'border-l-blue-500 bg-blue-50';
+    } else if (title.includes('Digunakan')) {
+      return 'border-l-orange-500 bg-orange-50';
     } else {
       return 'border-l-yellow-500 bg-yellow-50'; // Pending/proses
     }

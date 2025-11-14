@@ -359,6 +359,18 @@ export async function updateTrackingStatus(pengajuanId: string, trackingStatus: 
 
     const currentTime = new Date();
     
+    // Ambil data pengajuan untuk mendapatkan satkerId
+    const pengajuan = await prisma.pengajuanPeminjaman.findUnique({
+      where: { id: pengajuanId },
+      include: {
+        satkerPengaju: { select: { nama: true } }
+      }
+    });
+
+    if (!pengajuan) {
+      throw new Error('Pengajuan tidak ditemukan.');
+    }
+    
     const updateData: Record<string, string | Date> = {
       trackingStatus: trackingStatus,
       catatanAdmin: notes ? `[${trackingStatus}] ${notes}` : `Status: ${trackingStatus}`,
@@ -397,6 +409,48 @@ export async function updateTrackingStatus(pengajuanId: string, trackingStatus: 
     });
 
     console.log('Pengajuan tracking status updated successfully:', updatedPengajuan.id);
+
+    // Buat notifikasi untuk satker admin berdasarkan status tracking
+    const statusLabels: Record<string, { title: string; message: string; priority: 'low' | 'medium' | 'high' }> = {
+      'SEDANG_DIPROSES': {
+        title: 'Peminjaman Sedang Diproses',
+        message: `Pengajuan peminjaman ${pengajuan.jumlah} unit HT sedang diproses oleh admin pusat`,
+        priority: 'medium'
+      },
+      'SIAP_DIAMBIL': {
+        title: 'HT Siap Diambil',
+        message: `${pengajuan.jumlah} unit HT siap diambil di gudang pusat${notes ? `. Catatan: ${notes}` : ''}`,
+        priority: 'high'
+      },
+      'SEDANG_DIGUNAKAN': {
+        title: 'HT Sedang Digunakan',
+        message: `${pengajuan.jumlah} unit HT sedang digunakan${notes ? `. Catatan: ${notes}` : ''}`,
+        priority: 'medium'
+      },
+      'PERMINTAAN_PENGEMBALIAN': {
+        title: 'Permintaan Pengembalian Dikirim',
+        message: `Permintaan pengembalian ${pengajuan.jumlah} unit HT telah dikirim`,
+        priority: 'high'
+      },
+      'SUDAH_DIKEMBALIKAN': {
+        title: 'HT Berhasil Dikembalikan',
+        message: `${pengajuan.jumlah} unit HT berhasil dikembalikan ke gudang pusat`,
+        priority: 'high'
+      }
+    };
+
+    if (statusLabels[trackingStatus]) {
+      const { title, message, priority } = statusLabels[trackingStatus];
+      await createNotificationForSatker(
+        pengajuan.satkerId,
+        'peminjaman_baru',
+        title,
+        message,
+        priority,
+        `${pengajuanId}_${trackingStatus}`
+      );
+    }
+
     console.log('updateTrackingStatus completed successfully');
 
     revalidatePath('/dashboard/persetujuan');
