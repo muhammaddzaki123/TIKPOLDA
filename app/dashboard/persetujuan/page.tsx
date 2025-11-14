@@ -48,12 +48,22 @@ async function getPengajuanData() {
     orderBy: { createdAt: 'desc' },
   });
 
+  // Ambil data peminjaman aktif per personil untuk validasi mutasi
+  const peminjamanPersonil = await prisma.peminjaman.findMany({
+    where: { tanggalKembali: null },
+    include: {
+      personil: { select: { id: true, nama: true, nrp: true } },
+      ht: { select: { serialNumber: true, merk: true } }
+    }
+  });
+
   return { 
     pengajuanPeminjaman: JSON.parse(JSON.stringify(pengajuanPeminjaman)), 
     pengajuanMutasi: JSON.parse(JSON.stringify(pengajuanMutasi)), 
     peminjamanSatker: JSON.parse(JSON.stringify(peminjamanSatker)), 
     htDiGudang: JSON.parse(JSON.stringify(htDiGudang)), 
-    pengajuanPengembalian: JSON.parse(JSON.stringify(pengajuanPengembalian))
+    pengajuanPengembalian: JSON.parse(JSON.stringify(pengajuanPengembalian)),
+    peminjamanPersonil: JSON.parse(JSON.stringify(peminjamanPersonil))
   };
 }
 
@@ -63,7 +73,8 @@ export default async function PersetujuanPage() {
     pengajuanMutasi, 
     peminjamanSatker, 
     htDiGudang, 
-    pengajuanPengembalian 
+    pengajuanPengembalian,
+    peminjamanPersonil
   } = await getPengajuanData();
 
   return (
@@ -73,6 +84,7 @@ export default async function PersetujuanPage() {
       peminjamanSatker={peminjamanSatker}
       htDiGudang={htDiGudang}
       pengajuanPengembalian={pengajuanPengembalian}
+      peminjamanPersonil={peminjamanPersonil}
     />
   );
 }

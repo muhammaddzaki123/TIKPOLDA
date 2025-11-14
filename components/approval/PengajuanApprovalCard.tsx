@@ -55,6 +55,11 @@ interface PengajuanData {
   personil?: { nama: string; nrp: string };
   satkerAsal?: { nama: string };
   satkerTujuan?: { nama: string };
+  hasActiveLoan?: boolean;
+  peminjamanAktif?: Array<{
+    id: string;
+    ht: { serialNumber: string; merk: string };
+  }>;
   
   // Pengembalian specific
   ht?: { merk: string; serialNumber: string };
@@ -254,6 +259,38 @@ export function PengajuanApprovalCard({
       </CardHeader>
       
       <CardContent className="space-y-4 p-4 sm:p-6">
+        {/* Warning untuk mutasi dengan peminjaman aktif */}
+        {pengajuan.tipe === 'mutasi' && pengajuan.hasActiveLoan && pengajuan.status === 'PENDING' && (
+          <div className="rounded-lg border-2 border-red-300 bg-red-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-red-100 p-2">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <h4 className="text-sm font-semibold text-red-900 sm:text-base">
+                  ⚠️ Personil Masih Memiliki Tanggungan HT
+                </h4>
+                <p className="text-xs text-red-800 sm:text-sm">
+                  <strong>{pengajuan.personil?.nama}</strong> masih memiliki <strong>{pengajuan.peminjamanAktif?.length || 0} unit HT</strong> yang belum dikembalikan.
+                  Pengajuan mutasi tidak dapat disetujui sebelum semua HT dikembalikan.
+                </p>
+                {pengajuan.peminjamanAktif && pengajuan.peminjamanAktif.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-medium text-red-900 sm:text-sm">Daftar HT yang belum dikembalikan:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {pengajuan.peminjamanAktif.map((p, index) => (
+                        <Badge key={index} variant="destructive" className="text-xs">
+                          {p.ht.serialNumber} - {p.ht.merk}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-3">
             {pengajuan.tipe === 'peminjaman' && (
@@ -361,6 +398,7 @@ export function PengajuanApprovalCard({
                   <Button 
                     className="w-full h-11 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 sm:h-10"
                     size="lg"
+                    disabled={pengajuan.tipe === 'mutasi' && pengajuan.hasActiveLoan}
                   >
                     <CheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="truncate">

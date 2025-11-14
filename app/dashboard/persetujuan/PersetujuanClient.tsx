@@ -65,12 +65,20 @@ interface PeminjamanSatker {
   satker: { nama: string };
 }
 
+interface PeminjamanPersonil {
+  id: string;
+  personil: { id: string; nama: string; nrp: string };
+  ht: { serialNumber: string; merk: string };
+  tanggalKembali: Date | null;
+}
+
 interface PersetujuanClientProps {
   pengajuanPeminjaman: PengajuanPeminjaman[];
   pengajuanMutasi: PengajuanMutasi[];
   peminjamanSatker: PeminjamanSatker[];
   htDiGudang: HtOption[];
-  pengajuanPengembalian: PengajuanPengembalian[]; // New prop
+  pengajuanPengembalian: PengajuanPengembalian[];
+  peminjamanPersonil: PeminjamanPersonil[];
 }
 
 export default function PersetujuanClient({
@@ -78,7 +86,8 @@ export default function PersetujuanClient({
   pengajuanMutasi,
   peminjamanSatker,
   htDiGudang,
-  pengajuanPengembalian
+  pengajuanPengembalian,
+  peminjamanPersonil
 }: PersetujuanClientProps) {
 
   // Transform data untuk peminjaman dengan tracking status yang lebih detail
@@ -120,13 +129,22 @@ export default function PersetujuanClient({
     };
   });
 
-  // Transform data untuk mutasi
-  const mutasiData = pengajuanMutasi.map(m => ({
-    ...m,
-    tipe: 'mutasi' as const,
-    trackingStatus: m.status === 'APPROVED' ? 'DISETUJUI' as TrackingStatus : 
-                   m.status === 'REJECTED' ? 'DITOLAK' as TrackingStatus : 'PENGAJUAN_DIKIRIM' as TrackingStatus
-  }));
+  // Transform data untuk mutasi dengan informasi peminjaman aktif
+  const mutasiData = pengajuanMutasi.map(m => {
+    // Cari peminjaman aktif untuk personil ini
+    const peminjamanAktif = peminjamanPersonil.filter(
+      p => p.personil.nrp === m.personil.nrp && p.tanggalKembali === null
+    );
+    
+    return {
+      ...m,
+      tipe: 'mutasi' as const,
+      trackingStatus: m.status === 'APPROVED' ? 'DISETUJUI' as TrackingStatus : 
+                     m.status === 'REJECTED' ? 'DITOLAK' as TrackingStatus : 'PENGAJUAN_DIKIRIM' as TrackingStatus,
+      peminjamanAktif: peminjamanAktif,
+      hasActiveLoan: peminjamanAktif.length > 0
+    };
+  });
 
   const handleApprovePeminjaman = async (pengajuanId: string, selectedHtIds: string[]) => {
     try {
