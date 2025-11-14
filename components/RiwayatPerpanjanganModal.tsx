@@ -10,37 +10,33 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Clock, FileText, Calendar, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import type { Peminjaman, HT, Personil } from '@prisma/client';
+import type { Peminjaman, HT, Personil, RiwayatPerpanjangan as PrismaRiwayatPerpanjangan } from '@prisma/client';
 
-type PeminjamanAktif = (Peminjaman & { 
+type PeminjamanWithDetails = (Peminjaman & { 
   ht: HT; 
   personil: Personil; 
-  estimasiKembali: Date | null;
+  estimasiKembali?: Date | null;
+  riwayatPerpanjangan?: PrismaRiwayatPerpanjangan[];
 });
-
-interface RiwayatPerpanjangan {
-  id: string;
-  estimasiKembaliLama: Date | null;
-  estimasiKembaliBaru: Date;
-  fileUrlLama: string | null;
-  fileUrlBaru: string | null;
-  catatan: string | null;
-  createdAt: Date;
-}
 
 interface RiwayatPerpanjanganModalProps {
   isOpen: boolean;
   onClose: () => void;
-  peminjaman: PeminjamanAktif | null;
+  peminjaman: PeminjamanWithDetails | null;
 }
 
 export function RiwayatPerpanjanganModal({ isOpen, onClose, peminjaman }: RiwayatPerpanjanganModalProps) {
-  const [riwayat, setRiwayat] = useState<RiwayatPerpanjangan[]>([]);
+  const [riwayat, setRiwayat] = useState<PrismaRiwayatPerpanjangan[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchRiwayat = async () => {
     if (!peminjaman) return;
     
+    if (peminjaman.riwayatPerpanjangan) {
+      setRiwayat(peminjaman.riwayatPerpanjangan);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/peminjaman/${peminjaman.id}/riwayat-perpanjangan`);

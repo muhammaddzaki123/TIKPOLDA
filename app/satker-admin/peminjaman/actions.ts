@@ -9,10 +9,6 @@ import { authOptions } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
-// ==========================================================
-// SEMUA KODE LAMA ANDA TETAP DI SINI (TIDAK ADA YANG DIUBAH)
-// ==========================================================
-
 export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
   const satkerId = session?.user?.satkerId;
@@ -170,6 +166,11 @@ export async function getRiwayatPeminjamanBySatker() {
     include: {
       ht: true,
       personil: true,
+      riwayatPerpanjangan: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
     },
     orderBy: {
       tanggalKembali: 'desc', // Urutkan berdasarkan yang paling baru dikembalikan
