@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
 import { approvePeminjaman, approveMutasi, rejectPengajuan, updateTrackingStatus, approvePengembalian } from './actions';
 import { toast } from 'sonner';
+import PengembalianNotifications from '@/components/notifications/PengembalianNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface HtOption {
   id: string;
@@ -89,6 +91,9 @@ export default function PersetujuanClient({
   pengajuanPengembalian,
   peminjamanPersonil
 }: PersetujuanClientProps) {
+
+  // Hook untuk notifikasi
+  const { data: notificationData } = useNotifications();
 
   // Transform data untuk peminjaman dengan tracking status yang lebih detail
   const peminjamanData = pengajuanPeminjaman.map(p => {
@@ -285,6 +290,13 @@ export default function PersetujuanClient({
           Proses semua pengajuan dari Satuan Kerja dengan sistem tracking yang terintegrasi
         </p>
       </div>
+
+      {/* Notifikasi Pengembalian HT */}
+      <PengembalianNotifications
+        pengembalianMasuk={notificationData.pendingPengembalian}
+        pengembalianDisetujui={notificationData.pengembalianDisetujui}
+        pengembalianDitolak={notificationData.pengembalianDitolak}
+      />
 
       {/* Tabs Section - Responsive */}
       <Tabs defaultValue="peminjaman" className="w-full">

@@ -9,6 +9,10 @@ interface NotificationData {
   pendingPengembalian: number;
   keterlambatan: number;
   mendekatiDeadline: number;
+  pengembalianMasuk: number;
+  pengembalianDisetujui: number;
+  pengembalianDitolak: number;
+  pengembalianPending: number;
 }
 
 export function useNotifications() {
@@ -18,7 +22,11 @@ export function useNotifications() {
     pendingMutasi: 0,
     pendingPengembalian: 0,
     keterlambatan: 0,
-    mendekatiDeadline: 0
+    mendekatiDeadline: 0,
+    pengembalianMasuk: 0,
+    pengembalianDisetujui: 0,
+    pengembalianDitolak: 0,
+    pengembalianPending: 0
   });
   const [isLoading, setIsLoading] = useState(false);
 

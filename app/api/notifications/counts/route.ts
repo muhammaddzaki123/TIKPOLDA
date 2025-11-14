@@ -12,12 +12,18 @@ export async function GET() {
     }
 
     const today = new Date();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
     let result = {
       pendingPeminjaman: 0,
       pendingMutasi: 0,
       pendingPengembalian: 0,
       keterlambatan: 0,
-      mendekatiDeadline: 0
+      mendekatiDeadline: 0,
+      pengembalianMasuk: 0,
+      pengembalianDisetujui: 0,
+      pengembalianDitolak: 0,
+      pengembalianPending: 0
     };
 
     if (session.user.role === 'SUPER_ADMIN') {
@@ -26,7 +32,9 @@ export async function GET() {
         pendingPeminjaman,
         pendingMutasi,
         pendingPengembalian,
-        keterlambatanSatker
+        keterlambatanSatker,
+        pengembalianDisetujui,
+        pengembalianDitolak
       ] = await Promise.all([
         prisma.pengajuanPeminjaman.count({
           where: { status: 'PENDING' }
@@ -44,6 +52,18 @@ export async function GET() {
               lt: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
             }
           }
+        }),
+        prisma.pengajuanPengembalian.count({
+          where: {
+            status: 'APPROVED',
+            updatedAt: { gte: sevenDaysAgo }
+          }
+        }),
+        prisma.pengajuanPengembalian.count({
+          where: {
+            status: 'REJECTED',
+            updatedAt: { gte: sevenDaysAgo }
+          }
         })
       ]);
 
@@ -52,7 +72,11 @@ export async function GET() {
         pendingMutasi,
         pendingPengembalian,
         keterlambatan: keterlambatanSatker,
-        mendekatiDeadline: 0
+        mendekatiDeadline: 0,
+        pengembalianMasuk: pendingPengembalian, // Sama dengan pending
+        pengembalianDisetujui,
+        pengembalianDitolak,
+        pengembalianPending: pendingPengembalian
       };
 
     } else if (session.user.role === 'ADMIN_SATKER' && session.user.satkerId) {
@@ -63,13 +87,16 @@ export async function GET() {
         pengajuanUpdated,
         keterlambatanInternal,
         mendekatiDeadline,
-        statusTrackingBerubah
+        statusTrackingBerubah,
+        pengembalianDisetujui,
+        pengembalianDitolak,
+        pengembalianPending
       ] = await Promise.all([
         prisma.pengajuanPeminjaman.count({
           where: {
             satkerId,
             status: { in: ['APPROVED', 'REJECTED'] },
-            updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+            updatedAt: { gte: sevenDaysAgo }
           }
         }),
         prisma.peminjaman.count({
@@ -96,6 +123,26 @@ export async function GET() {
             trackingStatus: { in: ['SIAP_DIAMBIL', 'PERMINTAAN_PENGEMBALIAN', 'SUDAH_DIKEMBALIKAN'] },
             updatedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
           }
+        }),
+        prisma.pengajuanPengembalian.count({
+          where: {
+            satkerId,
+            status: 'APPROVED',
+            updatedAt: { gte: sevenDaysAgo }
+          }
+        }),
+        prisma.pengajuanPengembalian.count({
+          where: {
+            satkerId,
+            status: 'REJECTED',
+            updatedAt: { gte: sevenDaysAgo }
+          }
+        }),
+        prisma.pengajuanPengembalian.count({
+          where: {
+            satkerId,
+            status: 'PENDING'
+          }
         })
       ]);
 
@@ -104,7 +151,11 @@ export async function GET() {
         pendingMutasi: 0,
         pendingPengembalian: 0,
         keterlambatan: keterlambatanInternal,
-        mendekatiDeadline
+        mendekatiDeadline,
+        pengembalianMasuk: 0,
+        pengembalianDisetujui,
+        pengembalianDitolak,
+        pengembalianPending
       };
     }
 
