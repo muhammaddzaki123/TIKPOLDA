@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Clock, AlertCircle, CheckCircle, Info, RefreshCw } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle, Info, RefreshCw, Bell, PackageCheck, PackageX, PackagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationItem } from '@/lib/supabase/notifications';
 
@@ -30,17 +30,29 @@ export default function NotificationList({
       colorClass = 'text-red-500'; // Merah untuk rejected
     } else if (type === 'keterlambatan') {
       colorClass = 'text-red-500'; // Merah untuk keterlambatan
+    } else if (title.includes('Masuk') || title.includes('Baru')) {
+      colorClass = 'text-blue-500'; // Biru untuk masuk/baru
     }
     
     const iconClass = `h-4 w-4 ${colorClass}`;
+    
+    // Icon khusus untuk pengembalian
+    if (type === 'pengembalian_baru') {
+      if (title.includes('Disetujui') || title.includes('Diterima')) {
+        return <PackageCheck className={iconClass} />;
+      } else if (title.includes('Ditolak')) {
+        return <PackageX className={iconClass} />;
+      } else if (title.includes('Masuk') || title.includes('Baru')) {
+        return <PackagePlus className={iconClass} />;
+      }
+      return <RefreshCw className={iconClass} />;
+    }
     
     switch (type) {
       case 'peminjaman_baru':
         return <CheckCircle className={iconClass} />;
       case 'mutasi_baru':
         return <Info className={iconClass} />;
-      case 'pengembalian_baru':
-        return <RefreshCw className={iconClass} />;
       case 'keterlambatan':
         return <AlertCircle className={iconClass} />;
       default:
@@ -54,6 +66,8 @@ export default function NotificationList({
       return 'border-l-green-500 bg-green-50';
     } else if (title.includes('Ditolak')) {
       return 'border-l-red-500 bg-red-50';
+    } else if (title.includes('Masuk') || title.includes('Baru')) {
+      return 'border-l-blue-500 bg-blue-50';
     } else {
       return 'border-l-yellow-500 bg-yellow-50'; // Pending/proses
     }
@@ -152,5 +166,4 @@ export default function NotificationList({
   );
 }
 
-// Import Bell yang hilang
-import { Bell } from 'lucide-react';
+

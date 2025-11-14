@@ -13,8 +13,6 @@ import { createPackagePengembalian } from './actions';
 import { toast } from 'sonner';
 import { Personil, Satker } from '@prisma/client';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
-import PengembalianNotifications from '@/components/notifications/PengembalianNotifications';
-import { useNotifications } from '@/hooks/useNotifications';
 
 interface HtDetail {
   id: string;
@@ -54,9 +52,6 @@ export default function PengajuanClient({
   riwayatGabungan, 
   approvedLoans 
 }: PengajuanClientProps) {
-  
-  // Hook untuk notifikasi
-  const { data: notificationData } = useNotifications();
   
   const handleReturnRequest = async (pengajuanId: string) => {
     try {
@@ -98,13 +93,6 @@ export default function PengajuanClient({
           Gunakan formulir di bawah ini untuk mengirimkan permintaan resmi kepada Super Admin.
         </p>
       </div>
-
-      {/* Notifikasi Pengembalian HT */}
-      <PengembalianNotifications
-        pengembalianDisetujui={notificationData.pengembalianDisetujui}
-        pengembalianDitolak={notificationData.pengembalianDitolak}
-        pengembalianPending={notificationData.pengembalianPending}
-      />
 
       <Tabs defaultValue="peminjaman" className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto sm:h-10 gap-2 sm:gap-0">
