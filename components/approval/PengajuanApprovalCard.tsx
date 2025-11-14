@@ -354,109 +354,122 @@ export function PengajuanApprovalCard({
         </div>
 
         {(pengajuan.status === 'PENDING' || pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN') && (
-          <div className="border-t pt-4 flex gap-3">
-            <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-              <DialogTrigger asChild>
-                <Button className="flex-1">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian' : 'Setujui'}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian HT' : 'Setujui Pengajuan'}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' && (
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-sm text-blue-800">
-                        <strong>Konfirmasi Pengembalian:</strong> Apakah Anda yakin ingin menerima pengembalian HT ini? 
-                        HT akan dikembalikan ke gudang pusat dan status akan diubah menjadi &quot;Sudah Dikembalikan&quot;.
-                      </p>
-                    </div>
-                  )}
-                  {pengajuan.tipe === 'peminjaman' && htOptions.length > 0 && pengajuan.status === 'PENDING' && (
-                    <div>
-                      <Label>Pilih HT yang akan dipinjamkan ({selectedHtIds.length}/{pengajuan.jumlah})</Label>
-                      <div className="max-h-60 overflow-y-auto border rounded p-3 space-y-2">
-                        {htOptions.map((ht) => (
-                          <div key={ht.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={ht.id}
-                              checked={selectedHtIds.includes(ht.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  if (selectedHtIds.length < (pengajuan.jumlah || 0)) {
-                                    setSelectedHtIds([...selectedHtIds, ht.id]);
-                                  }
-                                } else {
-                                  setSelectedHtIds(selectedHtIds.filter(id => id !== ht.id));
-                                }
-                              }}
-                            />
-                            <label htmlFor={ht.id} className="text-sm cursor-pointer">
-                              {ht.serialNumber} - {ht.merk}
-                            </label>
-                          </div>
-                        ))}
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+              <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="w-full h-11 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 sm:h-10"
+                    size="lg"
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="truncate">
+                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian' : 'Setujui'}
+                    </span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="text-base sm:text-lg">
+                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima Pengembalian HT' : 'Setujui Pengajuan'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-800">
+                          <strong>Konfirmasi Pengembalian:</strong> Apakah Anda yakin ingin menerima pengembalian HT ini? 
+                          HT akan dikembalikan ke gudang pusat dan status akan diubah menjadi &quot;Sudah Dikembalikan&quot;.
+                        </p>
                       </div>
+                    )}
+                    {pengajuan.tipe === 'peminjaman' && htOptions.length > 0 && pengajuan.status === 'PENDING' && (
+                      <div>
+                        <Label>Pilih HT yang akan dipinjamkan ({selectedHtIds.length}/{pengajuan.jumlah})</Label>
+                        <div className="max-h-60 overflow-y-auto border rounded p-3 space-y-2">
+                          {htOptions.map((ht) => (
+                            <div key={ht.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={ht.id}
+                                checked={selectedHtIds.includes(ht.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    if (selectedHtIds.length < (pengajuan.jumlah || 0)) {
+                                      setSelectedHtIds([...selectedHtIds, ht.id]);
+                                    }
+                                  } else {
+                                    setSelectedHtIds(selectedHtIds.filter(id => id !== ht.id));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={ht.id} className="text-sm cursor-pointer">
+                                {ht.serialNumber} - {ht.merk}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                      <Button variant="outline" onClick={() => setShowApproveDialog(false)} className="w-full sm:flex-1">
+                        Batal
+                      </Button>
+                      <Button onClick={handleApprove} disabled={isPending} className="w-full sm:flex-1">
+                        {isPending ? 'Memproses...' : (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima' : 'Setujui')}
+                      </Button>
                     </div>
-                  )}
-                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                    <Button variant="outline" onClick={() => setShowApproveDialog(false)} className="w-full sm:flex-1">
-                      Batal
-                    </Button>
-                    <Button onClick={handleApprove} disabled={isPending} className="w-full sm:flex-1">
-                      {isPending ? 'Memproses...' : (pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Terima' : 'Setujui')}
-                    </Button>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
 
-            <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-              <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full text-xs sm:text-sm">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian' : 'Tolak'}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-base sm:text-lg">
-                    {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian HT' : 'Tolak Pengajuan'}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm">
-                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Alasan Penolakan Pengembalian *' : 'Alasan Penolakan *'}
-                    </Label>
-                    <Textarea
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder={
-                        pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' 
-                          ? 'Jelaskan alasan penolakan pengembalian...' 
-                          : 'Jelaskan alasan penolakan...'
-                      }
-                      rows={4}
-                      className="text-sm"
-                    />
+              <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full h-11 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 sm:h-10"
+                    size="lg"
+                  >
+                    <XCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="truncate">
+                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian' : 'Tolak'}
+                    </span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-base sm:text-lg">
+                      {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Tolak Pengembalian HT' : 'Tolak Pengajuan'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm">
+                        {pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' ? 'Alasan Penolakan Pengembalian *' : 'Alasan Penolakan *'}
+                      </Label>
+                      <Textarea
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder={
+                          pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN' 
+                            ? 'Jelaskan alasan penolakan pengembalian...' 
+                            : 'Jelaskan alasan penolakan...'
+                        }
+                        rows={4}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                      <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:flex-1">
+                        Batal
+                      </Button>
+                      <Button variant="destructive" onClick={handleReject} disabled={isPending} className="w-full sm:flex-1">
+                        {isPending ? 'Memproses...' : 'Tolak'}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                    <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:flex-1">
-                      Batal
-                    </Button>
-                    <Button variant="destructive" onClick={handleReject} disabled={isPending} className="w-full sm:flex-1">
-                      {isPending ? 'Memproses...' : 'Tolak'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         )}
       </CardContent>
