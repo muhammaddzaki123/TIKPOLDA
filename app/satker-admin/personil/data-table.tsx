@@ -16,6 +16,7 @@ import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { PersonilWithSatkerName } from './columns';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-utils';
 
 interface PersonilDataTableProps<TData extends PersonilWithSatkerName, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -158,11 +159,12 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
                     <div className="mt-2">
                         <p className="text-xs text-gray-600 mb-1">Foto saat ini:</p>
                         <Image
-                            src={personil.fotoUrl}
+                            src={getOptimizedImageUrl(personil.fotoUrl, true) || ''}
                             alt="Foto saat ini"
                             width={64}
                             height={80}
                             className="object-cover rounded border"
+                            unoptimized
                         />
                     </div>
                 )}
@@ -334,7 +336,7 @@ export function PersonilDataTable<TData extends PersonilWithSatkerName, TValue>(
             {selectedPersonil?.fotoUrl ? (
               <div className="relative">
                 <Image
-                  src={selectedPersonil.fotoUrl}
+                  src={getOptimizedImageUrl(selectedPersonil.fotoUrl, true) || ''}
                   alt={`Foto ${selectedPersonil.nama}`}
                   width={300}
                   height={400}

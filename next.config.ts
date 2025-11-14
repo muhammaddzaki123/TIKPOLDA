@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
         port: '3000',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/api/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '192.168.56.1',
+        port: '3000',
+        pathname: '/api/uploads/**',
+      },
     ],
     // Disable image optimization untuk development dan production
     // Karena menggunakan local file storage

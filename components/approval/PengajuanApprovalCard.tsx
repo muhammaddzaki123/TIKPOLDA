@@ -26,6 +26,7 @@ import {
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { getOptimizedImageUrl } from '@/lib/image-utils';
 
 interface HtOption {
   id: string;
@@ -248,7 +249,7 @@ export function PengajuanApprovalCard({
             
             {pengajuan.fileUrl && (
               <Button variant="outline" size="sm" asChild className="w-full text-xs sm:w-auto sm:text-sm">
-                <a href={pengajuan.fileUrl} target="_blank" rel="noopener noreferrer">
+                <a href={getOptimizedImageUrl(pengajuan.fileUrl, true) || ''} target="_blank" rel="noopener noreferrer">
                   <Download className="mr-2 h-4 w-4" />
                   Dokumen
                 </a>

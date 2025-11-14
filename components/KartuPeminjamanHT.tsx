@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Image from 'next/image';
 import type { Peminjaman, HT, Personil } from '@prisma/client';
+import { getOptimizedImageUrl } from '@/lib/image-utils';
 
 type PeminjamanWithDetails = Peminjaman & {
   ht: HT;
@@ -80,7 +81,7 @@ export function KartuPeminjamanHT({ data }: KartuPeminjamanHTProps) {
             <div className="w-[70px] h-[88px] bg-white rounded overflow-hidden border-2 border-gray-200">
               {personil.fotoUrl ? (
                 <Image
-                  src={personil.fotoUrl}
+                  src={getOptimizedImageUrl(personil.fotoUrl, true) || ''}
                   alt={`Foto ${personil.nama}`}
                   width={70}
                   height={88}

@@ -11,6 +11,7 @@ import { TrackingTimeline, TrackingStatus } from './TrackingTimeline';
 import { Eye, Download, Package, Calendar, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { getOptimizedImageUrl } from '@/lib/image-utils';
 
 interface HtDetail {
   id: string;
@@ -131,7 +132,7 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
             
             {pengajuan.fileUrl && (
               <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm" asChild>
-                <a href={pengajuan.fileUrl} target="_blank" rel="noopener noreferrer">
+                <a href={getOptimizedImageUrl(pengajuan.fileUrl, true) || ''} target="_blank" rel="noopener noreferrer">
                   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Download Surat
                 </a>

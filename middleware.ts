@@ -8,6 +8,15 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
+  // Add no-cache headers for uploaded files
+  if (pathname.startsWith('/api/uploads/')) {
+    const response = NextResponse.next();
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
+  }
+
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
 
   // Jika pengguna SUDAH LOGIN

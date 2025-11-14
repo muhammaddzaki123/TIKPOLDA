@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Personil as PrismaPersonil } from '@prisma/client';
+import { getOptimizedImageUrl } from '@/lib/image-utils';
 
 // Tipe data ini akan membawa nama Satker utama
 export type PersonilWithSatkerName = PrismaPersonil & {
@@ -33,11 +34,13 @@ export const columns: ColumnDef<PersonilWithSatkerName>[] = [
     header: 'Foto',
     cell: ({ row, table }) => {
       const fotoUrl = row.original.fotoUrl;
+      // Use optimized URL with API route and cache busting
+      const optimizedUrl = getOptimizedImageUrl(fotoUrl, true);
       return (
         <div className="flex items-center justify-center">
-          {fotoUrl ? (
+          {optimizedUrl ? (
             <Image
-              src={fotoUrl}
+              src={optimizedUrl}
               alt={`Foto ${row.original.nama}`}
               width={48}
               height={64}
