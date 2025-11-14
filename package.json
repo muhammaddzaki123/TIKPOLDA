@@ -2,12 +2,12 @@
   "name": "poldatik",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+"scripts": {
+  "dev": "next dev --turbopack",
+  "build": "prisma migrate deploy && prisma generate && next build",
+  "start": "next start",
+  "lint": "next lint"
+},
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@headlessui/react": "^2.2.4",
