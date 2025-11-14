@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   images: {
     remotePatterns: [
+      // Local development (deprecated - kept for backward compatibility)
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -27,6 +28,18 @@ const nextConfig: NextConfig = {
         hostname: '192.168.56.1',
         port: '3000',
         pathname: '/api/uploads/**',
+      },
+      // Supabase Storage (production)
+      {
+        protocol: 'https',
+        hostname: 'yoayfhdrfhicepqmorxr.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      // Alternative Supabase CDN domains (if used)
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
     // Disable image optimization untuk development dan production
