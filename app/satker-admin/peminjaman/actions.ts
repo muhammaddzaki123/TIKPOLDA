@@ -63,12 +63,28 @@ export async function createPeminjaman(formData: FormData) {
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Cek apakah HT sedang dipinjam
       const peminjamanAktif = await tx.peminjaman.findFirst({
         where: { htId: htId, tanggalKembali: null },
       });
 
       if (peminjamanAktif) {
         throw new Error('Peminjaman gagal: HT tersebut sedang tidak tersedia atau sudah dipinjam.');
+      }
+
+      // Cek apakah personil sudah memiliki peminjaman aktif
+      const personilMeminjam = await tx.peminjaman.findFirst({
+        where: { 
+          personilId: personilId, 
+          tanggalKembali: null 
+        },
+        include: {
+          ht: true
+        }
+      });
+
+      if (personilMeminjam) {
+        throw new Error(`Peminjaman gagal: ${personilMeminjam.ht.serialNumber} masih dipinjam oleh personil ini. Harap kembalikan terlebih dahulu sebelum meminjam HT lain.`);
       }
 
       await tx.peminjaman.create({
@@ -161,4 +177,78 @@ export async function getRiwayatPeminjamanBySatker() {
   });
 
   return riwayat;
+}
+
+/**
+ * Aksi untuk memperpanjang peminjaman dengan update estimasi kembali dan SPRINT baru
+ */
+export async function perpanjangPeminjaman(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  const satkerId = session?.user?.satkerId;
+
+  if (!satkerId) {
+    throw new Error('Otentikasi gagal: Anda tidak memiliki wewenang.');
+  }
+
+  const peminjamanId = formData.get('peminjamanId') as string;
+  const estimasiKembaliString = formData.get('estimasiKembaliBaru') as string;
+  const file = formData.get('fileSprint') as File;
+  const catatan = formData.get('catatanPerpanjangan') as string | null;
+
+  if (!peminjamanId || !estimasiKembaliString) {
+    throw new Error('ID Peminjaman dan tanggal estimasi baru wajib diisi.');
+  }
+
+  const estimasiKembaliBaru = new Date(estimasiKembaliString);
+  let fileUrl: string | null = null;
+
+  // Upload SPRINT baru jika ada
+  if (file && file.size > 0) {
+    if (file.size > 2 * 1024 * 1024) {
+      throw new Error('Ukuran file tidak boleh lebih dari 2MB.');
+    }
+    if (file.type !== 'application/pdf') {
+      throw new Error('File yang diunggah harus berformat PDF.');
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const filename = `${Date.now()}_perpanjangan_${file.name.replace(/\s/g, '_')}`;
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'berita_acara');
+
+    await mkdir(uploadDir, { recursive: true });
+
+    const filePath = path.join(uploadDir, filename);
+    await writeFile(filePath, buffer);
+
+    fileUrl = `/uploads/berita_acara/${filename}`;
+  }
+
+  try {
+    // Update estimasi kembali dan SPRINT
+    const updateData: { estimasiKembali: Date; fileUrl?: string; catatan?: string } = {
+      estimasiKembali: estimasiKembaliBaru,
+    };
+
+    if (fileUrl) {
+      updateData.fileUrl = fileUrl;
+    }
+
+    if (catatan) {
+      updateData.catatan = catatan;
+    }
+
+    await prisma.peminjaman.update({
+      where: { id: peminjamanId },
+      data: updateData,
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error('Terjadi kesalahan saat memperpanjang peminjaman.');
+  }
+
+  revalidatePath('/satker-admin/peminjaman');
+  revalidatePath('/satker-admin/inventaris');
+  revalidatePath('/dashboard/inventaris');
+  revalidatePath('/dashboard/satker');
 }

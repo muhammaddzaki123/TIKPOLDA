@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { PeminjamanForm } from '@/components/PeminjamanForm';
 import { PengembalianTable } from '@/components/PengembalianTable';
+import { OverdueNotificationAlert } from '@/components/OverdueNotificationAlert';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 // Force dynamic rendering to avoid Prisma prepared statement conflicts during build
@@ -68,6 +69,9 @@ export default async function PeminjamanPage() {
           Catat transaksi peminjaman dan pengembalian aset HT di unit kerja Anda.
         </p>
       </div>
+
+      {/* Notifikasi HT Terlambat */}
+      <OverdueNotificationAlert />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Kolom Kiri: Form Peminjaman */}
