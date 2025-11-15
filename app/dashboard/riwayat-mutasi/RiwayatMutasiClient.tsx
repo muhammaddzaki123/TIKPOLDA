@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { flexRender, getCoreRowModel, getPaginationRowModel, useReactTable } from '@tanstack/react-table';
 import { Satker } from '@prisma/client';
+import ExportRiwayatMutasiButton from '@/components/ExportRiwayatMutasiButton';
 
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -113,7 +114,8 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-1 sm:flex-wrap sm:items-center">
                 <Input
                     placeholder="Cari nama, nrp, atau alasan..."
                     value={searchQuery}
@@ -136,6 +138,12 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
                     satkerList={satkerList}
                     placeholder="Filter Satker Tujuan..."
                 />
+                </div>
+                
+                {/* Tombol Export */}
+                <div className="w-full sm:w-auto">
+                    <ExportRiwayatMutasiButton />
+                </div>
             </div>
             <div className="rounded-lg border bg-white p-4 shadow-sm">
                 {/* Tampilan Tabel untuk Desktop */}

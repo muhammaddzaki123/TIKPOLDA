@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronsUpDown, Check } from "lucide-react"
+import ExportRiwayatInternalButton from '@/components/ExportRiwayatInternalButton';
 
 import { cn } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -70,7 +71,8 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
     
     return (
         <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-1 sm:flex-wrap sm:items-center">
                 
                 {/* Combobox untuk Serial Number HT */}
                 <Popover open={openHt} onOpenChange={setOpenHt}>
@@ -161,6 +163,12 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                         </Command>
                     </PopoverContent>
                 </Popover>
+                </div>
+                
+                {/* Tombol Export */}
+                <div className="w-full sm:w-auto">
+                    <ExportRiwayatInternalButton />
+                </div>
             </div>
             <div className="rounded-lg border bg-white p-4 shadow-sm">
                 {/* Tampilan Tabel untuk Desktop */}

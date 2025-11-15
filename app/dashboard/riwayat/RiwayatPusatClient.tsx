@@ -8,6 +8,7 @@ import { DateRangePicker } from '@/components/date-range-picker';
 import { RiwayatPusatTable, RiwayatPusatGrouped } from './RiwayatPusatTable';
 import { Satker } from '@prisma/client';
 import { Button } from '@/components/ui/button';
+import ExportRiwayatButton from '@/components/ExportRiwayatButton';
 
 // --- Import Baru untuk Combobox ---
 import { ChevronsUpDown, Check } from "lucide-react";
@@ -64,45 +65,52 @@ export function RiwayatPusatClient({ riwayatData, satkerList }: RiwayatPusatClie
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                <Input
-                    placeholder="Cari keperluan atau nama satker..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:max-w-sm"
-                />
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-1 sm:flex-wrap sm:items-center">
+                    <Input
+                        placeholder="Cari keperluan atau nama satker..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full sm:max-w-sm"
+                    />
 
-                {/* --- COMBOBOX UNTUK FILTER SATKER --- */}
-                <Popover open={openSatker} onOpenChange={setOpenSatker}>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-full justify-between sm:w-[220px]">
-                        {satkerFilter ? satkerList.find((s) => s.id === satkerFilter)?.nama : "Filter Satker..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                            <CommandInput placeholder="Cari Satker..." />
-                            <CommandList>
-                                <CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
-                                <CommandGroup>
-                                    <CommandItem value="all" onSelect={() => { handleSatkerChange(null); setOpenSatker(false); }}>
-                                        <Check className={cn("mr-2 h-4 w-4", !satkerFilter ? "opacity-100" : "opacity-0")} />
-                                        Semua Satker
-                                    </CommandItem>
-                                    {satkerList.map((satker) => (
-                                        <CommandItem key={satker.id} value={satker.id} onSelect={(currentValue) => { handleSatkerChange(currentValue); setOpenSatker(false); }}>
-                                            <Check className={cn("mr-2 h-4 w-4", satkerFilter === satker.id ? "opacity-100" : "opacity-0")} />
-                                            {satker.nama}
+                    {/* --- COMBOBOX UNTUK FILTER SATKER --- */}
+                    <Popover open={openSatker} onOpenChange={setOpenSatker}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" aria-expanded={openSatker} className="w-full justify-between sm:w-[220px]">
+                            {satkerFilter ? satkerList.find((s) => s.id === satkerFilter)?.nama : "Filter Satker..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Cari Satker..." />
+                                <CommandList>
+                                    <CommandEmpty>Satker tidak ditemukan.</CommandEmpty>
+                                    <CommandGroup>
+                                        <CommandItem value="all" onSelect={() => { handleSatkerChange(null); setOpenSatker(false); }}>
+                                            <Check className={cn("mr-2 h-4 w-4", !satkerFilter ? "opacity-100" : "opacity-0")} />
+                                            Semua Satker
                                         </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
+                                        {satkerList.map((satker) => (
+                                            <CommandItem key={satker.id} value={satker.id} onSelect={(currentValue) => { handleSatkerChange(currentValue); setOpenSatker(false); }}>
+                                                <Check className={cn("mr-2 h-4 w-4", satkerFilter === satker.id ? "opacity-100" : "opacity-0")} />
+                                                {satker.nama}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
 
-                <DateRangePicker />
+                    <DateRangePicker />
+                </div>
+                
+                {/* Tombol Export */}
+                <div className="w-full sm:w-auto">
+                    <ExportRiwayatButton />
+                </div>
             </div>
             <div className="rounded-lg border bg-white p-4 shadow-sm">
                 <RiwayatPusatTable data={riwayatData} />
