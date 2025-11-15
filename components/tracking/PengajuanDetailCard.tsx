@@ -82,10 +82,35 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
     return labels[trackingStatus] || trackingStatus;
   };
 
+  // Cek apakah paket peminjaman terlambat
+  const isOverdue = () => {
+    if (pengajuan.status === 'APPROVED' &&
+        (pengajuan.trackingStatus === 'SEDANG_DIGUNAKAN' || pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN')) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Gunakan tanggalReturn atau tanggalSelesai
+      const returnDate = pengajuan.tanggalReturn || pengajuan.tanggalSelesai;
+      if (returnDate) {
+        const targetDate = new Date(returnDate);
+        targetDate.setHours(0, 0, 0, 0);
+        return targetDate < today;
+      }
+    }
+    return false;
+  };
+
+  const getCardBorderStyle = () => {
+    if (isOverdue()) {
+      return 'border-red-500 border-2 bg-red-50';
+    }
+    return '';
+  };
+
   const canRequestReturn = pengajuan.trackingStatus === 'SEDANG_DIGUNAKAN' && pengajuan.approvedHts && pengajuan.approvedHts.length > 0;
 
   return (
-    <Card className="w-full shadow-sm hover:shadow-md transition-shadow">
+    <Card className={`w-full shadow-sm hover:shadow-md transition-shadow ${getCardBorderStyle()}`}>
       <CardHeader className="pb-3 sm:pb-4">
         <div className="flex flex-col gap-3">
           <div className="space-y-2">
@@ -99,6 +124,11 @@ export function PengajuanDetailCard({ pengajuan, onReturnRequest }: PengajuanDet
               <Badge className={`${getTrackingStatusColor(pengajuan.trackingStatus)} text-[10px] sm:text-xs px-2 py-0.5 sm:py-1`}>
                 {getTrackingStatusLabel(pengajuan.trackingStatus)}
               </Badge>
+              {isOverdue() && (
+                <Badge className="bg-red-600 text-white animate-pulse text-[10px] sm:text-xs px-2 py-0.5 sm:py-1">
+                  ⚠️ TERLAMBAT
+                </Badge>
+              )}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">

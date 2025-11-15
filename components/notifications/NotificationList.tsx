@@ -40,7 +40,9 @@ export default function NotificationList({
       colorClass = 'text-green-500'; // Hijau untuk approved/siap
     } else if (title.includes('Ditolak')) {
       colorClass = 'text-red-500'; // Merah untuk rejected
-    } else if (type === 'keterlambatan') {
+    } else if (type === 'keterlambatan' || type === 'keterlambatan_paket_peminjaman') {
+      colorClass = 'text-red-500'; // Merah untuk keterlambatan
+    } else if (title.includes('Terlambat')) {
       colorClass = 'text-red-500'; // Merah untuk keterlambatan
     } else if (title.includes('Masuk') || title.includes('Baru')) {
       colorClass = 'text-blue-500'; // Biru untuk masuk/baru
@@ -86,6 +88,7 @@ export default function NotificationList({
       case 'mutasi_baru':
         return <Info className={iconClass} />;
       case 'keterlambatan':
+      case 'keterlambatan_paket_peminjaman':
         return <AlertCircle className={iconClass} />;
       default:
         return <Info className={iconClass} />;
@@ -94,7 +97,9 @@ export default function NotificationList({
 
   const getPriorityColor = (priority: NotificationItem['priority'], title: string) => {
     // Warna border dan background berdasarkan status
-    if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap') || title.includes('Berhasil')) {
+    if (title.includes('Terlambat')) {
+      return 'border-l-red-500 bg-red-50';
+    } else if (title.includes('Disetujui') || title.includes('Diterima') || title.includes('Siap') || title.includes('Berhasil')) {
       return 'border-l-green-500 bg-green-50';
     } else if (title.includes('Ditolak')) {
       return 'border-l-red-500 bg-red-50';

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 // Interface untuk notifikasi
 interface NotificationItem {
   id: string;
-  type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan';
+  type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan' | 'keterlambatan_paket_peminjaman';
   title: string;
   message: string;
   createdAt: Date;
@@ -154,6 +154,77 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
             priority,
             createdAt: pengembalian.updatedAt
           }
+        });
+      }
+    }
+
+    // 4. Keterlambatan Paket Peminjaman Satker
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Cari paket yang terlambat (tanggalReturn atau tanggalSelesai sudah lewat)
+    const overdueLoanPackages = await prisma.pengajuanPeminjaman.findMany({
+      where: {
+        trackingStatus: {
+          in: ['SEDANG_DIGUNAKAN', 'PERMINTAAN_PENGEMBALIAN']
+        },
+        status: 'APPROVED',
+        OR: [
+          {
+            tanggalReturn: {
+              lt: today,
+            }
+          },
+          {
+            tanggalReturn: null,
+            tanggalSelesai: {
+              lt: today,
+            }
+          }
+        ]
+      },
+      include: {
+        satkerPengaju: true,
+      },
+      orderBy: {
+        tanggalReturn: 'asc',
+      },
+    });
+
+    for (const loanPackage of overdueLoanPackages) {
+      // Gunakan tanggalReturn atau tanggalSelesai untuk hitung keterlambatan
+      const returnDate = loanPackage.tanggalReturn || loanPackage.tanggalSelesai;
+      if (!returnDate) continue;
+
+      const daysOverdue = Math.floor(
+        (today.getTime() - new Date(returnDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: userId,
+          type: 'keterlambatan_paket_peminjaman',
+          relatedId: loanPackage.id,
+          createdAt: {
+            gte: todayStart,
+          },
+        },
+      });
+
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: userId,
+            type: 'keterlambatan_paket_peminjaman',
+            title: '⚠️ Paket HT Terlambat Dikembalikan',
+            message: `Paket peminjaman ${loanPackage.jumlah} unit HT oleh ${loanPackage.satkerPengaju.nama} terlambat ${daysOverdue} hari. Segera hubungi satker!`,
+            relatedId: loanPackage.id,
+            satkerName: loanPackage.satkerPengaju.nama,
+            priority: 'high',
+          },
         });
       }
     }
@@ -313,6 +384,74 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
             priority,
             createdAt: pengembalian.updatedAt
           }
+        });
+      }
+    }
+
+    // 4. Keterlambatan Paket Peminjaman Satker
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Cari paket yang terlambat (tanggalReturn atau tanggalSelesai sudah lewat)
+    const overdueLoanPackages = await prisma.pengajuanPeminjaman.findMany({
+      where: {
+        satkerId,
+        trackingStatus: {
+          in: ['SEDANG_DIGUNAKAN', 'PERMINTAAN_PENGEMBALIAN']
+        },
+        status: 'APPROVED',
+        OR: [
+          {
+            tanggalReturn: {
+              lt: today,
+            }
+          },
+          {
+            tanggalReturn: null,
+            tanggalSelesai: {
+              lt: today,
+            }
+          }
+        ]
+      },
+      orderBy: {
+        tanggalReturn: 'asc',
+      },
+    });
+
+    for (const loanPackage of overdueLoanPackages) {
+      // Gunakan tanggalReturn atau tanggalSelesai untuk hitung keterlambatan
+      const returnDate = loanPackage.tanggalReturn || loanPackage.tanggalSelesai;
+      if (!returnDate) continue;
+
+      const daysOverdue = Math.floor(
+        (today.getTime() - new Date(returnDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: userId,
+          type: 'keterlambatan_paket_peminjaman',
+          relatedId: loanPackage.id,
+          createdAt: {
+            gte: todayStart,
+          },
+        },
+      });
+
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: userId,
+            type: 'keterlambatan_paket_peminjaman',
+            title: '⚠️ Paket HT Terlambat Dikembalikan',
+            message: `Paket peminjaman ${loanPackage.jumlah} unit HT terlambat ${daysOverdue} hari. Segera ajukan pengembalian!`,
+            relatedId: loanPackage.id,
+            priority: 'high',
+          },
         });
       }
     }

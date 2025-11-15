@@ -179,8 +179,33 @@ export function PengajuanApprovalCard({
     }
   };
 
+  // Cek apakah paket peminjaman terlambat
+  const isOverdue = () => {
+    if (pengajuan.tipe === 'peminjaman' && 
+        pengajuan.status === 'APPROVED' &&
+        (pengajuan.trackingStatus === 'SEDANG_DIGUNAKAN' || pengajuan.trackingStatus === 'PERMINTAAN_PENGEMBALIAN')) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Gunakan tanggalSelesai sebagai tanggal return
+      if (pengajuan.tanggalSelesai) {
+        const returnDate = new Date(pengajuan.tanggalSelesai);
+        returnDate.setHours(0, 0, 0, 0);
+        return returnDate < today;
+      }
+    }
+    return false;
+  };
+
+  const getCardBorderStyle = () => {
+    if (isOverdue()) {
+      return 'border-red-500 border-2 bg-red-50';
+    }
+    return '';
+  };
+
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${getCardBorderStyle()}`}>
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
@@ -188,9 +213,16 @@ export function PengajuanApprovalCard({
               {getTipeIcon()}
               <span className="break-all">{getTipeLabel()} #{pengajuan.id.substring(0, 8).toUpperCase()}</span>
             </CardTitle>
-            <Badge className={getStatusColor(pengajuan.status)}>
-              {pengajuan.status}
-            </Badge>
+            <div className="flex flex-wrap gap-2">
+              <Badge className={getStatusColor(pengajuan.status)}>
+                {pengajuan.status}
+              </Badge>
+              {isOverdue() && (
+                <Badge className="bg-red-600 text-white animate-pulse">
+                  ⚠️ TERLAMBAT
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {pengajuan.trackingStatus && (

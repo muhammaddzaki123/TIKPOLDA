@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
 import { approvePeminjaman, approveMutasi, rejectPengajuan, updateTrackingStatus, approvePengembalian } from './actions';
 import { toast } from 'sonner';
+import { OverdueSatkerNotificationAlert } from '@/components/OverdueSatkerNotificationAlert';
 
 interface HtOption {
   id: string;
@@ -89,7 +90,6 @@ export default function PersetujuanClient({
   pengajuanPengembalian,
   peminjamanPersonil
 }: PersetujuanClientProps) {
-
   // Transform data untuk peminjaman dengan tracking status yang lebih detail
   const peminjamanData = pengajuanPeminjaman.map(p => {
     let returnRequest = null;
@@ -278,6 +278,9 @@ export default function PersetujuanClient({
 
   return (
     <div className="w-full space-y-4 p-4 sm:space-y-6 sm:p-6">
+      {/* Overdue Notification Alert */}
+      <OverdueSatkerNotificationAlert />
+
       {/* Header Section - Responsive */}
       <div className="space-y-1">
         <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Pusat Persetujuan</h1>

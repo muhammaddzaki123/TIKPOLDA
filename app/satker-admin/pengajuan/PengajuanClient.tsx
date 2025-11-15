@@ -13,6 +13,7 @@ import { createPackagePengembalian } from './actions';
 import { toast } from 'sonner';
 import { Personil, Satker } from '@prisma/client';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
+import { OverduePeminjamanSatkerAlert } from '@/components/OverduePeminjamanSatkerAlert';
 
 interface HtDetail {
   id: string;
@@ -52,7 +53,6 @@ export default function PengajuanClient({
   riwayatGabungan, 
   approvedLoans 
 }: PengajuanClientProps) {
-  
   const handleReturnRequest = async (pengajuanId: string) => {
     try {
       // Cari pengajuan yang sesuai untuk mendapatkan detail HT
@@ -87,6 +87,9 @@ export default function PengajuanClient({
 
   return (
     <div className="w-full space-y-4 md:space-y-6 p-4 sm:p-6">
+      {/* Overdue Notification Alert */}
+      <OverduePeminjamanSatkerAlert />
+
       <div>
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Pusat Pengajuan</h1>
         <p className="text-xs sm:text-sm text-slate-600 mt-1">
