@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createPengembalian } from '@/app/satker-admin/peminjaman/actions';
 import type { Peminjaman, HT, Personil } from '@prisma/client';
 import Link from 'next/link';
@@ -39,6 +40,7 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPeminjaman, setSelectedPeminjaman] = useState<PeminjamanAktif | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [kondisiHTKembali, setKondisiHTKembali] = useState<string>('');
   
   // State untuk modal kartu
   const [isKartuModalOpen, setIsKartuModalOpen] = useState(false);
@@ -54,6 +56,8 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
 
   const openDialog = (peminjaman: PeminjamanAktif) => {
     setSelectedPeminjaman(peminjaman);
+    // Set kondisi HT default sesuai kondisi saat dipinjam (atau kondisi HT asli jika tidak ada)
+    setKondisiHTKembali(peminjaman.kondisiHTSaatPinjam || peminjaman.ht.status);
     setIsDialogOpen(true);
   };
 
@@ -73,10 +77,19 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
   };
 
   const handleSubmit = (formData: FormData) => {
+    // Tambahkan kondisi HT ke FormData
+    if (kondisiHTKembali) {
+      formData.append('kondisiHTSaatKembali', kondisiHTKembali);
+    } else {
+      toast.error('Kondisi HT saat dikembalikan wajib dipilih.');
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createPengembalian(formData);
         setIsDialogOpen(false);
+        setKondisiHTKembali('');
         toast.success('Pengembalian HT berhasil dicatat.');
       } catch (error: unknown) {
         if (error instanceof Error) {
@@ -302,8 +315,33 @@ export function PengembalianTable({ data }: PengembalianTableProps) {
           <form action={handleSubmit}>
             <input type="hidden" name="peminjamanId" value={selectedPeminjaman?.id ?? ''} />
             <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
+              {/* Dropdown Kondisi HT */}
               <div className="space-y-2">
-                <Label htmlFor="kondisiSaatKembali" className="text-xs sm:text-sm">Kondisi HT Saat Dikembalikan</Label>
+                <Label htmlFor="kondisiHTKembali" className="text-xs sm:text-sm">Kondisi HT Saat Dikembalikan</Label>
+                <Select 
+                  value={kondisiHTKembali} 
+                  onValueChange={setKondisiHTKembali}
+                  required
+                >
+                  <SelectTrigger className="text-xs sm:text-sm">
+                    <SelectValue placeholder="Pilih kondisi HT..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BAIK">BAIK</SelectItem>
+                    <SelectItem value="RUSAK_RINGAN">RUSAK RINGAN</SelectItem>
+                    <SelectItem value="RUSAK_BERAT">RUSAK BERAT</SelectItem>
+                    <SelectItem value="HILANG">HILANG</SelectItem>
+                  </SelectContent>
+                </Select>
+                {selectedPeminjaman?.kondisiHTSaatPinjam && (
+                  <p className="text-xs text-muted-foreground">
+                    Kondisi saat dipinjam: <span className="font-semibold">{selectedPeminjaman.kondisiHTSaatPinjam}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="kondisiSaatKembali" className="text-xs sm:text-sm">Catatan Kondisi Fisik</Label>
                 <Textarea id="kondisiSaatKembali" name="kondisiSaatKembali" placeholder="Contoh: Kondisi baik, lengkap dengan charger." className="text-xs sm:text-sm" required />
               </div>
             </div>

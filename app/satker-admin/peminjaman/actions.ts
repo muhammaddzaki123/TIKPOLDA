@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { uploadPdfToSupabase } from '@/lib/supabase/storage';
+import { HTStatus } from '@prisma/client';
 
 export async function createPeminjaman(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -22,6 +23,7 @@ export async function createPeminjaman(formData: FormData) {
   const catatan = formData.get('catatan') as string | null;
   const file = formData.get('file') as File;
   const estimasiKembaliString = formData.get('estimasiKembali') as string;
+  const kondisiHTSaatPinjam = formData.get('kondisiHTSaatPinjam') as string;
 
   if (!estimasiKembaliString) {
       throw new Error('Estimasi tanggal kembali wajib diisi.');
@@ -31,6 +33,10 @@ export async function createPeminjaman(formData: FormData) {
 
   if (!htId || !personilId || !kondisiSaatPinjam) {
     throw new Error('HT, Personil, dan Kondisi wajib diisi.');
+  }
+
+  if (!kondisiHTSaatPinjam) {
+    throw new Error('Kondisi HT wajib dipilih.');
   }
 
   let fileUrl: string | null = null;
@@ -74,16 +80,27 @@ export async function createPeminjaman(formData: FormData) {
         throw new Error(`Peminjaman gagal: ${personilMeminjam.ht.serialNumber} masih dipinjam oleh personil ini. Harap kembalikan terlebih dahulu sebelum meminjam HT lain.`);
       }
 
+      // Create peminjaman dan update kondisi HT
       await tx.peminjaman.create({
         data: {
           htId,
           personilId,
           kondisiSaatPinjam,
+          kondisiHTSaatPinjam: kondisiHTSaatPinjam as HTStatus, // Cast to HTStatus enum
           estimasiKembali: estimasiKembali,
           catatan,
           fileUrl: fileUrl,
           adminPencatatId: session.user.id,
         },
+      });
+
+      // Update status HT sesuai kondisi saat dipinjam
+      await tx.hT.update({
+        where: { id: htId },
+        data: { 
+          status: kondisiHTSaatPinjam as HTStatus, // Update status HT
+          updatedAt: new Date()
+        }
       });
     });
   } catch (error: unknown) {
@@ -103,21 +120,52 @@ export async function createPeminjaman(formData: FormData) {
 export async function createPengembalian(formData: FormData) {
   const peminjamanId = formData.get('peminjamanId') as string;
   const kondisiSaatKembali = formData.get('kondisiSaatKembali') as string;
+  const kondisiHTSaatKembali = formData.get('kondisiHTSaatKembali') as string;
 
   if (!peminjamanId || !kondisiSaatKembali) {
     throw new Error('ID Peminjaman dan Kondisi saat kembali wajib diisi.');
   }
 
+  if (!kondisiHTSaatKembali) {
+    throw new Error('Kondisi HT saat dikembalikan wajib dipilih.');
+  }
+
   try {
-    await prisma.peminjaman.update({
+    await prisma.$transaction(async (tx) => {
+      // Ambil data peminjaman untuk mendapatkan htId
+      const peminjaman = await tx.peminjaman.findUnique({
+        where: { id: peminjamanId },
+        select: { htId: true }
+      });
+
+      if (!peminjaman) {
+        throw new Error('Data peminjaman tidak ditemukan.');
+      }
+
+      // Update data peminjaman
+      await tx.peminjaman.update({
         where: { id: peminjamanId },
         data: {
-            tanggalKembali: new Date(),
-            kondisiSaatKembali: kondisiSaatKembali,
+          tanggalKembali: new Date(),
+          kondisiSaatKembali: kondisiSaatKembali,
+          kondisiHTSaatKembali: kondisiHTSaatKembali as HTStatus, // Cast to HTStatus enum
         }
+      });
+
+      // Update kondisi HT sesuai kondisi saat dikembalikan
+      await tx.hT.update({
+        where: { id: peminjaman.htId },
+        data: {
+          status: kondisiHTSaatKembali as HTStatus, // Update status HT
+          updatedAt: new Date()
+        }
+      });
     });
   } catch(error) {
       console.error(error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
       throw new Error('Terjadi kesalahan saat mencatat pengembalian.');
   }
 

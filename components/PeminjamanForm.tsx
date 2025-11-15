@@ -29,6 +29,8 @@ interface PeminjamanFormProps {
 export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps) {
   const [isPending, startTransition] = useTransition();
   const [estimasiKembali, setEstimasiKembali] = useState<Date | undefined>();
+  const [selectedHT, setSelectedHT] = useState<HT | null>(null);
+  const [kondisiHT, setKondisiHT] = useState<string>('');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,6 +42,14 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
         formData.append('estimasiKembali', estimasiKembali.toISOString());
     } else {
         toast.error('Estimasi tanggal kembali wajib diisi.');
+        return;
+    }
+
+    // Tambahkan kondisi HT ke FormData
+    if (kondisiHT) {
+        formData.append('kondisiHTSaatPinjam', kondisiHT);
+    } else {
+        toast.error('Kondisi HT wajib dipilih.');
         return;
     }
     
@@ -62,6 +72,8 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
         const form = document.getElementById('form-peminjaman-internal') as HTMLFormElement;
         form.reset();
         setEstimasiKembali(undefined);
+        setSelectedHT(null);
+        setKondisiHT('');
       } catch (error: unknown) {
         if (error instanceof Error) {
           toast.error(error.message);
@@ -81,12 +93,25 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
         <form id="form-peminjaman-internal" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <Label htmlFor="htId" className="text-xs sm:text-sm">Pilih HT yang Tersedia</Label>
-            <Select name="htId" required>
+            <Select 
+              name="htId" 
+              required
+              onValueChange={(value) => {
+                const ht = htTersedia.find(h => h.id === value);
+                setSelectedHT(ht || null);
+                // Set kondisi HT default sesuai kondisi HT yang dipilih
+                if (ht) {
+                  setKondisiHT(ht.status);
+                }
+              }}
+            >
               <SelectTrigger className="text-xs sm:text-sm"><SelectValue placeholder="Pilih Kode HT..." /></SelectTrigger>
               <SelectContent>
                 {htTersedia.length > 0 ? (
                   htTersedia.map((ht) => (
-                    <SelectItem key={ht.id} value={ht.id}>{ht.serialNumber} - {ht.merk}</SelectItem>
+                    <SelectItem key={ht.id} value={ht.id}>
+                      {ht.serialNumber} - {ht.merk} ({ht.status})
+                    </SelectItem>
                   ))
                 ) : (
                   <SelectItem value="disabled" disabled>Tidak ada HT yang tersedia</SelectItem>
@@ -132,6 +157,32 @@ export function PeminjamanForm({ htTersedia, personilList }: PeminjamanFormProps
                     />
                 </PopoverContent>
             </Popover>
+          </div>
+
+          {/* --- DROPDOWN KONDISI HT --- */}
+          <div className="space-y-2">
+            <Label htmlFor="kondisiHT" className="text-xs sm:text-sm">Kondisi HT</Label>
+            <Select 
+              value={kondisiHT} 
+              onValueChange={setKondisiHT}
+              disabled={!selectedHT}
+              required
+            >
+              <SelectTrigger className="text-xs sm:text-sm">
+                <SelectValue placeholder={selectedHT ? "Pilih kondisi HT..." : "Pilih HT terlebih dahulu"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BAIK">BAIK</SelectItem>
+                <SelectItem value="RUSAK_RINGAN">RUSAK RINGAN</SelectItem>
+                <SelectItem value="RUSAK_BERAT">RUSAK BERAT</SelectItem>
+                <SelectItem value="HILANG">HILANG</SelectItem>
+              </SelectContent>
+            </Select>
+            {selectedHT && (
+              <p className="text-xs text-muted-foreground">
+                Kondisi saat ini: <span className="font-semibold">{selectedHT.status}</span>
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

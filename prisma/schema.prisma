@@ -79,20 +79,22 @@ model HT {
 // --- MODEL TRANSAKSI & PENGAJUAN ---
 
 model Peminjaman {
-  id                 String                @id @default(cuid())
-  tanggalPinjam      DateTime              @default(now())
-  estimasiKembali    DateTime?
-  tanggalKembali     DateTime?
-  kondisiSaatPinjam  String
-  kondisiSaatKembali String?
-  catatan            String?
-  fileUrl            String?
-  adminPencatatId    String
-  ht                 HT                    @relation(fields: [htId], references: [id], onDelete: Cascade)
-  htId               String
-  personil           Personil              @relation(fields: [personilId], references: [id], onDelete: Cascade)
-  personilId         String
-  riwayatPerpanjangan RiwayatPerpanjangan[]
+  id                    String                @id @default(cuid())
+  tanggalPinjam         DateTime              @default(now())
+  estimasiKembali       DateTime?
+  tanggalKembali        DateTime?
+  kondisiSaatPinjam     String
+  kondisiSaatKembali    String?
+  kondisiHTSaatPinjam   HTStatus?             // Kondisi HT saat dipinjam
+  kondisiHTSaatKembali  HTStatus?             // Kondisi HT saat dikembalikan
+  catatan               String?
+  fileUrl               String?
+  adminPencatatId       String
+  ht                    HT                    @relation(fields: [htId], references: [id], onDelete: Cascade)
+  htId                  String
+  personil              Personil              @relation(fields: [personilId], references: [id], onDelete: Cascade)
+  personilId            String
+  riwayatPerpanjangan   RiwayatPerpanjangan[]
 }
 
 model RiwayatPerpanjangan {
