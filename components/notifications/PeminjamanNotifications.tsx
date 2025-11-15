@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ export default function PeminjamanNotifications({
   mendekatiDeadline,
   pengajuanUpdated
 }: PeminjamanNotificationsProps) {
+  const router = useRouter();
   
   interface Notification {
     id: string;
@@ -26,6 +28,7 @@ export default function PeminjamanNotifications({
     count: number;
     priority: 'high' | 'medium' | 'low';
     variant: 'default' | 'destructive';
+    link: string;
   }
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -42,7 +45,8 @@ export default function PeminjamanNotifications({
         message: `${pengajuanUpdated} pengajuan telah diperbarui statusnya`,
         count: pengajuanUpdated,
         priority: 'medium',
-        variant: 'default'
+        variant: 'default',
+        link: '/satker-admin/pengajuan'
       });
     }
 
@@ -55,7 +59,8 @@ export default function PeminjamanNotifications({
         message: `${keterlambatan} HT terlambat dikembalikan oleh personil`,
         count: keterlambatan,
         priority: 'high',
-        variant: 'destructive'
+        variant: 'destructive',
+        link: '/satker-admin/peminjaman'
       });
     }
 
@@ -68,7 +73,8 @@ export default function PeminjamanNotifications({
         message: `${mendekatiDeadline} HT harus dikembalikan dalam 3 hari`,
         count: mendekatiDeadline,
         priority: 'medium',
-        variant: 'default'
+        variant: 'default',
+        link: '/satker-admin/peminjaman'
       });
     }
 
@@ -95,13 +101,14 @@ export default function PeminjamanNotifications({
         <Alert 
           key={notification.id} 
           variant={notification.variant}
-          className={`border-l-4 ${
+          className={`border-l-4 cursor-pointer hover:bg-slate-50 transition-colors ${
             notification.priority === 'high' 
               ? 'border-l-red-500' 
-              : notification.priority === 'medium'
-              ? 'border-l-yellow-500'
-              : 'border-l-blue-500'
+              : notification.priority === 'medium' 
+                ? 'border-l-yellow-500' 
+                : 'border-l-blue-500'
           }`}
+          onClick={() => router.push(notification.link)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

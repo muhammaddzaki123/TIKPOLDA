@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, RefreshCw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -44,13 +44,10 @@ export default function NotificationBell() {
     }
   }, [session]);
 
-  // Ambil notifikasi saat komponen dimount dan setiap 30 detik
+  // Ambil notifikasi saat komponen dimount
   useEffect(() => {
     if (session?.user) {
       fetchNotifications();
-      
-      // Set interval untuk polling notifikasi setiap 30 detik
-      const interval = setInterval(fetchNotifications, 30000);
       
       // Listen untuk custom event refresh dari komponen lain
       const handleRefresh = () => {
@@ -59,7 +56,6 @@ export default function NotificationBell() {
       window.addEventListener('refreshNotifications', handleRefresh);
       
       return () => {
-        clearInterval(interval);
         window.removeEventListener('refreshNotifications', handleRefresh);
       };
     }
@@ -143,21 +139,35 @@ export default function NotificationBell() {
         sideOffset={5}
       >
         <div className="border-b p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-sm">Notifikasi</h3>
-            {unreadCount > 0 && (
+            <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={markAllAsRead}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                onClick={fetchNotifications}
+                disabled={isLoading}
+                className="text-xs text-slate-600 hover:text-slate-800 h-7 px-2"
+                title="Refresh notifikasi"
               >
-                Tandai Semua Dibaca
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
-            )}
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={markAllAsRead}
+                  disabled={isLoading}
+                  className="text-xs text-blue-600 hover:text-blue-800 h-7 px-2"
+                  title="Tandai semua dibaca"
+                >
+                  Tandai Semua Dibaca
+                </Button>
+              )}
+            </div>
           </div>
           {unreadCount > 0 && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500">
               {unreadCount} notifikasi belum dibaca
             </p>
           )}

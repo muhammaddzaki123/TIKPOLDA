@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { 
@@ -31,6 +32,98 @@ export default function NotificationList({
   onMarkAsRead,
   onRefresh
 }: NotificationListProps) {
+  const router = useRouter();
+  
+  // Fungsi untuk menentukan link redirect berdasarkan tipe notifikasi
+  const getNotificationLink = (notification: NotificationItem): string => {
+    const { type, title } = notification;
+    
+    // PEMINJAMAN - Pengajuan Peminjaman dari Satker ke Pusat
+    if (type === 'peminjaman_baru') {
+      // Untuk Super Admin - Pengajuan yang perlu disetujui
+      if (title.includes('Pengajuan Peminjaman Baru') || title.includes('Menunggu')) {
+        return '/dashboard/persetujuan'; // Tab Peminjaman di halaman persetujuan
+      }
+      
+      // Untuk Satker Admin - Status pengajuan mereka
+      if (title.includes('Disetujui') || title.includes('Ditolak')) {
+        return '/satker-admin/pengajuan'; // Lihat status pengajuan yang sudah diproses
+      }
+      
+      // Untuk Satker Admin - Tracking peminjaman aktif
+      if (title.includes('Siap Diambil') || title.includes('Sedang Digunakan')) {
+        return '/satker-admin/peminjaman'; // Halaman peminjaman aktif satker
+      }
+      
+      // Untuk Satker Admin - Pengembalian yang sudah selesai
+      if (title.includes('Berhasil Dikembalikan') || title.includes('Dikembalikan')) {
+        return '/satker-admin/riwayat-peminjaman'; // Lihat riwayat pengembalian
+      }
+    }
+    
+    // MUTASI - Pengajuan Mutasi Personil
+    if (type === 'mutasi_baru') {
+      // Untuk Super Admin - Pengajuan mutasi yang perlu disetujui
+      if (title.includes('Pengajuan Mutasi Baru') || title.includes('Menunggu')) {
+        return '/dashboard/persetujuan'; // Tab Mutasi di halaman persetujuan
+      }
+      
+      // Untuk tracking mutasi yang sudah diproses (disetujui/ditolak)
+      if (title.includes('Disetujui') || title.includes('Ditolak')) {
+        return '/dashboard/riwayat-mutasi'; // Halaman riwayat mutasi
+      }
+    }
+    
+    // PENGEMBALIAN - Pengajuan Pengembalian HT dari Satker
+    if (type === 'pengembalian_baru') {
+      // Untuk Super Admin - Pengembalian yang perlu disetujui
+      if (title.includes('Pengembalian HT Masuk') || title.includes('Menunggu')) {
+        return '/dashboard/persetujuan'; // Tab Pengembalian di halaman persetujuan
+      }
+      
+      // Untuk Satker Admin - Status pengembalian mereka
+      if (title.includes('Diterima') || title.includes('Disetujui')) {
+        return '/satker-admin/riwayat-peminjaman'; // Lihat pengembalian yang diterima
+      }
+      
+      if (title.includes('Ditolak')) {
+        return '/satker-admin/riwayat-peminjaman'; // Lihat pengembalian yang ditolak
+      }
+    }
+    
+    // KETERLAMBATAN - Untuk Super Admin
+    if (type === 'keterlambatan') {
+      // Keterlambatan peminjaman Satker (Pusat ke Satker)
+      return '/dashboard/satker'; // Halaman monitoring satker yang telat mengembalikan
+    }
+    
+    // KETERLAMBATAN PAKET - Untuk Satker Admin
+    if (type === 'keterlambatan_paket_peminjaman') {
+      // Keterlambatan peminjaman internal (Satker ke Personil)
+      return '/satker-admin/peminjaman'; // Halaman peminjaman internal satker
+    }
+    
+    // TRACKING UPDATE - Update status peminjaman
+    if (type === 'tracking_update') {
+      return '/satker-admin/peminjaman'; // Tracking peminjaman aktif
+    }
+    
+    // Default fallback - redirect ke dashboard yang sesuai
+    // Jika tidak bisa menentukan, arahkan ke dashboard utama
+    return '/dashboard';
+  };
+  
+  // Handler untuk klik notifikasi
+  const handleNotificationClick = (notification: NotificationItem) => {
+    // Mark as read jika belum dibaca
+    if (!notification.isRead) {
+      onMarkAsRead(notification.id);
+    }
+    
+    // Navigate ke halaman tujuan
+    const targetUrl = getNotificationLink(notification);
+    router.push(targetUrl);
+  };
   
   const getNotificationIcon = (type: NotificationItem['type'], priority: NotificationItem['priority'], title: string) => {
     // Tentukan warna berdasarkan status di title
@@ -147,7 +240,7 @@ export default function NotificationList({
           className={`p-3 border-l-4 transition-colors hover:bg-slate-50 cursor-pointer ${
             !notification.isRead ? getPriorityColor(notification.priority, notification.title) : 'border-l-slate-200 bg-white'
           }`}
-          onClick={() => !notification.isRead && onMarkAsRead(notification.id)}
+          onClick={() => handleNotificationClick(notification)}
         >
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0 mt-0.5">

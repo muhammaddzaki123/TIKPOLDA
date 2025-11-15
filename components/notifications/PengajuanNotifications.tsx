@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ export default function PengajuanNotifications({
   rejectedCount,
   pendingCount
 }: PengajuanNotificationsProps) {
+  const router = useRouter();
 
   interface Notification {
     id: string;
@@ -27,6 +29,7 @@ export default function PengajuanNotifications({
     priority: 'high' | 'medium' | 'low';
     variant: 'default' | 'destructive';
     borderColor: string;
+    link: string;
   }
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -44,7 +47,8 @@ export default function PengajuanNotifications({
         count: approvedCount,
         priority: 'high',
         variant: 'default',
-        borderColor: 'border-l-green-500'
+        borderColor: 'border-l-green-500',
+        link: '/satker-admin/pengajuan'
       });
     }
 
@@ -58,7 +62,8 @@ export default function PengajuanNotifications({
         count: rejectedCount,
         priority: 'medium',
         variant: 'destructive',
-        borderColor: 'border-l-red-500'
+        borderColor: 'border-l-red-500',
+        link: '/satker-admin/pengajuan'
       });
     }
 
@@ -72,7 +77,8 @@ export default function PengajuanNotifications({
         count: pendingCount,
         priority: 'medium',
         variant: 'default',
-        borderColor: 'border-l-yellow-500'
+        borderColor: 'border-l-yellow-500',
+        link: '/satker-admin/pengajuan'
       });
     }
 
@@ -99,7 +105,8 @@ export default function PengajuanNotifications({
         <Alert 
           key={notification.id} 
           variant={notification.variant}
-          className={`border-l-4 ${notification.borderColor}`}
+          className={`border-l-4 cursor-pointer hover:bg-slate-50 transition-colors ${notification.borderColor}`}
+          onClick={() => router.push(notification.link)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

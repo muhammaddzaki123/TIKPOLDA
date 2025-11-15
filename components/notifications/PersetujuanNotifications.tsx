@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ export default function PersetujuanNotifications({
   pendingPengembalian,
   keterlambatan
 }: PersetujuanNotificationsProps) {
+  const router = useRouter();
   
   interface Notification {
     id: string;
@@ -28,6 +30,7 @@ export default function PersetujuanNotifications({
     count: number;
     priority: 'high' | 'medium' | 'low';
     variant: 'default' | 'destructive';
+    link: string;
   }
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -44,7 +47,8 @@ export default function PersetujuanNotifications({
         message: `${pendingPeminjaman} pengajuan peminjaman menunggu persetujuan`,
         count: pendingPeminjaman,
         priority: 'high',
-        variant: 'default'
+        variant: 'default',
+        link: '/dashboard/persetujuan'
       });
     }
 
@@ -57,7 +61,8 @@ export default function PersetujuanNotifications({
         message: `${pendingMutasi} pengajuan mutasi menunggu persetujuan`,
         count: pendingMutasi,
         priority: 'medium',
-        variant: 'default'
+        variant: 'default',
+        link: '/dashboard/persetujuan'
       });
     }
 
@@ -70,7 +75,8 @@ export default function PersetujuanNotifications({
         message: `${pendingPengembalian} pengajuan pengembalian menunggu persetujuan`,
         count: pendingPengembalian,
         priority: 'medium',
-        variant: 'default'
+        variant: 'default',
+        link: '/dashboard/persetujuan'
       });
     }
 
@@ -83,7 +89,8 @@ export default function PersetujuanNotifications({
         message: `${keterlambatan} HT terlambat dikembalikan oleh satker`,
         count: keterlambatan,
         priority: 'high',
-        variant: 'destructive'
+        variant: 'destructive',
+        link: '/dashboard/peminjaman'
       });
     }
 
@@ -110,7 +117,8 @@ export default function PersetujuanNotifications({
         <Alert 
           key={notification.id} 
           variant={notification.variant}
-          className="border-l-4 border-l-blue-500"
+          className="border-l-4 border-l-blue-500 cursor-pointer hover:bg-slate-50 transition-colors"
+          onClick={() => router.push(notification.link)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

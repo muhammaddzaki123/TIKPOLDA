@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PackageCheck, PackageX, PackagePlus, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ export default function PengembalianNotifications({
   pengembalianDitolak = 0,
   pengembalianPending = 0
 }: PengembalianNotificationsProps) {
+  const router = useRouter();
 
   interface Notification {
     id: string;
@@ -29,6 +31,7 @@ export default function PengembalianNotifications({
     priority: 'high' | 'medium' | 'low';
     variant: 'default' | 'destructive';
     borderColor: string;
+    link: string;
   }
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -47,7 +50,8 @@ export default function PengembalianNotifications({
         count: pengembalianMasuk,
         priority: 'high',
         variant: 'default',
-        borderColor: 'border-l-blue-500'
+        borderColor: 'border-l-blue-500',
+        link: '/dashboard/persetujuan'
       });
     }
 
@@ -62,7 +66,8 @@ export default function PengembalianNotifications({
         count: pengembalianDisetujui,
         priority: 'medium',
         variant: 'default',
-        borderColor: 'border-l-green-500'
+        borderColor: 'border-l-green-500',
+        link: '/satker-admin/riwayat-peminjaman'
       });
     }
 
@@ -77,7 +82,8 @@ export default function PengembalianNotifications({
         count: pengembalianDitolak,
         priority: 'high',
         variant: 'destructive',
-        borderColor: 'border-l-red-500'
+        borderColor: 'border-l-red-500',
+        link: '/satker-admin/riwayat-peminjaman'
       });
     }
 
@@ -92,7 +98,8 @@ export default function PengembalianNotifications({
         count: pengembalianPending,
         priority: 'medium',
         variant: 'default',
-        borderColor: 'border-l-yellow-500'
+        borderColor: 'border-l-yellow-500',
+        link: '/satker-admin/riwayat-peminjaman'
       });
     }
 
@@ -112,7 +119,8 @@ export default function PengembalianNotifications({
         <Alert 
           key={notification.id} 
           variant={notification.variant}
-          className={`border-l-4 ${notification.borderColor}`}
+          className={`border-l-4 cursor-pointer hover:bg-slate-50 transition-colors ${notification.borderColor}`}
+          onClick={() => router.push(notification.link)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
