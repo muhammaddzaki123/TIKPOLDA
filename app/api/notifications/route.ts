@@ -9,6 +9,7 @@ interface NotificationItem {
   type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan' | 'keterlambatan_paket_peminjaman';
   title: string;
   message: string;
+  link: string; // URL tujuan saat notifikasi diklik
   createdAt: Date;
   isRead: boolean;
   priority: 'low' | 'medium' | 'high';
@@ -53,12 +54,16 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
         
         const priority = pengajuan.status === 'PENDING' ? 'high' : 'medium';
         
+        // Link ke halaman persetujuan untuk Super Admin
+        const link = '/dashboard/persetujuan';
+        
         await prisma.notification.create({
           data: {
             userId,
             type: 'peminjaman_baru',
             title,
             message: `${pengajuan.satkerPengaju.nama} - ${pengajuan.jumlah} unit HT - Status: ${pengajuan.status}`,
+            link,
             relatedId: pengajuan.id,
             satkerName: pengajuan.satkerPengaju.nama,
             priority,
@@ -98,12 +103,18 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
         
         const priority = mutasi.status === 'PENDING' ? 'high' : 'medium';
         
+        // Link ke halaman persetujuan untuk pengajuan baru, riwayat mutasi untuk yang sudah diproses
+        const link = mutasi.status === 'PENDING' 
+          ? '/dashboard/persetujuan' 
+          : '/dashboard/riwayat-mutasi';
+        
         await prisma.notification.create({
           data: {
             userId,
             type: 'mutasi_baru',
             title,
             message: `${mutasi.personil.nama} dari ${mutasi.satkerAsal.nama} ke ${mutasi.satkerTujuan.nama} - Status: ${mutasi.status}`,
+            link,
             relatedId: mutasi.id,
             satkerName: mutasi.satkerAsal.nama,
             priority,
@@ -143,12 +154,18 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
         
         const priority = pengembalian.status === 'PENDING' ? 'high' : 'medium';
         
+        // Link ke halaman persetujuan untuk pengajuan baru, riwayat untuk yang sudah diproses
+        const link = pengembalian.status === 'PENDING'
+          ? '/dashboard/persetujuan'
+          : '/dashboard/riwayat';
+        
         await prisma.notification.create({
           data: {
             userId,
             type: 'pengembalian_baru',
             title,
             message: `${pengembalian.satkerPengaju.nama} - ${jumlahHT} unit HT - Status: ${pengembalian.status}`,
+            link,
             relatedId: pengembalian.id,
             satkerName: pengembalian.satkerPengaju.nama,
             priority,
@@ -221,6 +238,7 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
             type: 'keterlambatan_paket_peminjaman',
             title: '⚠️ Paket HT Terlambat Dikembalikan',
             message: `Paket peminjaman ${loanPackage.jumlah} unit HT oleh ${loanPackage.satkerPengaju.nama} terlambat ${daysOverdue} hari. Segera hubungi satker!`,
+            link: '/dashboard/satker',
             relatedId: loanPackage.id,
             satkerName: loanPackage.satkerPengaju.nama,
             priority: 'high',
@@ -245,6 +263,7 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
     type: n.type as NotificationItem['type'],
     title: n.title,
     message: n.message,
+    link: n.link || '/dashboard',
     createdAt: n.createdAt,
     isRead: n.isRead,
     priority: n.priority as NotificationItem['priority'],
@@ -281,19 +300,24 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
       if (!existingIds.has(notifKey)) {
         let title = 'Update Pengajuan';
         let priority: 'low' | 'medium' | 'high' = 'medium';
+        let link = '/satker-admin/pengajuan'; // Default link
         
         if (pengajuan.status === 'APPROVED') {
           title = 'Pengajuan Disetujui';
           priority = 'high';
+          link = '/satker-admin/pengajuan';
         } else if (pengajuan.status === 'REJECTED') {
           title = 'Pengajuan Ditolak';
           priority = 'medium';
+          link = '/satker-admin/pengajuan';
         } else if (pengajuan.trackingStatus === 'SIAP_DIAMBIL') {
           title = 'HT Siap Diambil';
           priority = 'high';
+          link = '/satker-admin/peminjaman';
         } else if (pengajuan.trackingStatus === 'SUDAH_DIKEMBALIKAN') {
           title = 'Pengembalian Diterima';
           priority = 'high';
+          link = '/satker-admin/riwayat-peminjaman';
         }
         
         await prisma.notification.create({
@@ -302,6 +326,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
             type: 'peminjaman_baru',
             title,
             message: `Peminjaman ${pengajuan.jumlah} unit HT - Status: ${pengajuan.trackingStatus || pengajuan.status}`,
+            link,
             relatedId: notifKey,
             priority,
             createdAt: pengajuan.updatedAt
@@ -334,6 +359,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
           : 'Update Mutasi';
         
         const priority = mutasi.status === 'APPROVED' ? 'high' : 'medium';
+        const link = '/satker-admin/personil'; // Link ke halaman personil satker
         
         await prisma.notification.create({
           data: {
@@ -341,6 +367,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
             type: 'mutasi_baru',
             title,
             message: `Mutasi ${mutasi.personil.nama} ke ${mutasi.satkerTujuan.nama} - Status: ${mutasi.status}`,
+            link,
             relatedId: notifKey,
             priority,
             createdAt: mutasi.updatedAt
@@ -373,6 +400,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
           : 'Update Pengembalian';
         
         const priority = pengembalian.status === 'REJECTED' ? 'high' : 'medium';
+        const link = '/satker-admin/riwayat-peminjaman'; // Link ke riwayat peminjaman
         
         await prisma.notification.create({
           data: {
@@ -380,6 +408,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
             type: 'pengembalian_baru',
             title,
             message: `${jumlahHT} unit HT - Status: ${pengembalian.status}${pengembalian.catatanAdmin ? ` - ${pengembalian.catatanAdmin}` : ''}`,
+            link,
             relatedId: notifKey,
             priority,
             createdAt: pengembalian.updatedAt
@@ -449,6 +478,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
             type: 'keterlambatan_paket_peminjaman',
             title: '⚠️ Paket HT Terlambat Dikembalikan',
             message: `Paket peminjaman ${loanPackage.jumlah} unit HT terlambat ${daysOverdue} hari. Segera ajukan pengembalian!`,
+            link: '/satker-admin/peminjaman',
             relatedId: loanPackage.id,
             priority: 'high',
           },
@@ -472,6 +502,7 @@ async function getSatkerAdminNotifications(userId: string, satkerId: string): Pr
     type: n.type as NotificationItem['type'],
     title: n.title,
     message: n.message,
+    link: n.link || '/satker-admin',
     createdAt: n.createdAt,
     isRead: n.isRead,
     priority: n.priority as NotificationItem['priority'],

@@ -37,6 +37,7 @@ export interface NotificationItem {
   type: 'peminjaman_baru' | 'mutasi_baru' | 'pengembalian_baru' | 'keterlambatan' | 'keterlambatan_paket_peminjaman' | 'tracking_update';
   title: string;
   message: string;
+  link: string; // URL tujuan saat notifikasi diklik
   createdAt: Date;
   isRead: boolean;
   priority: 'low' | 'medium' | 'high';
@@ -63,6 +64,7 @@ export async function getSuperAdminNotifications(): Promise<NotificationItem[]> 
         type: 'peminjaman_baru',
         title: 'Pengajuan Peminjaman Baru',
         message: `${pengajuan.satkerPengaju.nama} mengajukan peminjaman ${pengajuan.jumlah} unit HT`,
+        link: '/dashboard/persetujuan',
         createdAt: pengajuan.createdAt,
         isRead: false,
         priority: 'high',
@@ -89,6 +91,7 @@ export async function getSuperAdminNotifications(): Promise<NotificationItem[]> 
         type: 'mutasi_baru',
         title: 'Pengajuan Mutasi Baru',
         message: `Mutasi ${mutasi.personil.nama} dari ${mutasi.satkerAsal.nama} ke ${mutasi.satkerTujuan.nama}`,
+        link: '/dashboard/persetujuan',
         createdAt: mutasi.createdAt,
         isRead: false,
         priority: 'medium',
@@ -117,6 +120,7 @@ export async function getSuperAdminNotifications(): Promise<NotificationItem[]> 
         type: 'pengembalian_baru',
         title: 'Pengajuan Pengembalian Baru',
         message: `${pengembalian.satkerPengaju.nama} mengajukan pengembalian ${jumlahHT} unit HT`,
+        link: '/dashboard/persetujuan',
         createdAt: pengembalian.createdAt,
         isRead: false,
         priority: 'medium',
@@ -148,6 +152,7 @@ export async function getSuperAdminNotifications(): Promise<NotificationItem[]> 
         type: 'keterlambatan',
         title: 'Keterlambatan Pengembalian',
         message: `${peminjaman.satker.nama} terlambat ${hariTerlambat} hari mengembalikan HT ${peminjaman.ht.serialNumber}`,
+        link: '/dashboard/satker',
         createdAt: peminjaman.tanggalPinjam,
         isRead: false,
         priority: 'high',
@@ -194,6 +199,7 @@ export async function getSatkerAdminNotifications(satkerId: string): Promise<Not
         type: pengajuan.status === 'APPROVED' ? 'peminjaman_baru' : 'peminjaman_baru',
         title: `Pengajuan ${pengajuan.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}`,
         message: `Pengajuan peminjaman ${pengajuan.jumlah} unit HT telah ${pengajuan.status === 'APPROVED' ? 'disetujui' : 'ditolak'}`,
+        link: '/satker-admin/pengajuan',
         createdAt: pengajuan.updatedAt,
         isRead: false,
         priority: pengajuan.status === 'APPROVED' ? 'high' : 'medium',
@@ -226,6 +232,7 @@ export async function getSatkerAdminNotifications(satkerId: string): Promise<Not
           type: 'keterlambatan',
           title: 'Keterlambatan Pengembalian Internal',
           message: `${peminjaman.personil.nama} terlambat ${hariTerlambat} hari mengembalikan HT ${peminjaman.ht.serialNumber}`,
+          link: '/satker-admin/peminjaman',
           createdAt: peminjaman.estimasiKembali,
           isRead: false,
           priority: hariTerlambat > 7 ? 'high' : 'medium',
@@ -260,6 +267,7 @@ export async function getSatkerAdminNotifications(satkerId: string): Promise<Not
           type: 'keterlambatan',
           title: 'Mendekati Batas Pengembalian',
           message: `HT ${peminjaman.ht.serialNumber} (${peminjaman.personil.nama}) harus dikembalikan dalam ${hariSisa} hari`,
+          link: '/satker-admin/peminjaman',
           createdAt: peminjaman.tanggalPinjam,
           isRead: false,
           priority: 'medium',

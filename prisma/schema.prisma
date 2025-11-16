@@ -240,6 +240,7 @@ model Notification {
   type         String
   title        String
   message      String
+  link         String?  // URL tujuan saat notifikasi diklik
   relatedId    String?
   satkerName   String?
   priority     String   @default("medium")

@@ -18,6 +18,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // State untuk kontrol dropdown
 
   // Fungsi untuk mengambil notifikasi
   const fetchNotifications = useCallback(async () => {
@@ -114,7 +115,7 @@ export default function NotificationBell() {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
@@ -179,6 +180,7 @@ export default function NotificationBell() {
             isLoading={isLoading}
             onMarkAsRead={markAsRead}
             onRefresh={fetchNotifications}
+            onNavigate={() => setIsOpen(false)} // Tutup dropdown saat navigate
           />
         </div>
       </DropdownMenuContent>
