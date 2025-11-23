@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import StatCard from '@/components/stat-card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Building, RadioTower, Users, CheckCircle, AlertTriangle, Wrench, HelpCircle } from 'lucide-react';
 import { Prisma } from '@prisma/client';
 
 // Tipe untuk data yang akan kita terima
@@ -62,12 +61,12 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-slate-700">Ringkasan Sistem</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <StatCard title="Total Satuan Kerja" value={stats.satkerCount.toString()} icon={Building} color="bg-blue-500" />
-            <StatCard title="Total Personil" value={stats.personilCount.toString()} icon={Users} color="bg-cyan-500" />
+            <StatCard title="Total Satuan Kerja" value={stats.satkerCount.toString()} iconName="Building" color="bg-blue-500" />
+            <StatCard title="Total Personil" value={stats.personilCount.toString()} iconName="Users" color="bg-cyan-500" />
             {/* Kartu Total HT dibuat bisa diklik */}
             <DialogTrigger asChild onClick={() => handleCardClick('Total Unit HT Berdasarkan Merek', htData.allHt)}>
               <div className="cursor-pointer transition-transform hover:scale-[1.02]">
-                <StatCard title="Total Unit HT" value={stats.htCount.toString()} icon={RadioTower} color="bg-indigo-500" />
+                <StatCard title="Total Unit HT" value={stats.htCount.toString()} iconName="RadioTower" color="bg-indigo-500" />
               </div>
             </DialogTrigger>
           </div>
@@ -78,16 +77,16 @@ export function DashboardClient({ stats, htData }: DashboardClientProps) {
           <h2 className="text-xl font-semibold text-slate-700">Status Aset HT</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <DialogTrigger asChild onClick={() => handleCardClick('Daftar HT Tersedia', htData.htTersedia)}>
-              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Tersedia" value={stats.tersediaCount.toString()} icon={CheckCircle} color="bg-green-500" /></div>
+              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Tersedia" value={stats.tersediaCount.toString()} iconName="CheckCircle" color="bg-green-500" /></div>
             </DialogTrigger>
             <DialogTrigger asChild onClick={() => handleCardClick('Daftar HT Dipinjam', htData.htDipinjam)}>
-              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Dipinjam" value={stats.dipinjamCount.toString()} icon={AlertTriangle} color="bg-yellow-500" /></div>
+              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Dipinjam" value={stats.dipinjamCount.toString()} iconName="AlertTriangle" color="bg-yellow-500" /></div>
             </DialogTrigger>
             <DialogTrigger asChild onClick={() => handleCardClick('Daftar HT Rusak', htData.htRusak)}>
-              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Rusak" value={stats.rusakCount.toString()} icon={Wrench} color="bg-orange-500" /></div>
+              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Rusak" value={stats.rusakCount.toString()} iconName="Wrench" color="bg-orange-500" /></div>
             </DialogTrigger>
              <DialogTrigger asChild onClick={() => handleCardClick('Daftar HT Hilang', htData.htHilang)}>
-              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Hilang" value={stats.hilangCount.toString()} icon={HelpCircle} color="bg-red-500" /></div>
+              <div className="cursor-pointer transition-transform hover:scale-[1.02]"><StatCard title="HT Hilang" value={stats.hilangCount.toString()} iconName="HelpCircle" color="bg-red-500" /></div>
             </DialogTrigger>
           </div>
         </div>
