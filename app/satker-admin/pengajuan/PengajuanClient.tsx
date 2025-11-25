@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Personil, Satker } from '@prisma/client';
 import { TrackingStatus } from '@/components/tracking/TrackingTimeline';
 import { OverduePeminjamanSatkerAlert } from '@/components/OverduePeminjamanSatkerAlert';
+import ExportPengajuanSatkerButton from '@/components/ExportPengajuanSatkerButton';
 
 interface HtDetail {
   id: string;
@@ -90,11 +91,14 @@ export default function PengajuanClient({
       {/* Overdue Notification Alert */}
       <OverduePeminjamanSatkerAlert />
 
-      <div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Pusat Pengajuan</h1>
-        <p className="text-xs sm:text-sm text-slate-600 mt-1">
-          Gunakan formulir di bawah ini untuk mengirimkan permintaan resmi kepada Super Admin.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Pusat Pengajuan</h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            Gunakan formulir di bawah ini untuk mengirimkan permintaan resmi kepada Super Admin.
+          </p>
+        </div>
+        <ExportPengajuanSatkerButton />
       </div>
 
       <Tabs defaultValue="peminjaman" className="w-full">

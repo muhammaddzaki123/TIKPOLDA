@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { UserCircle, LogOut, Menu } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import {
@@ -20,6 +21,7 @@ interface HeaderDashboardProps {
 
 export default function HeaderDashboard({ isSidebarOpen, setIsSidebarOpen }: HeaderDashboardProps) {
   const { data: session } = useSession();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut({
@@ -44,9 +46,13 @@ export default function HeaderDashboard({ isSidebarOpen, setIsSidebarOpen }: Hea
       <div className="flex items-center space-x-4">
         <NotificationBell />
 
-        <DropdownMenu>
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center space-x-2 p-2 h-auto">
+            <Button 
+              variant="ghost" 
+              className="flex items-center space-x-2 p-2 h-auto"
+              onClick={() => setIsDropdownOpen(true)}
+            >
               <UserCircle className="h-8 w-8 text-slate-600" />
               <div className="hidden text-right md:block">
                 <p className="text-sm font-semibold">{session?.user?.nama || 'Pengguna'}</p>

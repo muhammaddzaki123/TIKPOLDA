@@ -3,6 +3,7 @@
 import { getRiwayatPeminjamanBySatker } from "../peminjaman/actions";
 import { RiwayatPeminjamanTable } from "@/components/RiwayatPeminjamanTable";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import ExportRiwayatPeminjamanSatkerButton from "@/components/ExportRiwayatPeminjamanSatkerButton";
 
 export default async function RiwayatPeminjamanPage() {
     
@@ -11,8 +12,9 @@ export default async function RiwayatPeminjamanPage() {
 
     return (
         <main className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
-            <div className="flex items-center">
+            <div className="flex items-center justify-between">
                 <h1 className="text-2xl md:text-3xl font-bold">Riwayat Peminjaman Internal</h1>
+                <ExportRiwayatPeminjamanSatkerButton />
             </div>
             
             <Card>
