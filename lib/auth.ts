@@ -162,16 +162,18 @@ export const authOptions: AuthOptions = {
     error: '/login', // Redirect errors to login page
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Disable secure cookies for development/testing on localhost
-  useSecureCookies: false,
+  // Auto-detect production HTTPS for secure cookies
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://'),
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: process.env.NEXTAUTH_URL?.startsWith('https://')
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false, // Set to true only in production with HTTPS
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://'),
       },
     },
   },
