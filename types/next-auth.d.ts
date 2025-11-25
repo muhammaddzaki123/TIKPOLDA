@@ -1,8 +1,8 @@
 // types/next-auth.d.ts
 
 import { Role, Satker } from '@prisma/client';
-import NextAuth, { DefaultSession } from 'next-auth';
-import { JWT, DefaultJWT } from 'next-auth/jwt';
+import { DefaultSession } from 'next-auth';
+import { DefaultJWT } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   /**
@@ -15,6 +15,7 @@ declare module 'next-auth' {
     nama: string;
     satker: Satker | null; // Tambahkan ini
     satkerId: string | null; // Tambahkan ini
+    loginTime?: number; // Track login timestamp for single session
   }
 
   /**
@@ -41,5 +42,6 @@ declare module 'next-auth/jwt' {
     nama: string;
     satker: Satker | null; // Tambahkan ini
     satkerId: string | null; // Tambahkan ini
+    loginTime?: number; // Track login timestamp for single session
   }
 }

@@ -7,6 +7,25 @@ import { compare } from 'bcryptjs';
 import { securityLogger } from '@/lib/logger';
 import { securityService } from '@/lib/security';
 
+// Helper function to get IP from NextAuth request
+const getClientIp = (req: { headers?: Record<string, string | string[]> }): string => {
+  // NextAuth request object is different from NextRequest
+  if (req?.headers) {
+    const forwarded = req.headers['x-forwarded-for'];
+    const realIp = req.headers['x-real-ip'];
+    
+    if (forwarded) {
+      return typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : forwarded[0];
+    }
+    
+    if (realIp) {
+      return typeof realIp === 'string' ? realIp : realIp[0];
+    }
+  }
+  
+  return 'unknown';
+};
+
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -21,7 +40,7 @@ export const authOptions: AuthOptions = {
         }
 
         // Get client IP
-        const ip = securityService.getClientIp(req as unknown as Request);
+        const ip = getClientIp(req);
 
         // Check if account is locked
         if (securityService.isAccountLocked(credentials.email)) {
@@ -60,7 +79,7 @@ export const authOptions: AuthOptions = {
         securityService.resetLoginAttempts(credentials.email);
         securityLogger.logSuccessfulLogin(user.id, user.email, ip);
 
-        // Kembalikan semua data yang dibutuhkan, termasuk objek 'satker'
+        // Kembalikan semua data yang dibutuhkan, termasuk loginTime untuk single session
         return {
           id: user.id,
           email: user.email,
@@ -68,6 +87,7 @@ export const authOptions: AuthOptions = {
           role: user.role,
           satker: user.satker,
           satkerId: user.satkerId,
+          loginTime: Date.now(), // Will be used to invalidate old sessions
         };
       },
     }),
@@ -81,24 +101,43 @@ export const authOptions: AuthOptions = {
     // Callback 'jwt' sekarang juga akan menerima data 'satker' dari 'authorize'
     async jwt({ token, user }) {
       if (user) {
+        // Login baru - simpan semua data termasuk loginTime
         token.id = user.id;
         token.role = user.role;
         token.nama = user.nama;
-        token.satker = user.satker; // Simpan data satker ke token
-        token.satkerId = user.satkerId; // Simpan satkerId ke token
+        token.satker = user.satker;
+        token.satkerId = user.satkerId;
+        token.loginTime = user.loginTime; // New login timestamp
+        
+        if (user.loginTime) {
+          console.log(`[JWT] New token created for user ${user.email} at ${new Date(user.loginTime).toISOString()}`);
+        }
       }
+      
       return token;
     },
     // Callback 'session' akan mengambil data dari token dan menyediakannya ke klien
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.nama = token.nama;
-        session.user.satker = token.satker; // Teruskan data satker ke sesi
-        session.user.satkerId = token.satkerId; // Teruskan satkerId ke sesi
+        session.user.satker = token.satker;
+        session.user.satkerId = token.satkerId;
       }
       return session;
+    },
+  },
+  events: {
+    // Event saat user sign in
+    async signIn({ user }) {
+      console.log(`[AUTH] User ${user.email} logged in at ${new Date().toISOString()}`);
+    },
+    // Event saat user sign out
+    async signOut({ token }) {
+      if (token?.email) {
+        console.log(`[AUTH] User ${token.email} logged out at ${new Date().toISOString()}`);
+      }
     },
   },
   pages: {

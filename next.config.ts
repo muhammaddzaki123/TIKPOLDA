@@ -101,6 +101,8 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     // Format yang didukung
     formats: ['image/webp'],
+    // Quality settings
+    qualities: [100],
     // Device sizes untuk responsive images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Image sizes untuk different breakpoints

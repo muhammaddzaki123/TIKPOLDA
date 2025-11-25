@@ -25,13 +25,25 @@ interface SidebarSatkerProps {
 
 export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: SidebarSatkerProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
   }, [pathname, setIsSidebarOpen]);
+
+  // Redirect to login if session is invalid
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.href = '/login';
+    }
+  }, [status]);
+
+  // Show loading or prevent render if no session
+  if (!session?.user) {
+    return null;
+  }
 
   return (
     <>

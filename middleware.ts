@@ -3,23 +3,56 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { apiLimiter } from '@/lib/rate-limit';
-import { securityLogger } from '@/lib/logger';
-import { securityService } from '@/lib/security';
+
+// Edge Runtime compatible - no Node.js modules
+const getClientIp = (req: NextRequest): string => {
+  const forwarded = req.headers.get('x-forwarded-for');
+  const realIp = req.headers.get('x-real-ip');
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  
+  if (realIp) {
+    return realIp;
+  }
+  
+  return 'unknown';
+};
+
+// Simple in-memory rate limiter for Edge Runtime
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+const checkRateLimit = (key: string, limit: number, windowMs: number): boolean => {
+  const now = Date.now();
+  const record = rateLimitMap.get(key);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+
+  if (record.count >= limit) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+};
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
-  // Get client IP for rate limiting and logging
-  const ip = securityService.getClientIp(req as unknown as Request);
+  // Get client IP for rate limiting
+  const ip = getClientIp(req);
 
-  // Rate limiting untuk API endpoints (kecuali auth endpoints yang sudah punya limiter sendiri)
+  // Rate limiting untuk API endpoints (kecuali auth endpoints)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
-    try {
-      await apiLimiter.check(60, `api_${ip}_${pathname}`); // 60 requests per minute per IP per endpoint
-    } catch {
-      securityLogger.logRateLimitExceeded(`api_${ip}`, pathname, ip);
+    const allowed = checkRateLimit(`api_${ip}_${pathname}`, 60, 60000); // 60 per minute
+    
+    if (!allowed) {
+      console.warn(`[SECURITY] Rate limit exceeded: ${ip} - ${pathname}`);
       return NextResponse.json(
         { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
         { status: 429 }
@@ -48,21 +81,13 @@ export async function middleware(req: NextRequest) {
 
     // Jika SUPER_ADMIN mencoba akses halaman Admin Satker
     if (token.role === 'SUPER_ADMIN' && pathname.startsWith('/satker-admin')) {
-      securityLogger.logUnauthorizedAccess(pathname, ip, {
-        userId: token.id,
-        role: token.role,
-        attemptedAccess: 'satker-admin',
-      });
+      console.warn(`[SECURITY] Unauthorized access attempt: ${token.id} - ${pathname}`);
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
     // Jika ADMIN_SATKER mencoba akses halaman Super Admin
     if (token.role === 'ADMIN_SATKER' && pathname.startsWith('/dashboard')) {
-      securityLogger.logUnauthorizedAccess(pathname, ip, {
-        userId: token.id,
-        role: token.role,
-        attemptedAccess: 'dashboard',
-      });
+      console.warn(`[SECURITY] Unauthorized access attempt: ${token.id} - ${pathname}`);
       return NextResponse.redirect(new URL('/satker-admin', req.url));
     }
 
@@ -72,9 +97,7 @@ export async function middleware(req: NextRequest) {
 
   // Jika pengguna BELUM LOGIN dan mencoba mengakses halaman selain login/register
   if (!token && !isAuthPage) {
-    securityLogger.logUnauthorizedAccess(pathname, ip, {
-      reason: 'Not authenticated',
-    });
+    console.warn(`[SECURITY] Unauthorized access: ${ip} - ${pathname}`);
     // Arahkan ke halaman login
     return NextResponse.redirect(new URL('/login', req.url));
   }

@@ -8,6 +8,7 @@ import {
   CheckSquare, ClipboardList, X,
 } from 'lucide-react';
 import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -28,6 +29,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     // Menutup sidebar saat navigasi di layar mobile
@@ -35,6 +37,18 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }: SidebarProp
       setIsSidebarOpen(false);
     }
   }, [pathname, setIsSidebarOpen]);
+
+  // Redirect to login if session is invalid
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.href = '/login';
+    }
+  }, [status]);
+
+  // Show loading or prevent render if no session
+  if (!session?.user) {
+    return null;
+  }
 
   return (
     <>

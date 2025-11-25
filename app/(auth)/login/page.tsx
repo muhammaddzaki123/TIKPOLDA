@@ -37,10 +37,10 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        // Jika login berhasil, arahkan ke halaman netral.
-        // Middleware akan mengambil alih dari sini untuk mengarahkan
-        // pengguna berdasarkan perannya.
-        router.replace('/dashboard');
+        // Jika login berhasil, tunggu sebentar untuk JWT token ter-update
+        // lalu arahkan ke halaman netral. Middleware akan redirect ke dashboard yang sesuai
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = '/dashboard';
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
