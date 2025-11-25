@@ -41,39 +41,6 @@ export function ChartCard({ title, subtitle, children }: ChartCardProps) {
   );
 }
 
-// Custom Tooltip
-interface TooltipPayload {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayload[];
-  label?: string;
-}
-
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-        <p className="text-sm font-medium text-slate-900">{label}</p>
-        {payload.map((entry, index: number) => (
-          <p
-            key={index}
-            className="text-sm text-slate-600"
-            style={{ color: entry.color }}
-          >
-            {entry.name}: <span className="font-semibold">{entry.value}</span>
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 // Trend Line Chart
 interface TrendData {
   date: string;
@@ -242,6 +209,15 @@ interface PieChartComponentProps {
 
 const RADIAN = Math.PI / 180;
 
+interface PieLabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
+}
+
 const renderCustomizedLabel = ({
   cx,
   cy,
@@ -249,7 +225,12 @@ const renderCustomizedLabel = ({
   innerRadius,
   outerRadius,
   percent,
-}: any) => {
+}: PieLabelProps) => {
+  // Guard clause for undefined values
+  if (!cx || !cy || midAngle === undefined || !innerRadius || !outerRadius || !percent) {
+    return null;
+  }
+
   // Posisi label di tengah antara inner dan outer radius
   const radius = innerRadius + (outerRadius - innerRadius) * 0.65;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
