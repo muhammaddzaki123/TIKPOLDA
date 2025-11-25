@@ -2,22 +2,23 @@
 
 import winston from 'winston';
 
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'poldatik-app' },
-  transports: [
-    // Write all logs to console
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
+// Check if we're in Vercel (read-only filesystem)
+const isVercel = process.env.VERCEL === '1';
+
+// Create transports array conditionally
+const transports: winston.transport[] = [
+  // Always log to console
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    ),
+  }),
+];
+
+// Only add file transports if NOT in Vercel
+if (!isVercel) {
+  transports.push(
     // Write all logs with level 'error' and below to error.log
     new winston.transports.File({ 
       filename: 'logs/error.log', 
@@ -37,8 +38,19 @@ const logger = winston.createLogger({
       level: 'warn',
       maxsize: 5242880, // 5MB
       maxFiles: 10,
-    }),
-  ],
+    })
+  );
+}
+
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'poldatik-app' },
+  transports,
 });
 
 export const securityLogger = {
