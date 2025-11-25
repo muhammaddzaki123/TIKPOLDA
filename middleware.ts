@@ -44,6 +44,12 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
+  // Debug logging untuk production
+  if (!token && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+    console.log(`[MIDDLEWARE] No token found for path: ${pathname}`);
+    console.log(`[MIDDLEWARE] NEXTAUTH_SECRET exists: ${!!process.env.NEXTAUTH_SECRET}`);
+  }
+
   // Get client IP for rate limiting
   const ip = getClientIp(req);
 

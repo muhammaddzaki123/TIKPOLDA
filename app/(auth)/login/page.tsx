@@ -24,9 +24,10 @@ export default function LoginPage() {
     try {
       // Memanggil NextAuth untuk proses otentikasi
       const result = await signIn('credentials', {
-        redirect: false, // Kita tangani redirect secara manual untuk menampilkan pesan error
+        redirect: false,
         email,
         password,
+        callbackUrl: '/dashboard',
       });
 
       if (result?.error) {
@@ -35,10 +36,8 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        // Jika login berhasil, tunggu sebentar untuk JWT token ter-update
-        // lalu arahkan ke halaman netral. Middleware akan redirect ke dashboard yang sesuai
-        await new Promise(resolve => setTimeout(resolve, 500));
-        window.location.href = '/dashboard';
+        // Redirect dengan full page reload untuk memastikan cookie ter-set
+        window.location.href = result.url || '/dashboard';
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

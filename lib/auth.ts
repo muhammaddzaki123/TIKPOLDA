@@ -7,6 +7,8 @@ import { compare } from 'bcryptjs';
 import { securityLogger } from '@/lib/logger';
 import { securityService } from '@/lib/security';
 
+const MAX_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5');
+
 // Helper function to get IP from NextAuth request
 const getClientIp = (req: { headers?: Record<string, string | string[]> }): string => {
   // NextAuth request object is different from NextRequest
@@ -64,15 +66,30 @@ export const authOptions: AuthOptions = {
 
         if (!user) {
           securityService.recordLoginAttempt(credentials.email, ip, false);
+          const failedAttempts = securityService.getFailedAttempts(credentials.email);
+          const remainingAttempts = MAX_ATTEMPTS - failedAttempts;
+          
           securityLogger.logFailedLogin(credentials.email, ip, 'User not found');
+          
+          if (remainingAttempts > 0) {
+            throw new Error(`Email tidak ditemukan. Sisa ${remainingAttempts} percobaan sebelum akun terkunci.`);
+          }
           return null;
         }
 
         const isPasswordValid = await compare(credentials.password, user.password);
         if (!isPasswordValid) {
           securityService.recordLoginAttempt(credentials.email, ip, false);
+          const failedAttempts = securityService.getFailedAttempts(credentials.email);
+          const remainingAttempts = MAX_ATTEMPTS - failedAttempts;
+          
           securityLogger.logFailedLogin(credentials.email, ip, 'Invalid password');
-          return null;
+          
+          if (remainingAttempts > 0) {
+            throw new Error(`Password salah. Sisa ${remainingAttempts} percobaan sebelum akun terkunci.`);
+          } else {
+            throw new Error(`Akun terkunci karena terlalu banyak percobaan gagal. Coba lagi dalam 15 menit.`);
+          }
         }
 
         // Login successful - reset attempts and log
@@ -145,16 +162,16 @@ export const authOptions: AuthOptions = {
     error: '/login', // Redirect errors to login page
   },
   secret: process.env.NEXTAUTH_SECRET,
-  // Enable CSRF protection
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  // Disable secure cookies for development/testing on localhost
+  useSecureCookies: false,
   cookies: {
     sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      name: 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Set to true only in production with HTTPS
       },
     },
   },
