@@ -32,8 +32,8 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        // Jika NextAuth mengembalikan error (cth: kredensial salah)
-        throw new Error('Email atau password salah. Silakan coba lagi.');
+        // Jika NextAuth mengembalikan error (cth: kredensial salah atau akun terkunci)
+        throw new Error(result.error);
       }
 
       if (result?.ok) {

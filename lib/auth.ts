@@ -4,6 +4,8 @@ import { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@/lib/prisma';
 import { compare } from 'bcryptjs';
+import { securityLogger } from '@/lib/logger';
+import { securityService } from '@/lib/security';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -13,9 +15,23 @@ export const authOptions: AuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials.password) {
           return null;
+        }
+
+        // Get client IP
+        const ip = securityService.getClientIp(req as unknown as Request);
+
+        // Check if account is locked
+        if (securityService.isAccountLocked(credentials.email)) {
+          const remainingTime = securityService.getRemainingLockoutTime(credentials.email);
+          securityLogger.logFailedLogin(
+            credentials.email, 
+            ip, 
+            `Account locked. ${remainingTime} minutes remaining`
+          );
+          throw new Error(`Akun terkunci karena terlalu banyak percobaan gagal. Coba lagi dalam ${remainingTime} menit.`);
         }
 
         // --- PERBAIKAN UTAMA DI SINI ---
@@ -27,10 +43,22 @@ export const authOptions: AuthOptions = {
           },
         });
 
-        if (!user) return null;
+        if (!user) {
+          securityService.recordLoginAttempt(credentials.email, ip, false);
+          securityLogger.logFailedLogin(credentials.email, ip, 'User not found');
+          return null;
+        }
 
         const isPasswordValid = await compare(credentials.password, user.password);
-        if (!isPasswordValid) return null;
+        if (!isPasswordValid) {
+          securityService.recordLoginAttempt(credentials.email, ip, false);
+          securityLogger.logFailedLogin(credentials.email, ip, 'Invalid password');
+          return null;
+        }
+
+        // Login successful - reset attempts and log
+        securityService.resetLoginAttempts(credentials.email);
+        securityLogger.logSuccessfulLogin(user.id, user.email, ip);
 
         // Kembalikan semua data yang dibutuhkan, termasuk objek 'satker'
         return {
@@ -46,6 +74,8 @@ export const authOptions: AuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 8 * 60 * 60, // 8 hours
+    updateAge: 60 * 60, // Update session every 1 hour
   },
   callbacks: {
     // Callback 'jwt' sekarang juga akan menerima data 'satker' dari 'authorize'
@@ -73,6 +103,20 @@ export const authOptions: AuthOptions = {
   },
   pages: {
     signIn: '/login',
+    error: '/login', // Redirect errors to login page
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Enable CSRF protection
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
 };
