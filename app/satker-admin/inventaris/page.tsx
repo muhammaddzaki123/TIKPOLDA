@@ -78,7 +78,7 @@ export default async function InventarisSatkerPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-lg border bg-white p-2 shadow-sm sm:p-4">
+      <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-sm sm:p-4">
         <InventarisDataTable columns={columns} data={inventarisData} />
       </div>
     </div>

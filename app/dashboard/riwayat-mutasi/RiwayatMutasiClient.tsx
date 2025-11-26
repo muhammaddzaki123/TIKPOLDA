@@ -145,7 +145,7 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
                     <ExportRiwayatMutasiButton />
                 </div>
             </div>
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
+            <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                 {/* Tampilan Tabel untuk Desktop */}
                 <div className="hidden md:block">
                     <div className="rounded-md border">
@@ -188,30 +188,30 @@ export function RiwayatMutasiClient({ riwayatData, satkerList }: RiwayatMutasiCl
                 <div className="grid grid-cols-1 gap-4 md:hidden">
                     {riwayatData.length > 0 ? (
                         riwayatData.map((item) => (
-                            <div key={item.id} className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+                            <div key={item.id} className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <span className="font-semibold text-slate-800">{item.personil.nama}</span>
-                                        <p className="text-sm text-slate-500 font-mono">{item.personil.nrp}</p>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-100">{item.personil.nama}</span>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-mono">{item.personil.nrp}</p>
                                     </div>
                                     <Badge variant={getStatusVariant(item.status)} className="whitespace-nowrap">
                                         {item.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}
                                     </Badge>
                                 </div>
                                 
-                                <div className="text-sm text-slate-600 space-y-2 pt-1">
+                                <div className="text-sm text-slate-600 dark:text-slate-400 space-y-2 pt-1">
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="font-medium text-slate-700 truncate">{item.satkerAsal.nama}</span>
-                                        <ArrowRight className="h-4 w-4 text-slate-500 shrink-0" />
-                                        <span className="font-medium text-slate-700 truncate text-right">{item.satkerTujuan.nama}</span>
+                                        <span className="font-medium text-slate-700 dark:text-slate-300 truncate">{item.satkerAsal.nama}</span>
+                                        <ArrowRight className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                                        <span className="font-medium text-slate-700 dark:text-slate-300 truncate text-right">{item.satkerTujuan.nama}</span>
                                     </div>
-                                    <p><span className="font-medium text-slate-700">Tgl Diproses:</span> {formatDate(item.updatedAt.toString())}</p>
-                                    <p className="truncate" title={item.alasan}><span className="font-medium text-slate-700">Alasan:</span> {item.alasan}</p>
+                                    <p><span className="font-medium text-slate-700 dark:text-slate-300">Tgl Diproses:</span> {formatDate(item.updatedAt.toString())}</p>
+                                    <p className="truncate" title={item.alasan}><span className="font-medium text-slate-700 dark:text-slate-300">Alasan:</span> {item.alasan}</p>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-12 text-slate-500">
+                        <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                             <p>Tidak ada data riwayat mutasi yang cocok.</p>
                         </div>
                     )}

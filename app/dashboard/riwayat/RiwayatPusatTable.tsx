@@ -136,20 +136,20 @@ export function RiwayatPusatTable({ data }: { data: RiwayatPusatGrouped[] }) {
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {data.length > 0 ? (
           data.map((item) => (
-            <div key={item.id} className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+            <div key={item.id} className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm space-y-3">
               <div className="flex justify-between items-start">
-                <span className="font-semibold text-slate-800">{item.satkerPengaju.nama}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{item.satkerPengaju.nama}</span>
                 <Badge variant={getStatusVariant(item.status)} className="whitespace-nowrap">
                   {item.status === 'APPROVED' ? 'Disetujui' : 'Ditolak'}
                 </Badge>
               </div>
               
-              <div className="text-sm text-slate-600 space-y-1">
-                <p className="truncate" title={item.keperluan}><span className="font-medium text-slate-700">Keperluan:</span> {item.keperluan}</p>
-                <p><span className="font-medium text-slate-700">Tanggal Pengajuan:</span> {formatDate(item.createdAt)}</p>
-                <p><span className="font-medium text-slate-700">Tanggal Diproses:</span> {formatDate(item.updatedAt)}</p>
+              <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                <p className="truncate" title={item.keperluan}><span className="font-medium text-slate-700 dark:text-slate-300">Keperluan:</span> {item.keperluan}</p>
+                <p><span className="font-medium text-slate-700 dark:text-slate-300">Tanggal Pengajuan:</span> {formatDate(item.createdAt)}</p>
+                <p><span className="font-medium text-slate-700 dark:text-slate-300">Tanggal Diproses:</span> {formatDate(item.updatedAt)}</p>
                  {item.status === 'REJECTED' && item.catatanAdmin && (
-                    <p className="truncate" title={item.catatanAdmin}><span className="font-medium text-slate-700">Alasan Penolakan:</span> {item.catatanAdmin}</p>
+                    <p className="truncate" title={item.catatanAdmin}><span className="font-medium text-slate-700 dark:text-slate-300">Alasan Penolakan:</span> {item.catatanAdmin}</p>
                  )}
               </div>
 

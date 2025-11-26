@@ -57,13 +57,13 @@ export default async function PersonilManagementPage() {
   return (
     <div className="w-full space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Manajemen Personil</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="text-2xl font-bold dark:text-slate-100">Manajemen Personil</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Lihat seluruh personil dan kelola pemindahan tugas (mutasi) antar Satuan Kerja.
         </p>
       </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
+      <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
         <PersonilDataTable 
             columns={columns} 
             data={personilData} 

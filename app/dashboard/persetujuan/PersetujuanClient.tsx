@@ -283,8 +283,8 @@ export default function PersetujuanClient({
 
       {/* Header Section - Responsive */}
       <div className="space-y-1">
-        <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Pusat Persetujuan</h1>
-        <p className="text-xs text-slate-600 sm:text-sm">
+        <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl dark:text-slate-100">Pusat Persetujuan</h1>
+        <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
           Proses semua pengajuan dari Satuan Kerja dengan sistem tracking yang terintegrasi
         </p>
       </div>
@@ -305,10 +305,10 @@ export default function PersetujuanClient({
         </TabsList>
 
         <TabsContent value="peminjaman" className="mt-4 space-y-4 sm:space-y-6">
-          <div className="rounded-lg border bg-white p-3 shadow-sm sm:p-6">
+          <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm sm:p-6">
             <div className="mb-4">
-              <h3 className="text-base font-semibold sm:text-lg">Peminjaman & Pengembalian HT</h3>
-              <p className="text-xs text-gray-600 sm:text-sm">
+              <h3 className="text-base font-semibold sm:text-lg dark:text-slate-100">Peminjaman & Pengembalian HT</h3>
+              <p className="text-xs text-gray-600 dark:text-slate-400 sm:text-sm">
                 Kelola pengajuan peminjaman dan pengembalian HT dari berbagai satker dengan sistem tracking yang terintegrasi
               </p>
             </div>
@@ -323,10 +323,10 @@ export default function PersetujuanClient({
         </TabsContent>
 
         <TabsContent value="mutasi" className="mt-4 space-y-4 sm:space-y-6">
-          <div className="rounded-lg border bg-white p-3 shadow-sm sm:p-6">
+          <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm sm:p-6">
             <div className="mb-4">
-              <h3 className="text-base font-semibold sm:text-lg">Pengajuan Mutasi Personil</h3>
-              <p className="text-xs text-gray-600 sm:text-sm">
+              <h3 className="text-base font-semibold sm:text-lg dark:text-slate-100">Pengajuan Mutasi Personil</h3>
+              <p className="text-xs text-gray-600 dark:text-slate-400 sm:text-sm">
                 Kelola pengajuan mutasi personil antar satker
               </p>
             </div>

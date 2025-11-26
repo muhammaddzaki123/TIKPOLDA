@@ -243,11 +243,11 @@ export function DashboardClient({
 
       {/* Dialog untuk menampilkan detail */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col dark:bg-slate-800 dark:border-slate-700">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">{dialogTitle}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold dark:text-slate-100">{dialogTitle}</DialogTitle>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto">
+          <div className="flex-grow overflow-y-auto dark:bg-slate-900/50 rounded-lg">
             <div className="rounded-lg border border-slate-200">
               <Table>
                 <TableHeader className="bg-slate-50">

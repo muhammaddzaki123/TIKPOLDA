@@ -170,7 +170,7 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                     <ExportRiwayatInternalButton />
                 </div>
             </div>
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
+            <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                 {/* Tampilan Tabel untuk Desktop */}
                 <div className="hidden md:block">
                     <div className="rounded-md border">
@@ -213,9 +213,9 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                 <div className="grid grid-cols-1 gap-4 md:hidden">
                     {riwayatData.length > 0 ? (
                         riwayatData.map((item) => (
-                            <div key={item.id} className="rounded-lg border bg-white p-4 shadow-sm space-y-3">
+                            <div key={item.id} className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm space-y-3">
                                 <div className="flex justify-between items-start">
-                                    <span className="font-semibold text-slate-800">{item.personil.nama}</span>
+                                    <span className="font-semibold text-slate-800 dark:text-slate-100">{item.personil.nama}</span>
                                     {item.tanggalKembali ? (
                                         <Badge variant="default">Sudah Kembali</Badge>
                                     ) : (
@@ -223,12 +223,12 @@ export function RiwayatInternalClient({ riwayatData, satkerList, personilList, h
                                     )}
                                 </div>
                                 
-                                <div className="text-sm text-slate-600 space-y-1">
-                                    <p><span className="font-medium text-slate-700">Satker:</span> {item.personil.satker.nama}</p>
-                                    <p><span className="font-medium text-slate-700">HT:</span> <span className="font-mono">{item.ht.serialNumber}</span></p>
-                                    <p><span className="font-medium text-slate-700">Tgl Pinjam:</span> {formatDate(item.tanggalPinjam.toString())}</p>
+                                <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                                    <p><span className="font-medium text-slate-700 dark:text-slate-300">Satker:</span> {item.personil.satker.nama}</p>
+                                    <p><span className="font-medium text-slate-700 dark:text-slate-300">HT:</span> <span className="font-mono">{item.ht.serialNumber}</span></p>
+                                    <p><span className="font-medium text-slate-700 dark:text-slate-300">Tgl Pinjam:</span> {formatDate(item.tanggalPinjam.toString())}</p>
                                     <p>
-                                        <span className="font-medium text-slate-700">Tgl Kembali:</span> 
+                                        <span className="font-medium text-slate-700 dark:text-slate-300">Tgl Kembali:</span> 
                                         {item.tanggalKembali ? formatDate(item.tanggalKembali.toString()) : ' -'}
                                     </p>
                                 </div>

@@ -54,15 +54,15 @@ const activityConfig = {
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   return (
-    <Card className="p-6">
+    <Card className="p-6 dark:bg-slate-800 dark:border-slate-700">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Aktivitas Terkini</h3>
-        <Clock className="h-5 w-5 text-slate-400" />
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Aktivitas Terkini</h3>
+        <Clock className="h-5 w-5 text-slate-400 dark:text-slate-500" />
       </div>
       
       <div className="space-y-4">
         {activities.length === 0 ? (
-          <p className="text-center text-sm text-slate-500 py-8">
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 py-8">
             Belum ada aktivitas terkini
           </p>
         ) : (
@@ -77,7 +77,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
               >
                 {/* Timeline line */}
                 {index !== activities.length - 1 && (
-                  <div className="absolute left-5 top-10 h-full w-0.5 bg-slate-200" />
+                  <div className="absolute left-5 top-10 h-full w-0.5 bg-slate-200 dark:bg-slate-700" />
                 )}
                 
                 {/* Icon */}
@@ -90,10 +90,10 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                 {/* Content */}
                 <div className="flex-1 space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-slate-900">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                       {activity.description}
                     </p>
-                    <span className="text-xs text-slate-500 whitespace-nowrap">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {formatDistanceToNow(new Date(activity.timestamp), {
                         addSuffix: true,
                         locale: id,
@@ -101,7 +101,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                     </span>
                   </div>
                   {activity.user && (
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                       <User className="h-3 w-3" />
                       <span>{activity.user}</span>
                     </div>

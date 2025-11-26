@@ -112,7 +112,7 @@ export function RiwayatPusatClient({ riwayatData, satkerList }: RiwayatPusatClie
                     <ExportRiwayatButton />
                 </div>
             </div>
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
+            <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
                 <RiwayatPusatTable data={riwayatData} />
             </div>
         </div>

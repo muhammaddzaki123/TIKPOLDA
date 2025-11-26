@@ -184,12 +184,12 @@ export default async function SatkerDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-lg bg-white p-5 shadow">
-          <h3 className="mb-4 text-lg font-semibold">Aktivitas Terbaru di Satker Anda</h3>
+        <div className="rounded-lg bg-white dark:bg-slate-800 dark:border dark:border-slate-700 p-5 shadow">
+          <h3 className="mb-4 text-lg font-semibold dark:text-slate-100">Aktivitas Terbaru di Satker Anda</h3>
           <RecentActivityCard activities={activities} />
         </div>
-        <div className="rounded-lg bg-white p-5 shadow">
-          <h3 className="mb-4 text-lg font-semibold">Status Pengajuan Anda</h3>
+        <div className="rounded-lg bg-white dark:bg-slate-800 dark:border dark:border-slate-700 p-5 shadow">
+          <h3 className="mb-4 text-lg font-semibold dark:text-slate-100">Status Pengajuan Anda</h3>
           <StatusPengajuanCard pengajuanList={pengajuanList} />
         </div>
       </div>

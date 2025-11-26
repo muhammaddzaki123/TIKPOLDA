@@ -25,13 +25,13 @@ export default function StatCard({ title, value, iconName, color, href }: StatCa
   const Icon = iconMap[iconName];
   
   const content = (
-    <div className={`flex items-center rounded-lg bg-white p-5 shadow ${href ? 'cursor-pointer transition-transform hover:scale-105 hover:shadow-lg' : ''}`}>
+    <div className={`flex items-center rounded-lg bg-white dark:bg-slate-800 p-5 shadow dark:shadow-slate-900/50 border dark:border-slate-700 ${href ? 'cursor-pointer transition-transform hover:scale-105 hover:shadow-lg dark:hover:shadow-slate-900' : ''}`}>
       <div className={`mr-4 rounded-full p-3 ${color}`}>
         <Icon className="h-6 w-6 text-white" />
       </div>
       <div>
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <p className="text-2xl font-bold text-slate-800">{value}</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
+        <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
       </div>
     </div>
   );

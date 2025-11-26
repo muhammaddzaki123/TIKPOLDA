@@ -35,8 +35,8 @@ export default function InventarisClient({
       {/* Header Section - Responsive */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl">Manajemen Inventaris HT</h1>
-          <p className="text-xs text-slate-600 sm:text-sm">Kelola aset di gudang pusat dan pantau aset yang terdistribusi</p>
+          <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl dark:text-slate-100">Manajemen Inventaris HT</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-400 sm:text-sm">Kelola aset di gudang pusat dan pantau aset yang terdistribusi</p>
         </div>
         
         {/* Action Buttons - Responsive */}
@@ -124,7 +124,7 @@ export default function InventarisClient({
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="gudang" className="mt-4 rounded-lg border bg-white p-2 shadow-sm sm:p-4">
+        <TabsContent value="gudang" className="mt-4 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-sm sm:p-4">
           <InventarisDataTable
             columns={gudangColumns}
             data={gudangData}
@@ -134,7 +134,7 @@ export default function InventarisClient({
           />
         </TabsContent>
         
-        <TabsContent value="terdistribusi" className="mt-4 rounded-lg border bg-white p-2 shadow-sm sm:p-4">
+        <TabsContent value="terdistribusi" className="mt-4 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-sm sm:p-4">
           <InventarisDataTable
             columns={terdistribusiColumns}
             data={terdistribusiData}

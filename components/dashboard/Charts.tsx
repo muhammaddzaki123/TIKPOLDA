@@ -27,11 +27,11 @@ interface ChartCardProps {
 
 export function ChartCard({ title, subtitle, children }: ChartCardProps) {
   return (
-    <Card className="p-6 shadow-md hover:shadow-lg transition-shadow duration-300">
-      <div className="mb-6 pb-4 border-b border-slate-100">
-        <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+    <Card className="p-6 shadow-md hover:shadow-lg transition-shadow duration-300 dark:bg-slate-800 dark:border-slate-700">
+      <div className="mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
         {subtitle && (
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
         )}
       </div>
       <div className="mt-2">

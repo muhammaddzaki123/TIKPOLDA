@@ -63,12 +63,12 @@ export default async function PersonilSatkerPage() {
     <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Manajemen Personil</h1>
-          <p className="text-sm text-slate-600 mt-1">Kelola semua data anggota di unit kerja Anda.</p>
+          <h1 className="text-2xl md:text-3xl font-bold dark:text-slate-100">Manajemen Personil</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Kelola semua data anggota di unit kerja Anda.</p>
         </div>
       </div>
 
-      <div className="rounded-lg border bg-white p-2 md:p-4 shadow-sm">
+      <div className="rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 p-2 md:p-4 shadow-sm">
         <PersonilDataTable 
             columns={columns} 
             data={personilDataWithSatkerName} 
