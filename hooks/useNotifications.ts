@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 interface NotificationData {
@@ -30,7 +30,7 @@ export function useNotifications() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchNotificationData = async () => {
+  const fetchNotificationData = useCallback(async () => {
     if (!session?.user) return;
 
     setIsLoading(true);
@@ -51,7 +51,45 @@ export function useNotifications() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
+
+  // Fungsi untuk menghapus notifikasi
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/delete?id=${notificationId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh data setelah hapus
+        await fetchNotificationData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      return false;
+    }
+  }, [fetchNotificationData]);
+
+  // Fungsi untuk menghapus semua notifikasi
+  const deleteAllNotifications = useCallback(async () => {
+    try {
+      const response = await fetch('/api/notifications/delete-all', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh data setelah hapus
+        await fetchNotificationData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+      return false;
+    }
+  }, [fetchNotificationData]);
 
   useEffect(() => {
     if (session?.user) {
@@ -62,11 +100,13 @@ export function useNotifications() {
       
       return () => clearInterval(interval);
     }
-  }, [session]);
+  }, [session, fetchNotificationData]);
 
   return {
     data,
     isLoading,
-    refresh: fetchNotificationData
+    refresh: fetchNotificationData,
+    deleteNotification,
+    deleteAllNotifications
   };
 }

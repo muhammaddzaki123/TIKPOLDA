@@ -46,16 +46,21 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
 
     for (const pengajuan of pengajuanPeminjaman) {
       if (!existingIds.has(pengajuan.id)) {
-        const title = pengajuan.status === 'PENDING' 
-          ? 'Pengajuan Peminjaman Baru'
-          : pengajuan.status === 'APPROVED'
-          ? 'Peminjaman Disetujui'
-          : 'Peminjaman Ditolak';
+        let title = 'Pengajuan Peminjaman Baru';
+        let link = '/dashboard/persetujuan'; // Default untuk semua notifikasi peminjaman
+        
+        if (pengajuan.status === 'PENDING') {
+          title = 'Pengajuan Peminjaman Baru';
+          link = '/dashboard/persetujuan'; // Pending perlu persetujuan
+        } else if (pengajuan.status === 'APPROVED') {
+          title = 'Peminjaman Disetujui';
+          link = '/dashboard/satker'; // Approved bisa lihat di manajemen satker
+        } else if (pengajuan.status === 'REJECTED') {
+          title = 'Peminjaman Ditolak';
+          link = '/dashboard/satker'; // Rejected juga ke satker
+        }
         
         const priority = pengajuan.status === 'PENDING' ? 'high' : 'medium';
-        
-        // Link ke halaman persetujuan untuk Super Admin
-        const link = '/dashboard/persetujuan';
         
         await prisma.notification.create({
           data: {
@@ -238,7 +243,7 @@ async function getSuperAdminNotifications(userId: string): Promise<NotificationI
             type: 'keterlambatan_paket_peminjaman',
             title: '⚠️ Paket HT Terlambat Dikembalikan',
             message: `Paket peminjaman ${loanPackage.jumlah} unit HT oleh ${loanPackage.satkerPengaju.nama} terlambat ${daysOverdue} hari. Segera hubungi satker!`,
-            link: '/dashboard/satker',
+            link: '/dashboard/persetujuan', // Ke halaman persetujuan untuk follow up pengembalian
             relatedId: loanPackage.id,
             satkerName: loanPackage.satkerPengaju.nama,
             priority: 'high',

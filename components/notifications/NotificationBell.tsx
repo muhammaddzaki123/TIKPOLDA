@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, RefreshCw } from 'lucide-react';
+import { Bell, RefreshCw, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -18,7 +18,14 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false); // State untuk kontrol dropdown
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Fungsi untuk mengambil notifikasi
   const fetchNotifications = useCallback(async () => {
@@ -104,13 +111,60 @@ export default function NotificationBell() {
           prev.map(notif => ({ ...notif, isRead: true }))
         );
         setUnreadCount(0);
+        console.log('✅ Semua notifikasi telah ditandai dibaca');
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error('❌ Error marking all notifications as read:', error);
     }
   };
 
-  if (!session?.user) {
+  // Fungsi untuk menghapus satu notifikasi
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/delete?id=${notificationId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove dari state lokal
+        setNotifications(prev => {
+          const deletedNotif = prev.find(n => n.id === notificationId);
+          if (deletedNotif && !deletedNotif.isRead) {
+            setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+          }
+          return prev.filter(notif => notif.id !== notificationId);
+        });
+        
+        console.log('✅ Notifikasi telah dihapus');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting notification:', error);
+    }
+  };
+
+  // Fungsi untuk menghapus semua notifikasi
+  const deleteAllNotifications = async () => {
+    if (notifications.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/notifications/delete-all', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+        console.log('✅ Semua notifikasi telah dihapus');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting all notifications:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (!session?.user || !isMounted) {
     return null;
   }
 
@@ -136,12 +190,12 @@ export default function NotificationBell() {
       
       <DropdownMenuContent 
         align="end" 
-        className="w-80 max-h-96 overflow-hidden p-0"
+        className="w-96 max-h-[500px] overflow-hidden p-0"
         sideOffset={5}
       >
-        <div className="border-b p-4">
+        <div className="border-b p-4 bg-white sticky top-0 z-10">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm">Notifikasi</h3>
+            <h3 className="font-semibold text-base">Notifikasi</h3>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -153,36 +207,48 @@ export default function NotificationBell() {
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
-              {unreadCount > 0 && (
+              {notifications.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={markAllAsRead}
-                  disabled={isLoading}
-                  className="text-xs text-blue-600 hover:text-blue-800 h-7 px-2"
-                  title="Tandai semua dibaca"
+                  onClick={deleteAllNotifications}
+                  disabled={isDeleting}
+                  className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 h-7 px-2"
+                  title="Hapus semua notifikasi"
                 >
-                  Tandai Semua Dibaca
+                  <Trash2 className={`h-3.5 w-3.5 ${isDeleting ? 'animate-pulse' : ''}`} />
                 </Button>
               )}
             </div>
           </div>
-          {unreadCount > 0 && (
-            <p className="text-xs text-slate-500">
-              {unreadCount} notifikasi belum dibaca
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            {unreadCount > 0 && (
+              <p className="text-xs text-slate-500">
+                {unreadCount} notifikasi belum dibaca
+              </p>
+            )}
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                disabled={isLoading}
+                className="text-xs text-blue-600 hover:text-blue-800 h-6 px-2"
+              >
+                Tandai Semua Dibaca
+              </Button>
+            )}
+          </div>
         </div>
         
-        <div className="max-h-80 overflow-y-auto">
-          <NotificationList
-            notifications={notifications}
-            isLoading={isLoading}
-            onMarkAsRead={markAsRead}
-            onRefresh={fetchNotifications}
-            onNavigate={() => setIsOpen(false)} // Tutup dropdown saat navigate
-          />
-        </div>
+        <NotificationList
+          notifications={notifications}
+          isLoading={isLoading}
+          onMarkAsRead={markAsRead}
+          onDeleteNotification={deleteNotification}
+          onRefresh={fetchNotifications}
+          onNavigate={() => setIsOpen(false)}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
