@@ -63,7 +63,7 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
         {/* Header */}
         <div className="border-b border-slate-700/50 bg-slate-800/30 backdrop-blur-sm p-4 mb-2">
           <div className="flex items-center justify-center relative">
-            <div className="flex flex-col items-center space-y-2 text-center">
+            <Link href="/" className="flex flex-col items-center space-y-2 text-center hover:opacity-80 transition-opacity">
               <div className="relative">
                 <div className="absolute inset-0 bg-cyan-500/20 blur-md rounded-full"></div>
                 <Image src="/icon.svg" width={36} height={36} alt="Logo" className="relative" />
@@ -72,7 +72,7 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
                 <span className="text-base font-bold text-white">Admin Satker</span>
                 <span className="text-xs text-cyan-400 font-medium truncate max-w-[200px]">{session?.user.satker?.nama || 'Satuan Kerja'}</span>
               </div>
-            </div>
+            </Link>
 
             <button 
               onClick={() => setIsSidebarOpen(false)} 

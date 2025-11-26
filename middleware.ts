@@ -76,6 +76,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
+  const isLandingPage = pathname === '/';
 
   // Jika pengguna SUDAH LOGIN
   if (token) {
@@ -101,7 +102,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Jika pengguna BELUM LOGIN dan mencoba mengakses halaman selain login/register
+  // Jika pengguna BELUM LOGIN
+  // Izinkan akses ke landing page tanpa login
+  if (isLandingPage) {
+    return NextResponse.next();
+  }
+
+  // Jika mencoba mengakses halaman selain login/register/landing
   if (!token && !isAuthPage) {
     console.warn(`[SECURITY] Unauthorized access: ${ip} - ${pathname}`);
     // Arahkan ke halaman login

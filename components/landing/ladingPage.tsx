@@ -49,28 +49,16 @@ const LandingPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 pt-4">
               <Link
-                href="/register"
-                className="group relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-700 to-slate-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold overflow-hidden transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(37,99,235,0.6)] w-full sm:w-auto"
+                href="/login"
+                className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-700 to-slate-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold overflow-hidden transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(37,99,235,0.6)] w-full sm:w-auto"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-blue-700 via-blue-800 to-slate-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10" aria-hidden>
-                  <path d="M15 14a4 4 0 10-6 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M12 7v.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span className="relative z-10">Daftar Sekarang</span>
-              </Link>
-
-              <Link
-                href="/login"
-                className="group inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl hover:bg-white/20 border-2 border-white/20 hover:border-blue-400/50 transition-all duration-300 transform hover:scale-105 font-bold w-full sm:w-auto"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:translate-x-1 transition-transform" aria-hidden>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 group-hover:translate-x-1 transition-transform" aria-hidden>
                   <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10 17l5-5-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M15 12H3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>Masuk</span>
+                <span className="relative z-10">Masuk</span>
               </Link>
             </div>
 
