@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Warehouse, Users, Send, History, ClipboardPenLine, X
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const sidebarItems = [
   { name: 'Dashboard', href: '/satker-admin', icon: LayoutDashboard },
@@ -26,6 +26,7 @@ interface SidebarSatkerProps {
 export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: SidebarSatkerProps) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const [showDeveloperInfo, setShowDeveloperInfo] = useState(false);
 
   useEffect(() => {
     if (window.innerWidth < 768) {
@@ -55,53 +56,127 @@ export default function SidebarSatker({ isSidebarOpen, setIsSidebarOpen }: Sideb
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-[#0d2436] text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 h-full w-64 transform bg-gradient-to-b from-[#0B1221] via-[#0d2436] to-[#0B1221] text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 shadow-2xl ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } flex flex-col`}
       >
-        <div className="relative mb-6 flex items-center justify-center px-4 pt-4 pb-6">
-          <div className="flex flex-col items-center space-y-2 text-center">
-            <Image src="/icon.svg" width={32} height={32} alt="Logo" />
-            <div className="flex flex-col">
-              <span className="text-base font-semibold">Admin Satker</span>
-              <span className="text-xs font-medium text-cyan-400">{session?.user.satker?.nama || 'Satuan Kerja'}</span>
+        {/* Header */}
+        <div className="border-b border-slate-700/50 bg-slate-800/30 backdrop-blur-sm p-4 mb-2">
+          <div className="flex items-center justify-center relative">
+            <div className="flex flex-col items-center space-y-2 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-500/20 blur-md rounded-full"></div>
+                <Image src="/icon.svg" width={36} height={36} alt="Logo" className="relative" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-white">Admin Satker</span>
+                <span className="text-xs text-cyan-400 font-medium truncate max-w-[200px]">{session?.user.satker?.nama || 'Satuan Kerja'}</span>
+              </div>
             </div>
-          </div>
 
-          <button 
-            onClick={() => setIsSidebarOpen(false)} 
-            className="absolute top-4 right-4 text-gray-400 hover:text-white md:hidden"
-          >
-            <X className="h-6 w-6" />
-          </button>
+            <button 
+              onClick={() => setIsSidebarOpen(false)} 
+              className="absolute top-0 right-0 p-1.5 hover:bg-slate-700/50 rounded-lg transition-colors md:hidden"
+            >
+              <X className="h-5 w-5 text-slate-300" />
+            </button>
+          </div>
         </div>
 
-        {/* PERUBAHAN 4 (Nav):
-          - Menambahkan 'px-4' untuk padding horizontal
-          - 'flex-1' akan otomatis mengisi ruang kosong
-        */}
-        <nav className="flex-1 px-4">
-          <ul>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+          <ul className="space-y-1">
             {sidebarItems.map((item) => (
               <li key={item.name}>
                 <Link
                   href={item.href}
-                  className={`flex items-center space-x-3 rounded-md p-2.5 text-sm font-medium transition-colors ${
+                  className={`group flex items-center space-x-3 rounded-lg p-3 text-sm font-medium transition-all duration-200 ${
                     pathname === item.href || (item.href !== '/satker-admin' && pathname.startsWith(item.href))
-                      ? 'bg-slate-700 text-white'
-                      : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                      ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-white shadow-lg border border-cyan-500/30'
+                      : 'text-slate-300 hover:bg-slate-700/40 hover:text-white hover:border hover:border-slate-600/50'
                   }`}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.name}</span>
+                  <item.icon className={`h-5 w-5 flex-shrink-0 transition-transform duration-200 ${
+                    pathname === item.href || (item.href !== '/satker-admin' && pathname.startsWith(item.href))
+                      ? 'text-cyan-400 scale-110'
+                      : 'text-slate-400 group-hover:text-cyan-400 group-hover:scale-110'
+                  }`} />
+                  <span className="truncate">{item.name}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="mt-auto border-t border-gray-700 p-4">
-          <p className="text-center text-xs text-gray-400">© 2025 Polda NTB</p>
+        {/* Footer/Copyright */}
+        <div className="border-t border-slate-700/50 bg-slate-800/40 backdrop-blur-sm">
+          <div className="p-3 sm:p-4">
+            {/* Developer Info - Expandable */}
+            <div 
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showDeveloperInfo ? 'max-h-32 mb-3 opacity-100' : 'max-h-0 mb-0 opacity-0'
+              }`}
+            >
+              <div className="bg-slate-800/60 rounded-lg p-2.5 sm:p-3 border border-slate-700/50 hover:border-cyan-500/30 transition-all duration-300 group">
+                <a 
+                  href="https://www.linkedin.com/in/muhammad-dzaki-al-qushoyyi" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider mb-1">Developed by</p>
+                      <p className="text-[11px] sm:text-xs font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
+                        Muhammad Dzaki Al-Qushoyyi
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 truncate">
+                        Teknik Informatika
+                      </p>
+                      <p className="text-[9px] sm:text-[10px] text-cyan-400/80 truncate">Universitas Mataram</p>
+                    </div>
+                    <svg 
+                      width="12" 
+                      height="12" 
+                      className="sm:w-[14px] sm:h-[14px]" 
+                      viewBox="0 0 24 24" 
+                      fill="none"
+                    >
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" stroke="currentColor" className="text-slate-500 group-hover:text-cyan-400 transition-colors" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15 3h6v6" stroke="currentColor" className="text-slate-500 group-hover:text-cyan-400 transition-colors" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10 14L21 3" stroke="currentColor" className="text-slate-500 group-hover:text-cyan-400 transition-colors" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            {/* Copyright - Clickable */}
+            <button
+              onClick={() => setShowDeveloperInfo(!showDeveloperInfo)}
+              className="w-full text-center py-2 px-2 rounded-lg hover:bg-slate-700/30 transition-all duration-200 group"
+            >
+              <p className="text-[10px] sm:text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                © {new Date().getFullYear()} POLDA NTB. All rights reserved.
+              </p>
+              <div className="flex items-center justify-center gap-1 mt-1">
+                <span className="text-[8px] sm:text-[9px] text-slate-500 group-hover:text-cyan-400 transition-colors">
+                  {showDeveloperInfo ? 'Hide' : 'Show'} Developer Info
+                </span>
+                <svg 
+                  width="10" 
+                  height="10" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  className={`text-slate-500 group-hover:text-cyan-400 transition-all duration-300 ${
+                    showDeveloperInfo ? 'rotate-180' : 'rotate-0'
+                  }`}
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </button>
+          </div>
         </div>
       </aside>
     </>
